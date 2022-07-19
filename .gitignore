@@ -1,2 +1,5 @@
 .DS_store
 .gitignore
+.RData
+.RHistory
+.Rproj.user
