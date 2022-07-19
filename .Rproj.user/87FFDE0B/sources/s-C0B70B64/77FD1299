@@ -1,0 +1,24 @@
+{
+    "id": "77FD1299",
+    "path": "~/Git_repos/tv-suite/app.R",
+    "project_path": "app.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": true,
+    "created": 1608302047422.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "cursorPosition": "38,0",
+        "scrollLine": "18"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1658246169,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1658256504169,
+    "read_only": false,
+    "read_only_alternatives": []
+}
