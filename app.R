@@ -23,6 +23,8 @@ library("magrittr")
 library("knitr")
 library("DT")
 library("readxl")
+library("survival")
+library("survminer")
 
 # Add variable to control whether login page will be allowed
 source(file.path("ui", "interface_variables.R"), local = TRUE)

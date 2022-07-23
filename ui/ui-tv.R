@@ -110,7 +110,7 @@ tabPanel(
           shinydashboard::valueBoxOutput("card_tv_treatment", width = 2),
           shinydashboard::valueBoxOutput("card_tv_disease", width = 2),
           shinydashboard::valueBoxOutput("card_tv_models", width = 2),
-          shinydashboard::valueBoxOutput("card_tv_patients", width = 2),
+          shinydashboard::valueBoxOutput("card_tv_studies", width = 2),
           shinydashboard::valueBoxOutput("card_tv_contributor", width = 2)
         )
       )
@@ -139,7 +139,7 @@ tabPanel(
 
                               div(
                                 column(
-                                  width = 3,
+                                  width = 2,
                                   pickerInput("tv_all_plot_type", "Plot Type",
                                               choices = c("Study Plot", "Treatment Plot"),
                                               selected = c("Study Plot"),
@@ -148,13 +148,23 @@ tabPanel(
                                 ),
 
                                 column(
-                                  width = 3,
+                                  width = 2,
+                                  pickerInput("tv_all_plot_style", "Plot Style",
+                                              choices = c("Study Average", "Individual Animal"),
+                                              selected = c("Study Average"),
+                                              options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                                                                      showContent = TRUE),multiple = FALSE)
+                                ),
+
+                                column(
+                                  offset = 2,
+                                  width = 1,
                                   checkboxInput("tv_all_scale", "Scaled Plot", FALSE),
                                   checkboxInput("tv_all_interpolate", "Interpolation", FALSE)
                                 ),
 
                                 column(
-                                  width = 3,
+                                  width = 2,
                                   div(id="tv_div_all_scale_picker",
                                       pickerInput("tv_all_scaleby", "Scale Plot By",
                                                   choices = c("Growth Factor", "Volume"),
@@ -163,7 +173,7 @@ tabPanel(
                                                                           showContent = TRUE),multiple = FALSE))
                                 ),
                                 column(
-                                  width = 3,
+                                  width = 2,
                                   div(id="tv_div_all_endpoint",
                                       numericInput("tv_all_endpoint_scale", "Endpoint Scaling", value = 4, min = 1, max = 15000))
                                 )
@@ -250,25 +260,9 @@ tabPanel(
                                    ),
 
                                    column(
-                                     width = 2,
-                                     checkboxInput("tv_checkbox", "Scaled Plot", FALSE),
+                                     offset = 1,
+                                     width = 1,
                                      checkboxInput("tv_interpolate", "Interpolation", FALSE)
-                                   ),
-
-                                   column(
-                                     width = 2,
-                                     div(id="div_tv_scale_picker_study", pickerInput("tv_scale_picker_study", "Scale Plot By",
-                                                                                     choices = c("Growth Factor", "Volume"),
-                                                                                     selected = c("Growth Factor"),
-                                                                                     options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
-                                                                                                             showContent = TRUE),multiple = FALSE))
-                                   ),
-
-                                   column(
-                                     width = 3,
-                                     div(id="div_tv_endpoint.scale", numericInput("tv_endpoint.scale", "Endpoint Scaling",
-                                                                                  value = 4,
-                                                                                  min = 1, max = 15000))
                                    )
                                  )
                                )
@@ -286,9 +280,17 @@ tabPanel(
                            ),
 
                            fluidRow(
-                             div(
+                             column(
+                               width = 12, offset = 0,
                                withSpinner(
-                                 plotOutput("plot_tumorvol_study", width = "100%"),
+                                 plotlyOutput("plot_tumorvol_study", width = "100%", inline=TRUE),
+                                 proxy.height = "100px", color="#0273B7"
+                               )),
+                             column(
+                               width = 8,
+                               HTML("<br>"),
+                               withSpinner(
+                                 DTOutput("dt_dr_table"),
                                  proxy.height = "100px", color="#0273B7"
                                )
                              )

@@ -1,5 +1,5 @@
 # DATA
-data <- try(as.data.frame(readRDS("include/tv-test.rds")), silent = T)
+data <- try(as.data.frame(readRDS("include/tv-test-new.rds")), silent = T)
 rownames(data) <- NULL
 
 # GET methods
@@ -12,20 +12,20 @@ get_tv_contributor <- function() {
 }
 
 get_tv_treatment <- function() {
-  if (length(unique(data$AgentName)) < 2) {
-    unique(data$AgentName)
+  if (length(unique(data$Arms)) < 2) {
+    unique(data$Arms)
   } else {
-    agents <- factor(unique(data$AgentName))
+    agents <- factor(unique(data$Arms))
     agents <- relevel(agents, 'Control')
     levels(agents)
   }
 }
 
 get_tv_disease <- function() {
-  if (length(unique(data$SDC_Diagnosis_Description)) < 2) {
-    list(unique(data$SDC_Diagnosis_Description))
+  if (length(unique(data$Disease_Type)) < 2) {
+    list(unique(data$Disease_Type))
   } else {
-    sort(unique(data$SDC_Diagnosis_Description), na.last = T)
+    sort(unique(data$Disease_Type), na.last = T)
   }
 }
 
@@ -53,48 +53,48 @@ get_tv_volumes_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"ID
 output$card_tv_volumes <- shinydashboard::renderValueBox({
   ret <- get_query_tv()$"df"
   shinydashboard::valueBox(
-    get_tv_volumes_count(ret), "Volume Records",
+    get_tv_volumes_count(ret), "Unique Mouse IDs",
     icon = icon("file-medical"), color = "green"
   )
 })
 
 get_tv_studies_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"Study")))
 
-output$card_tv_models <- shinydashboard::renderValueBox({
+output$card_tv_studies <- shinydashboard::renderValueBox({
   ret <- get_query_tv()$"df"
   shinydashboard::valueBox(
     get_tv_studies_count(ret), "Studies",
-    icon = icon("vial"), color = "yellow"
+    icon = icon("chart-area"), color = "yellow"
   )
 })
 
-get_tv_patients_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"Patient_ID")))
+get_tv_models_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"Tumor")))
 
-output$card_tv_patients <- shinydashboard::renderValueBox({
+output$card_tv_models <- shinydashboard::renderValueBox({
   ret <- get_query_tv()$"df"
   shinydashboard::valueBox(
-    get_tv_patients_count(ret), "Patients",
-    icon = icon("users"), color = "blue"
+    get_tv_models_count(ret), "Models",
+    icon = icon("paw"), color = "blue"
   )
 })
 
-get_tv_disease_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"SDC_Diagnosis_Description")))
+get_tv_disease_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"Disease_Type")))
 
 output$card_tv_disease <- shinydashboard::renderValueBox({
   ret <- get_query_tv()$"df"
   shinydashboard::valueBox(
     get_tv_disease_count(ret), "Disease Types",
-    icon = icon("virus"), color = "red"
+    icon = icon("disease"), color = "red"
   )
 })
 
-get_tv_treatment_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"AgentName")))
+get_tv_treatment_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"Arms")))
 
 output$card_tv_treatment <- shinydashboard::renderValueBox({
   ret <- get_query_tv()$"df"
   shinydashboard::valueBox(
     get_tv_treatment_count(ret), "Treatments",
-    icon = icon("medkit"), color = "maroon"
+    icon = icon("pills"), color = "maroon"
   )
 })
 
@@ -202,30 +202,33 @@ observeEvent(input$tv_all_scaleby,{
 
 output$plot_tumorvol <- renderPlotly({
   # Data
-  df <- get_query_tv()$"df"
+  s.data <- get_query_tv()$"df"
 
-  if (is.null(df) | (nrow(df) == 0)) {
+  if (is.null(s.data) | (nrow(s.data) == 0)) {
     plot_ly()
   } else {
 
+
     # Get Level Type Input by User
-    level_type <- "Animal"
+    
     if (input$tv_all_plot_type == "Treatment Plot") {
-      level_type <- "Arm"
+      pattern_type <- "Treatment"
+    } else if (input$tv_all_plot_type == "Study Plot") {
+      pattern_type <- "Study"
     }
-    pattern_type <- "TAN"
+
+    if (input$tv_all_plot_style == "Study Average") {
+      level_type <- "Arm"
+    } else if (input$tv_all_plot_style == "Individual Animal") {
+      level_type <- "Animal"
+    } 
 
     # Call plot
     if (input$tv_all_scale) {
+
       shinyjs::enable("tv_all_interpolate")
       shinyjs::enable("tv_div_all_endpoint")
       shinyjs::enable("tv_div_all_scale_picker")
-
-      s.data <- get_data_summary_scaled(df, measure.var = "Volume",
-                                        group.vars = c("Study", "Times", "Arms", "Model_ID", "Type"))
-      # print(s.data)
-      s.data <- subset(s.data, select = !(names(s.data) %in% c("ID")))
-      s.data <- s.data %>% dplyr::rename(ID = Study)
 
       if(input$tv_all_scaleby == "Volume") {
         scale_by_volume_all <- TRUE
@@ -253,7 +256,7 @@ output$plot_tumorvol <- renderPlotly({
         get_plot_scaled_interpolated(data = get_interpolated_pdx_data(s.data), position.dodge = 0.5,  title = NULL, scale.factor = endpoint_scale_all, scale.by.volume = scale_by_volume_all, level = level_type, pattern = pattern_type)
       } else {
         get_plot_scaled(data = s.data, position.dodge = 0.5,  title = NULL, scale.factor = endpoint_scale_all, scale.by.volume = scale_by_volume_all, level = level_type, pattern = pattern_type)
-      }
+      } # MWL: THESE NEED TO BE FIXED! 
 
     } else {
       # Turn off Scaled Plot I/Os
@@ -264,10 +267,9 @@ output$plot_tumorvol <- renderPlotly({
       # Reset Info Text of the Scaled Plot
       output$tv_all_text_scaled <- renderText({""})
 
-      get_tv_plot(data = df, level = level_type,pattern = pattern_type,position.dodge = 0.99)
+      get_tv_plot(data = s.data, level = level_type, pattern = pattern_type, position.dodge = 0.99) #MWL: THIS IS FIXED! 
     }
   }
-
 })
 
 # PLOT - Study
@@ -280,122 +282,43 @@ gen_data_filter_study <- eventReactive(c(input$tv_study_picker, input$tv_submit_
   data_study
 }, ignoreNULL = F)
 
-gen_data_processed <- reactive({
-  data_processed <-
-    gen_data_filter_study() %>%
-    dplyr::group_by(Model_ID) %>%
-    dplyr::mutate(Days=OBS_DAY) %>%
-    dplyr::ungroup() %>%
-    dplyr::rename(Arms = AgentName, Tumor = Model_ID, Times = Days, Volume = TUMOR_WT)%>%#, Type = SDC_Diagnosis_Description) %>%
-    mutate(Arms=recode(Arms, 'Untreated'='Control')) %>%
-    dplyr::select(Arms, Tumor, Times, Volume, ID, Type) %>%
-    dplyr::filter(Arms != '')
-
-  data_processed
-})
-
 last.study.day <- reactive({
   return(input$tv_resist)
 })
 
-observeEvent(input$tv_scale_picker_study,{
-  if(input$tv_scale_picker_study == "Volume") {
-    updateNumericInput(session, "tv_endpoint.scale",
-                       label = paste("Endpoint Scaling (Volume mm3)"),
-                       value = 1200, min = 0, max = 10000)
-  } else {
-    updateNumericInput(session, "tv_endpoint.scale",
-                       label = paste("Endpoint Scaling (Growth Factor)"),
-                       value = 4, min = 0, max = 10000)
-  }
-})
+output$plot_tumorvol_study <- renderPlotly({
 
-output$plot_tumorvol_study <- renderPlot({
-
-  if (input$tv_checkbox){
+  if (input$tv_interpolate){
 
     # Data
-    shinyjs::enable("tv_interpolate")
-    shinyjs::enable("div_tv_endpoint.scale")
-    shinyjs::enable("div_tv_scale_picker_study")
 
-    if(input$tv_scale_picker_study == "Volume") {
-      scale.by.volume <- TRUE
+    Data_Response <- gen_data_filter_study()
 
-      output$tv_text_scaled_study <- renderText({
-        paste0("Plots are scaled by Volume. Y-axis ranges from 100% with endpoint scaling of ",
-               input$tv_endpoint.scale,
-               "mm3 to -100% (total regression)")
-      })
+    #print(Data_Response)
 
-    } else {
-      scale.by.volume <- FALSE
-
-      output$tv_text_scaled_study <- renderText({
-        paste0("Plots are scaled by Relative Growth. Y-axis ranges from 100% with endpoint scaling of ",
-               input$tv_endpoint.scale,
-               "x starting growth to -100% (total regression)")
-      })
-    }
-
-    Data_Response <- get_data_summary_scaled(gen_data_filter_study(), measure.var = "Volume",
-                                             group.vars = c("Study", "Times", "Arms", "ID", "Type"))
-    study <- unlist(levels(factor(Data_Response$Tumor)))[1]
-
+    study <- unlist(levels(factor(Data_Response$Study)))[1]
+    
     one_A_N_DRAP <- Data_Response %>%
-      filter(Tumor == study) %>% droplevels()
+      filter(Study == study) %>% droplevels()
 
-    if (input$tv_interpolate){
-      p1 <- get_plot_scaled_interpolated_study(data = get_interpolated_pdx_data(data = one_A_N_DRAP), position.dodge = 0.5,  title = study, scale.factor = input$tv_endpoint.scale, scale.by.volume = scale.by.volume )
-    }else{
-      p1 <- get_plot_scaled_study(data = one_A_N_DRAP, position.dodge = 0.5,  title = study, scale.factor = input$tv_endpoint.scale, scale.by.volume = scale.by.volume )
-    }
-
+    
+    p1 <- get_plot_interpolated(data = get_interpolated_pdx_data(data = one_A_N_DRAP), position.dodge = 0.5,  title = study)
+    
     p1 <- p1 + geom_vline(xintercept = last.study.day(), linetype="dashed",
                           color = "black", size=1.2)
 
-    mytheme <- gridExtra::ttheme_default(
-      core = list(fg_params=list(cex = 0.8)),
-      colhead = list(fg_params=list(cex = 0.8)),
-      rowhead = list(fg_params=list(cex = 1.0)))
-
-    response_list = list()
-
-    response_list[[study]] <- get_DRLevel(one_A_N_DRAP, neg.control = 'Control', last.measure.day = last.study.day())$Response.Level
-    response_list[[study]]$Study <- study
-
-    t1 <- gridExtra::tableGrob(response_list[[study]][order(relevel(factor(response_list[[study]]$Arms), 'Control')),] , theme=mytheme, rows=NULL)  # transform into a tableGrob
-    #
-    title <- textGrob(paste('RECIST at', last.study.day(), 'days'),gp=gpar(fontsize=12))
-    padding <- unit(5,"mm")
-    table <- gtable_add_rows(
-      t1,
-      heights = grobHeight(title) + padding,
-      pos = 0)
-    table <- gtable_add_grob(
-      table,
-      title,
-      1, 1, 1, ncol(table))
-
-    return(grid.arrange(p1, table, nrow=1))
-
-    # return(p1)
+    return(p1)
 
   } else {
 
-    shinyjs::disable("tv_interpolate")
-    shinyjs::disable("div_tv_endpoint.scale")
-    shinyjs::disable("div_tv_scale_picker_study")
-
     output$tv_text_scaled_study <- renderText({""})
 
-    df <- gen_data_processed()
+    df <- gen_data_filter_study()
 
-    study <- unlist(levels(factor(df$Tumor)))[1]
+    study <- unlist(levels(factor(df$Study)))[1]
 
     one_A_N_DRAP <- df %>%
-      filter(Tumor == study) %>% droplevels()
-
+      filter(Study == study) %>% droplevels()
 
     p1 <- get_plot_volumeGC_alt(one_A_N_DRAP, level = 'Arm',
                                 position.dodge = 0.2,
@@ -407,36 +330,59 @@ output$plot_tumorvol_study <- renderPlot({
 
     p1 <- p1 + xlab("Time (d)") + ylab("Tumor Volume (mm3)")
 
-    mytheme <- gridExtra::ttheme_default(
-      core = list(fg_params=list(cex = 0.8)),
-      colhead = list(fg_params=list(cex = 0.8)),
-      rowhead = list(fg_params=list(cex = 1.0)))
-
-    response_list = list()
-    response_list[[study]] <- get_DRLevel(one_A_N_DRAP, neg.control = 'Control', last.measure.day = last.study.day())$Response.Level
-    response_list[[study]]$Study <- study
-
-    if ('Control'%in%unique(response_list[[study]]$Arms)){
-      response_list[[study]]$Arms <- relevel(factor(response_list[[study]]$Arms), 'Control')
-    }
-
-    t1 <- gridExtra::tableGrob(response_list[[study]][order(response_list[[study]]$Arms),] , theme=mytheme, rows=NULL)  # transform into a tableGrob
-
-    title <- textGrob(paste('RECIST at', last.study.day(), 'days'),gp=gpar(fontsize=12))
-    padding <- unit(5,"mm")
-    table <- gtable_add_rows(
-      t1,
-      heights = grobHeight(title) + padding,
-      pos = 0)
-    table <- gtable_add_grob(
-      table,
-      title,
-      1, 1, 1, ncol(table))
-
-    return(grid.arrange(p1, table, nrow=1))
+    return(p1)
 
   }
 })
+
+output$dt_dr_table <- DT::renderDataTable(
+  dr_table()
+)
+
+dr_table <- reactive({
+
+  output$tv_text_scaled_study <- renderText({""})
+
+  df <- gen_data_filter_study()
+
+  if (input$tv_interpolate){
+      df = get_interpolated_pdx_data(data = df)
+      print(df)
+      df$Volume <- df$Interpolated_Volume
+  }
+
+  study <- unlist(levels(factor(df$Study)))[1]
+
+  one_A_N_DRAP <- df %>%
+    filter(Study == study) %>% droplevels()
+
+  response_list = list()
+  response_list[[study]] <- get_DRLevel(one_A_N_DRAP, neg.control = 'Control', last.measure.day = last.study.day())$Response.Level
+  response_list[[study]]$Study <- study
+
+
+  if ('Control'%in%unique(response_list[[study]]$Arms)){
+    response_list[[study]]$Arms <- relevel(factor(response_list[[study]]$Arms), 'Control')
+  }
+
+  response_list[[study]]$Response.Level <- factor(response_list[[study]]$Response.Level)
+
+  tab.df <- DT::datatable(response_list[[study]][order(response_list[[study]]$Arms),],
+            style = "bootstrap",
+            escape = FALSE,
+            filter = list(position = "top", clear = T),
+            rownames= FALSE,
+            class = "cell-border stripe",
+            extensions = "Buttons",
+            options = list(
+              dom = "Blrtip", scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, pageLength = 20, paging = T,
+              buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download")))) %>%
+            formatRound(c('Best.Response', 'Avg.Response'), digits = 2)
+  tab.df
+})
+
+
+
 
 # landing page buttons
 observeEvent(input$btn_nav_tv, updateNavlistPanel(session, "nav_bco", selected = title_tumor_volume))
