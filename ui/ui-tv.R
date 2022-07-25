@@ -117,9 +117,10 @@ tabPanel(
     ),
 
     shinydashboard::box(
-
+      
       width = 12,
       title = "Matched Tumor Volume - Visual Analytics", status="primary",solidHeader = TRUE,
+
       tabsetPanel(type = "tabs",
                   tabPanel("Tumor Volume Analytics",
 
@@ -236,13 +237,10 @@ tabPanel(
 
       width = 12,
       title = "Matched Study Focused Tumor Volume - Visual Analytics", status="primary",solidHeader = TRUE,
-      tabsetPanel(type = "tabs",
-                  tabPanel("Tumor Volume-Study Analytics",
-                           fluidRow(
-                             column(
-                               width = 12,
-                               div(
-                                 fluidRow(
+      # shinydashboard::box(
+      #   width = 12,
+      #   title = "Matched Tumor Volumes - Summary", status="primary",solidHeader = TRUE,
+        fluidRow(
                                    column(
                                      width = 2,
                                      pickerInput("tv_study_picker", "Study",
@@ -250,17 +248,24 @@ tabPanel(
                                                  selected = get_tv_study()[1],
                                                  options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
                                                                          showContent = TRUE),multiple = FALSE),
-                                   ),
-
+                                   )
+        ),
+      # ),
+      tabsetPanel(type = "tabs",
+                  tabPanel("Objective Response (RECIST)",
+                           fluidRow(
+                             column(
+                               width = 12,
+                               div(
+                                 fluidRow(
                                    column(
                                      width = 2,
-                                     numericInput("tv_resist", "RECIST Day",
+                                     numericInput("tv_recist", "RECIST Day",
                                                   value = 24,
                                                   min = 0, max = 100),
                                    ),
-
                                    column(
-                                     offset = 1,
+                                     offset = 0,
                                      width = 1,
                                      checkboxInput("tv_interpolate", "Interpolation", FALSE)
                                    )
@@ -281,13 +286,13 @@ tabPanel(
 
                            fluidRow(
                              column(
-                               width = 12, offset = 0,
+                               width = 6, offset = 0,
                                withSpinner(
-                                 plotlyOutput("plot_tumorvol_study", width = "100%", inline=TRUE),
+                                 plotlyOutput("plot_tumorvol_study", width = "100%", inline=TRUE, height = '500px'),
                                  proxy.height = "100px", color="#0273B7"
                                )),
                              column(
-                               width = 8,
+                               width = 6,
                                HTML("<br>"),
                                withSpinner(
                                  DTOutput("dt_dr_table"),
@@ -296,34 +301,72 @@ tabPanel(
                              )
                            )
                   ),
-                  tabPanel("Tumor Volume-Study Analytics",
-                           fluidRow(
+                  tabPanel("Waterfall Plots",
+                          fluidRow(
                              column(
                                width = 12,
                                div(
-                                 shinydashboard::box(
-                                   width = 12,
-                                   title = "Study - Data Table", solidHeader = TRUE,
-
-                                   fluidRow(
-                                     column(
-                                       width = 12,
-
-                                       # table with css spinner
-                                       HTML("<br>"),
-                                       withSpinner(
-                                         DTOutput("tbl_pdtc_sample"),
-                                         proxy.height = "100px", color="#0273B7"
-                                       ),
-
-                                       hr()
-
-                                     )
+                                 fluidRow(
+                                   column(
+                                     width = 2,
+                                     pickerInput("waterfall_metric", "Waterfall Metric",
+                                                 choices = c('dVt', 'AUC.Filtered.Measures', 'AUC.All.Measures'),
+                                                 selected = 'dVt',
+                                                 options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                                                                         showContent = TRUE),multiple = FALSE)
+                                   ),
+                                   column(
+                                     width = 2,
+                                     numericInput("tv_AUC.day.waterfall", "AUC Day",
+                                                  value = 24,
+                                                  min = 0, max = 100), ### MAKE THIS SO IT ONLY TURNS ON WHEN AUC LAST DAY IS PICKED. 
+                                   ),
+                                   column(
+                                     offset = 0,
+                                     width = 1,
+                                     checkboxInput("tv_waterfall_interpolate", "Interpolation", FALSE)
                                    )
                                  )
                                )
-                             )
-                           )
+                             )),
+
+                           hr(),
+
+                           fluidRow(
+                             column(
+                               width = 8, offset = 2,
+                               withSpinner(
+                                 plotlyOutput("tv_plot_waterfall", width = "100%", height = '500px'),
+                                 proxy.height = "100px", color="#0273B7"
+                               ))
+                           )                           
+                  ),
+                  tabPanel("Event Free Survival Plots",
+                          fluidRow(
+                             column(
+                               width = 12,
+                               div(
+                                 fluidRow(
+                                   column(
+                                     width = 2,
+                                     numericInput("tv_PercChange_EventSize", "Event Size", ### NOTE THIS MAY CHANGE TO REFLECT MORE THAN % INCREASE
+                                                  value = 100,
+                                                  min = 0, max = 99999),
+                                   )
+                                 )
+                               )
+                             )),
+
+                           hr(),
+
+                           fluidRow(
+                             column(
+                               width = 8, offset = 2,
+                               withSpinner(
+                                 plotlyOutput("tv_plot_EFS", width = "100%", height = '500px'),
+                                 proxy.height = "100px", color="#0273B7"
+                               ))
+                           )                           
                   )
       )
     )

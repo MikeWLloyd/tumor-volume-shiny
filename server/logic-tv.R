@@ -210,7 +210,7 @@ output$plot_tumorvol <- renderPlotly({
 
 
     # Get Level Type Input by User
-    
+
     if (input$tv_all_plot_type == "Treatment Plot") {
       pattern_type <- "Treatment"
     } else if (input$tv_all_plot_type == "Study Plot") {
@@ -221,7 +221,7 @@ output$plot_tumorvol <- renderPlotly({
       level_type <- "Arm"
     } else if (input$tv_all_plot_style == "Individual Animal") {
       level_type <- "Animal"
-    } 
+    }
 
     # Call plot
     if (input$tv_all_scale) {
@@ -256,7 +256,7 @@ output$plot_tumorvol <- renderPlotly({
         get_plot_scaled_interpolated(data = get_interpolated_pdx_data(s.data), position.dodge = 0.5,  title = NULL, scale.factor = endpoint_scale_all, scale.by.volume = scale_by_volume_all, level = level_type, pattern = pattern_type)
       } else {
         get_plot_scaled(data = s.data, position.dodge = 0.5,  title = NULL, scale.factor = endpoint_scale_all, scale.by.volume = scale_by_volume_all, level = level_type, pattern = pattern_type)
-      } # MWL: THESE NEED TO BE FIXED! 
+      }
 
     } else {
       # Turn off Scaled Plot I/Os
@@ -267,7 +267,7 @@ output$plot_tumorvol <- renderPlotly({
       # Reset Info Text of the Scaled Plot
       output$tv_all_text_scaled <- renderText({""})
 
-      get_tv_plot(data = s.data, level = level_type, pattern = pattern_type, position.dodge = 0.99) #MWL: THIS IS FIXED! 
+      get_tv_plot(data = s.data, level = level_type, pattern = pattern_type, position.dodge = 0.99) #MWL: THIS IS FIXED!
     }
   }
 })
@@ -283,7 +283,21 @@ gen_data_filter_study <- eventReactive(c(input$tv_study_picker, input$tv_submit_
 }, ignoreNULL = F)
 
 last.study.day <- reactive({
-  return(input$tv_resist)
+  return(input$tv_recist)
+})
+
+AUC.study.day <- reactive({
+  return(input$tv_AUC.day.waterfall)
+})
+
+
+
+PercChange_EventSize <- reactive({
+  return(input$tv_PercChange_EventSize)
+})
+
+waterfall_metric <- reactive({
+  return(input$waterfall_metric)
 })
 
 output$plot_tumorvol_study <- renderPlotly({
@@ -297,21 +311,19 @@ output$plot_tumorvol_study <- renderPlotly({
     #print(Data_Response)
 
     study <- unlist(levels(factor(Data_Response$Study)))[1]
-    
+
     one_A_N_DRAP <- Data_Response %>%
       filter(Study == study) %>% droplevels()
 
-    
+
     p1 <- get_plot_interpolated(data = get_interpolated_pdx_data(data = one_A_N_DRAP), position.dodge = 0.5,  title = study)
-    
+
     p1 <- p1 + geom_vline(xintercept = last.study.day(), linetype="dashed",
                           color = "black", size=1.2)
 
     return(p1)
 
   } else {
-
-    output$tv_text_scaled_study <- renderText({""})
 
     df <- gen_data_filter_study()
 
@@ -341,13 +353,10 @@ output$dt_dr_table <- DT::renderDataTable(
 
 dr_table <- reactive({
 
-  output$tv_text_scaled_study <- renderText({""})
-
   df <- gen_data_filter_study()
 
   if (input$tv_interpolate){
       df = get_interpolated_pdx_data(data = df)
-      print(df)
       df$Volume <- df$Interpolated_Volume
   }
 
@@ -381,8 +390,73 @@ dr_table <- reactive({
   tab.df
 })
 
+output$tv_plot_EFS <- renderPlotly({
+
+  # temp <- data.frame(X = c(1,2,3,4), Y = c(2,3,4,5))
+  # p <- ggplot(temp, aes(x=X, y=Y)) + geom_point(size=3)
+  # return(p)
+  df <- gen_data_filter_study()
+  study <- unlist(levels(factor(df$Study)))[1]
+
+  one_A_N_DRAP <- df %>%
+    filter(Study == study) %>% droplevels()
+
+  p1 <- EFSplot(one_A_N_DRAP, PercChange_EventSize())
+
+  s <- subplot(p1[[1]], p1[[2]], heights = c(0.75, 0.25), margin = 0.05, nrows=2, shareX = T, titleY = T)
+
+  print(levels(as.factor(p1$data.survtable$Arms)))
+
+  for(i in 1:length(s$x$data)) {
+    if (i <= length(levels(as.factor(p1$data.survtable$Arms)))) {
+      s$x$data[[i]]$showlegend <- TRUE
+      #s$x$data[[i]]$name <- levels(relevel(as.factor(p1$data.survtable$Arms), 'Control')) [[i]]
+    } else {
+      s$x$data[[i]]$showlegend <- FALSE
+    }
+  }
+  for (i in 1:length(s$x$data)){
+    if (!is.null(s$x$data[[i]]$name)){
+      s$x$data[[i]]$name = gsub('^\\(|,\\d+\\)$', '', s$x$data[[i]]$name)
+    }
+  }
+  s
+})
+
+output$tv_plot_waterfall <- renderPlotly({
+
+  # temp <- data.frame(X = c(1,2,3,4), Y = c(2,3,4,5))
+  # p <- ggplot(temp, aes(x=X, y=Y)) + geom_point(size=3)
+  # return(p)
+
+  df <- gen_data_filter_study()
+  study <- unlist(levels(factor(df$Study)))[1]
+
+  one_A_N_DRAP <- df %>%
+    filter(Study == study) %>% droplevels()
+
+  if (input$tv_waterfall_interpolate){
+    one_A_N_DRAP = get_interpolated_pdx_data(data = one_A_N_DRAP)
+    one_A_N_DRAP$Volume <- one_A_N_DRAP$Interpolated_Volume
+  }
+
+  ### NEED TO GET INDIVIDUAL RESPONSE BEFORE PLOTTING. 
+
+  resp <- IndividualMouseReponse(one_A_N_DRAP, last.measure.day = AUC.study.day())
 
 
+  p1 <- ggplotly(WaterfallPlot_PDX(resp, waterfall_metric()))
+
+  for (i in 1:length(p1$x$data)){
+    if (!is.null(p1$x$data[[i]]$name)){
+      p1$x$data[[i]]$name = gsub('^\\(|,\\d+\\)$', '', p1$x$data[[i]]$name)
+    }
+  }
+
+
+  p1
+
+})
 
 # landing page buttons
 observeEvent(input$btn_nav_tv, updateNavlistPanel(session, "nav_bco", selected = title_tumor_volume))

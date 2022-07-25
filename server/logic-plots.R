@@ -199,18 +199,18 @@ get_plot_scaled <- function(data, orders = NULL, position.dodge, title = NULL, p
   if( level == 'Animal') {
     if(pattern == 'Study'){
       p <- ggplot(data = adjusted.data, aes(x = Times, y = Moscow, group = ID, color = Arms)) +
-        geom_line(position = position_dodge(position.dodge),cex = 1.2) + 
-        geom_point(cex = 2, position = position_dodge(position.dodge)) + 
+        geom_line(position = position_dodge(position.dodge),cex = 1.2) +
+        geom_point(cex = 2, position = position_dodge(position.dodge)) +
         ylim(-100, 100) + labs(caption = caption_text)
     }
     if(pattern == 'Treatment'){
       p <- ggplot(data = adjusted.data, aes(x = Times, y = Moscow, group = ID, color = Study)) +
-        geom_line(position = position_dodge(position.dodge),cex = 1.2) + 
-        geom_point(cex = 2, position = position_dodge(position.dodge)) + 
+        geom_line(position = position_dodge(position.dodge),cex = 1.2) +
+        geom_point(cex = 2, position = position_dodge(position.dodge)) +
         ylim(-100, 100) + labs(caption = caption_text)
     }
   }
-  
+
   if( level == 'Arm') {
     s.data <- adjusted.data %>%
               group_by(Study, Arms, Times) %>%
@@ -218,19 +218,19 @@ get_plot_scaled <- function(data, orders = NULL, position.dodge, title = NULL, p
               dplyr::rename(Volume = Mean)
     if(pattern == 'Study'){
       p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Arms)) +
-            geom_line(position = position_dodge(position.dodge),cex = 1.2) + 
-            geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE), 
+            geom_line(position = position_dodge(position.dodge),cex = 1.2) +
+            geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
                           position = position_dodge(position.dodge)) +
-            geom_point(cex = 2,position = position_dodge(position.dodge)) + 
+            geom_point(cex = 2,position = position_dodge(position.dodge)) +
             ylim(-100, 100) + labs(caption = caption_text)
     }
 
     if(pattern == 'Treatment'){
       p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Study)) +
-            geom_line(position = position_dodge(position.dodge),cex = 1.2) + 
-            geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE), 
+            geom_line(position = position_dodge(position.dodge),cex = 1.2) +
+            geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
                           position = position_dodge(position.dodge)) +
-            geom_point(cex = 2,position = position_dodge(position.dodge)) + 
+            geom_point(cex = 2,position = position_dodge(position.dodge)) +
             ylim(-100, 100) + labs(caption = caption_text)
     }
 
@@ -425,6 +425,145 @@ get_interpolated_pdx_data <- function(data){
   return(Interpolate.Data)
 }
 
+get_plot_scaled_interpolated <- function(data, orders = NULL, position.dodge, title = NULL, plot_on = TRUE, scale.factor, scale.by.volume = FALSE, level = 'Arm', pattern = 'TAN', ...) {
+
+  if(inherits(data, "data.frame")){
+    data<-as.data.frame(data)
+  }
+
+  #check the order
+  if (!is.null(orders)){
+
+    arms <- unique(data$Arms)
+    judged.order <- is.element(orders,arms)
+
+    if ("FALSE" %in% judged.order)
+      stop("The input order is improper. Please ensure the input order is the order of 'Arms' among data.")
+
+    data$Arms <- factor(data$Arms,levels=orders) # set the order
+  }
+
+  if ('Control'%in%unique(data$Arms)){
+    data$Arms <- relevel(factor(data$Arms), 'Control')
+  }
+
+  if(scale.by.volume) {
+
+    adjusted.data <- data %>%
+      group_by(Arms, Times) %>%
+      mutate(TimeMean = mean(Interpolated_Volume)) %>%
+      ungroup() %>%
+      group_by(Arms, ID) %>%
+      mutate(zero_adjust = Interpolated_Volume - Interpolated_Volume[1L],
+             EndPoint = scale.factor,
+             ArmMean = mean(Interpolated_Volume),
+             Moscow = ifelse(zero_adjust == 0, 0,
+                             ifelse(zero_adjust < 0, ((((Interpolated_Volume - Interpolated_Volume[1L]) / Interpolated_Volume[1L]) * 100)),
+                                    ifelse(Interpolated_Volume >= EndPoint, 100, (((Interpolated_Volume / EndPoint) * 100))))))
+    caption_text = bquote('Endpoint Scale = ' ~ .(scale.factor) ~ 'mm'^3)
+
+  } else {
+
+    adjusted.data <- data %>%
+      group_by(Arms, Times) %>%
+      mutate(TimeMean = mean(Interpolated_Volume)) %>%
+      ungroup() %>%
+      group_by(Arms, ID) %>%
+      mutate(zero_adjust = Interpolated_Volume - Interpolated_Volume[1L],
+             EndPoint = TimeMean[1L] * scale.factor,
+             ArmMean = mean(Interpolated_Volume),
+             Moscow = ifelse(zero_adjust == 0, 0,
+                             ifelse(zero_adjust < 0, ((((Interpolated_Volume - Interpolated_Volume[1L]) / Interpolated_Volume[1L]) * 100)),
+                                    ifelse(Interpolated_Volume >= EndPoint, 100, (((Interpolated_Volume / EndPoint) * 100))))))
+    caption_text = paste0('Endpoint Scale = ', scale.factor, 'x')
+  }
+
+  if( level == 'Animal') {
+    if(pattern == 'Study'){
+      p <- ggplot(data = adjusted.data, aes(x = Times, y = Moscow, group = ID, color = Arms)) +
+        geom_line(position = position_dodge(position.dodge),cex = 1.2) +
+        geom_point(cex = 2, position = position_dodge(position.dodge)) +
+        ylim(-100, 100) + labs(caption = caption_text)
+    }
+    if(pattern == 'Treatment'){
+      p <- ggplot(data = adjusted.data, aes(x = Times, y = Moscow, group = ID, color = Study)) +
+        geom_line(position = position_dodge(position.dodge),cex = 1.2) +
+        geom_point(cex = 2, position = position_dodge(position.dodge)) +
+        ylim(-100, 100) + labs(caption = caption_text)
+    }
+  }
+
+  if( level == 'Arm') {
+    s.data <- adjusted.data %>%
+              group_by(Study, Arms, Times) %>%
+              summarise(N = n(), Mean = mean(Moscow), SD = sd(Moscow), SE = (SD / sqrt(N)), Study=Study, ID=ID, .groups = 'drop') %>%
+              dplyr::rename(Volume = Mean)
+    if(pattern == 'Study'){
+      p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Arms)) +
+            geom_line(position = position_dodge(position.dodge),cex = 1.2) +
+            geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
+                          position = position_dodge(position.dodge)) +
+            geom_point(cex = 2,position = position_dodge(position.dodge)) +
+            ylim(-100, 100) + labs(caption = caption_text)
+    }
+
+    if(pattern == 'Treatment'){
+      p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Study)) +
+            geom_line(position = position_dodge(position.dodge),cex = 1.2) +
+            geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
+                          position = position_dodge(position.dodge)) +
+            geom_point(cex = 2,position = position_dodge(position.dodge)) +
+            ylim(-100, 100) + labs(caption = caption_text)
+    }
+
+  }
+  text <- "% progression / regression endpoint"
+
+  p <- p + xlab("Time (d)") + ylab(text)
+
+  p <- p + theme_bw() +
+    theme(
+      panel.background = element_rect(fill = "transparent"),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank(),
+      plot.background  = element_rect(fill = "transparent")
+    )   #backgroud
+  p <- p + theme(
+    axis.title.x = element_text(face = "bold",size = 12),
+    axis.text.x  = element_text(vjust = 0,size = 12),
+    axis.title.y = element_text(face = "bold",size = 12),
+    axis.text.y  = element_text(hjust = 1,size = 12)
+  )
+
+  if(pattern == 'Study'){
+
+    p <- p + facet_wrap(~ Study, dir = 'h')+ labs(color = "Treatments") +
+      theme(strip.text = element_text(colour = "black", face = "bold", size = rel(1)),
+            strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)
+      )
+  }
+
+  if(pattern == 'Treatment'){
+
+    p <- p + facet_wrap(~ Arms, dir = 'h')+ labs(color = "Study") +
+      theme(strip.text = element_text(colour = "black", face = "bold", size = rel(1)),
+            strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)
+      )
+  }
+
+  p <- p + scale_color_manual(values=colorblind_pallet)
+
+  if (! is.null(title)) {
+    p <- p + ggtitle(title)
+  }
+
+  if (plot_on) {
+    plot(p)
+  } else {
+    p
+  }
+}
+
 get_plot_interpolated <- function(data, orders = NULL, position.dodge, title = NULL, plot_on = TRUE, level = 'Arm', pattern = 'TAN', ...) {
 
   if(inherits(data, "data.frame")){
@@ -468,7 +607,7 @@ get_plot_interpolated <- function(data, orders = NULL, position.dodge, title = N
       geom_point(cex = 2,position = position_dodge(position.dodge))
   }
 
-  p <- p + xlab("Time (d)") + ylab(expression(bold(paste("Tumor Volume (",mm^3,")",sep = " "))))
+  p <- p + xlab("Time (d)") + ylab('Tumor Volume mm^3')
 
   p <- p + theme_bw() +
     theme(
@@ -518,7 +657,7 @@ get_DRLevel <- function(data, neg.control, rm.neg.control=TRUE, last.measure.day
 
   Volume <- data[,'Volume']
   indata <- subset(data,Volume >= 0)
-  
+
   drug.response.level <- get_response_level(indata, last.measure.day)
 
   return(drug.response.level)
@@ -683,7 +822,7 @@ get_response_level <- function(data, last.measure.day){
   return(list(Response.Level = Response.Level, mouse.info = mouse.info))
 }
 
-EFSplot <- function(data, last.measure.day = NULL, PercChange_EventSize = 100, plot_on = TRUE) {
+EFSplot <- function(data, PercChange_EventSize = 100, plot_on = TRUE) {
 
   if(inherits(data, "data.frame")){
     data<-as.data.frame(data)
@@ -703,40 +842,77 @@ EFSplot <- function(data, last.measure.day = NULL, PercChange_EventSize = 100, p
 
   ## Make 'Event' flexible to use volume or growth factor change.
 
-  for (d in levels(as.factor(data$Tumor))) {
-    data.d <- data[data$Tumor == d,]
-    Volume <- data.d[,'Volume']
-    indata <- subset(data.d, Volume >= 0)
+ 
+  data <- droplevels(data)
 
-    data.d <- droplevels(data.d)
+  data$Arms <- relevel(as.factor(data$Arms), 'Control')
 
-    data.d$Arms <- relevel(as.factor(data.d$Arms), 'Control')
+  fit <- survfit(Surv(Times, Outcome) ~ Arms, data = data, error = "greenwood")
 
-    fit <- survfit(Surv(Times, Outcome) ~ Arms, data = data.d, error = "greenwood")
+  p <- ggsurvplot(fit,
+                  data = data,
+                  size = 1,                 # change line size
+                  palette = colorblind_pallet,
+                  pval = TRUE,              # Add p-value
+                  risk.table = TRUE,        # Add risk table
+                  risk.table.col = "strata",# Risk table color by groups
+                  legend.labs = levels(relevel(as.factor(data$Arms), 'Control')),    # Change legend labels
+                  xlab = 'Time in Days',
+                  risk.table.y.text = TRUE,
+                  surv.median.line = "hv",
+                  risk.table.height = 0.25,
+                  legend.title="Arms",
+                  risk.table.title=''
+  )
 
-    p <- ggsurvplot(fit,
-                    data = data.d,
-                    size = 1,                 # change line size
-                    palette = colorblind_pallet,
-                    pval = TRUE,              # Add p-value
-                    risk.table = TRUE,        # Add risk table
-                    risk.table.col = "strata",# Risk table color by groups
-                    legend.labs = levels(relevel(as.factor(data.d$Arms), 'Control')),    # Change legend labels
-                    xlab = 'Time in Days',
-                    risk.table.y.text = TRUE,
-                    surv.median.line = "hv",
-                    risk.table.height = 0.25,
-                    legend.title="Arms",
-                    risk.table.title='Mice On Study'
-    )
-
-    if (plot_on) {
-      print(p)
-    } else {
-      return(p)
-    }
-  }
+  return(p)
+  
 }
+
+auc <-
+  function(x, y, from = min(x, na.rm=TRUE), to = max(x, na.rm=TRUE), type=c("linear", "spline"), absolutearea=FALSE, subdivisions = 100, ...)
+  {
+    type <- match.arg(type)
+    
+    # Sanity checks
+    stopifnot(length(x) == length(y))
+    stopifnot(!is.na(from))
+    
+    if (length(unique(x)) < 2)
+      return(NA)
+    
+    if (type=="linear") {
+      
+      ## Default option
+      if (absolutearea==FALSE) {
+        values <- approx(x, y, xout = sort(unique(c(from, to, x[x > from & x < to]))), ...)
+        res <- 0.5 * sum(diff(values$x) * (values$y[-1] + values$y[-length(values$y)]))
+      } else { ## Absolute areas
+        ## This is done by adding artificial dummy points on the x axis
+        o <- order(x)
+        ox <- x[o]
+        oy <- y[o]
+        
+        idx <- which(diff(oy >= 0)!=0)
+        newx <- c(x, x[idx] - oy[idx]*(x[idx+1]-x[idx]) / (y[idx+1]-y[idx]))
+        newy <- c(y, rep(0, length(idx)))
+        values <- approx(newx, newy, xout = sort(unique(c(from, to, newx[newx > from & newx < to]))), ...)
+        res <- 0.5 * sum(diff(values$x) * (abs(values$y[-1]) + abs(values$y[-length(values$y)])))
+      }
+      
+    } else { ## If it is not a linear approximation
+      if (absolutearea)
+        myfunction <- function(z) { abs(splinefun(x, y, method="natural")(z)) }
+      else
+        myfunction <- splinefun(x, y, method="natural")
+      
+      
+      res <- integrate(myfunction, lower=from, upper=to, subdivisions=subdivisions)$value
+    }
+    
+    res
+  }
+
 
 IndividualMouseReponse <- function(data, last.measure.day = NULL) {
 
@@ -809,78 +985,6 @@ IndividualMouseReponse <- function(data, last.measure.day = NULL) {
   return(Response.Level)
 }
 
-IndividualMouseReponse_Interpolated <- function(data, last.measure.day = NULL) {
-
-  if(inherits(data, "data.frame")){
-    data<-as.data.frame(data)
-  }
-
-  Response.Level <- vector()
-
-  for (d in levels(as.factor(data$Tumor))) {
-
-    data.d <- data[data$Tumor == d,]
-
-    Volume <- data.d[,'Interpolated_Volume']
-    indata <- subset(data.d, Interpolated_Volume >= 0)
-
-    ID <- unique(indata$ID)
-
-    for ( i in 1:length(ID)){
-
-      data.id.i <- indata[indata$ID == ID[i],]
-
-      if (!is.null(last.measure.day)) {
-
-        end_day_index = match(last.measure.day,data.id.i$Times)
-
-        if (is.na(end_day_index)) {
-          end_day_index = which.min(abs(data.id.i$Times - last.measure.day))
-        }
-
-        data.id.sub <- data.id.i[end_day_index,]
-
-      } else {
-        end_day_index <-length(data.id.i$Interpolated_Volume)
-      }
-
-      t.max <- max(data.id.i$Times)
-
-      data.id.i <- data.id.i[order(data.id.i$Times),]
-
-      last.avail.day <- data.id.i[end_day_index,]$Times
-
-      data.id.i <- data.id.i %>%
-        dplyr::arrange(ID, Times) %>%
-        dplyr::group_by(ID) %>%
-        dplyr::mutate(dVt = (((Interpolated_Volume - Interpolated_Volume[1]) / Interpolated_Volume[1] ) * 100),
-                      log2.Fold.Change = log2(Interpolated_Volume / Interpolated_Volume[1]))
-
-      data.id.i <- data.id.i %>%
-        dplyr::group_by(ID) %>%
-        dplyr::mutate(AUC.All.Measures = auc(Times, dVt, type = 'spline') / max(Times))
-
-      data.id.sub <- data.id.i %>%
-        dplyr::group_by(ID) %>%
-        dplyr::filter(Times <= last.avail.day) %>%
-        dplyr::mutate(AUC.Filtered.Measures = auc(Times, dVt, type = 'spline') / max(Times)) %>%
-        dplyr::select(ID, Times, AUC.Filtered.Measures) %>%
-        dplyr::full_join(data.id.i, by = c('ID', 'Times')) %>%
-        dplyr::filter(Times == last.avail.day) %>%
-        dplyr::select(c('ID', 'Times',  'Arms', 'Tumor', 'Interpolated_Volume', 'Type', 'dVt', 'log2.Fold.Change', 'AUC.Filtered.Measures', 'AUC.All.Measures'))
-
-
-      data.id.sub <- as.data.frame(data.id.sub)
-
-      Response.Level <- rbind(Response.Level,data.id.sub)
-
-    }
-  }
-  Response.Level <- Response.Level %>% dplyr::rename(VC.LastDay = Times)
-  return(Response.Level)
-}
-
-
 WaterfallPlot_PDX <- function(data,
                               plot_measure = c('dVt', 'AUC.Filtered.Measures', 'AUC.All.Measures'),
                               caption_text_on = TRUE,
@@ -944,3 +1048,19 @@ WaterfallPlot_PDX <- function(data,
     return(p)
   }
 }
+
+
+
+### CHANGE PLOT TYPE NAME TO BE MORE INTUATIVE
+
+### NEED TO INCLUDE T/C PLOTS.
+
+### NEED TO INCLUDE ANOVA STATS OR OTHER.
+
+### WHY ARE TV STATS PLOTS TRUNCATED AT 30 DAYS? 'DOC 20' is a good example to check 
+
+### NEED TO INCLUDE HYBRID PLOTS. THIS SHOULD BE ANOTHER TAB IN THE 'Matched Tumor Volume - Visual Analytics'
+
+### NEED TO INCLUDE LOG2 FOLD PLOTS. THIS SHOULD BE ANOTHER TAB IN THE 'Matched Tumor Volume - Visual Analytics'
+
+### NEED TO INCLUDE 'SEMI-LOG' BUTTON.
