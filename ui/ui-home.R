@@ -27,15 +27,11 @@ tabPanel(
     br(),
 
     span(h2("powered by Seven Bridges"), style = "color:#FFF; text-shadow: rgba(0, 0, 0, 0.7) 0px 0px 15px; text-align: center;", align = "center"),
+    ## note: if not actually powered by SB, can this text be removed? 
 
     br(), br(),
 
-    fluidRow(
-      column(
-        width = 12, offset = 2,
-        p(ui_home_desc_1, style = "color:#FFF; text-shadow: rgba(0, 0, 0, 0.5) 0px 0px 50px; font-size: 16px; font-weight: 600;")
-      )
-    ),
+    span(h4("A tool for tumor volume analysis and plotting from your input volume data based on the given template."), style = "color:#FFF; text-shadow: rgba(0, 0, 0, 0.7) 0px 0px 15px; text-align: center;", align = "center"),
 
     br(), br(),
 

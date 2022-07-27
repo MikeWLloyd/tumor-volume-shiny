@@ -11,7 +11,7 @@
 include_ui_login_page = FALSE
 
 # Interface text
-ui_home_desc_1 = "The Tumor Volume Suite provides enviroment for preparing tumor volume plots with your input volume data based on the given template."
+# ui_home_desc_1 = "The Tumor Volume Suite provides environment for preparing tumor volume plots with your input volume data based on the given template."
 
 # Tab titles
 title_home = "Home"

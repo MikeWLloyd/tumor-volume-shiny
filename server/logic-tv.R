@@ -208,7 +208,6 @@ output$plot_tumorvol <- renderPlotly({
     plot_ly()
   } else {
 
-
     # Get Level Type Input by User
 
     if (input$tv_all_plot_type == "Treatment Plot") {
@@ -223,10 +222,28 @@ output$plot_tumorvol <- renderPlotly({
       level_type <- "Animal"
     }
 
+    # interpolate the data if asked for. 
+    if (input$tv_all_interpolate){
+        s.data = get_interpolated_pdx_data(data = s.data)
+        s.data$Volume <- s.data$Interpolated_Volume
+    }
+
+    #semi-log the data if asked for. 
+    
+
+    if (input$tv_all_semi.log){
+        s.data$Volume <- log(s.data$Volume)
+        updateCheckboxInput(session, 'tv_all_scale', value = FALSE)
+        shinyjs::disable("tv_all_scale")
+        #input$ = FALSE
+    } else {
+      shinyjs::enable("tv_all_scale")
+    }
+    
+
     # Call plot
     if (input$tv_all_scale) {
 
-      shinyjs::enable("tv_all_interpolate")
       shinyjs::enable("tv_div_all_endpoint")
       shinyjs::enable("tv_div_all_scale_picker")
 
@@ -249,18 +266,12 @@ output$plot_tumorvol <- renderPlotly({
         })
       }
 
-      interpolate_all <- input$tv_all_interpolate
       endpoint_scale_all <- input$tv_all_endpoint_scale
 
-      if(input$tv_all_interpolate) {
-        get_plot_scaled_interpolated(data = get_interpolated_pdx_data(s.data), position.dodge = 0.5,  title = NULL, scale.factor = endpoint_scale_all, scale.by.volume = scale_by_volume_all, level = level_type, pattern = pattern_type)
-      } else {
-        get_plot_scaled(data = s.data, position.dodge = 0.5,  title = NULL, scale.factor = endpoint_scale_all, scale.by.volume = scale_by_volume_all, level = level_type, pattern = pattern_type)
-      }
+      get_plot_scaled(data = s.data, position.dodge = 0.5,  title = NULL, scale.factor = endpoint_scale_all, scale.by.volume = scale_by_volume_all, level = level_type, pattern = pattern_type)
 
     } else {
       # Turn off Scaled Plot I/Os
-      shinyjs::disable("tv_all_interpolate")
       shinyjs::disable("tv_div_all_endpoint")
       shinyjs::disable("tv_div_all_scale_picker")
 
@@ -290,7 +301,18 @@ AUC.study.day <- reactive({
   return(input$tv_AUC.day.waterfall)
 })
 
+TCmain.study.day <- reactive({
+  return(input$main_TC.day)
+})
 
+TC.study.day <- reactive({
+  return(input$tv_TC.day)
+})
+
+
+anova_measure_day <- reactive({
+  return(input$anova_Measure_Day)
+})
 
 PercChange_EventSize <- reactive({
   return(input$tv_PercChange_EventSize)
@@ -376,6 +398,8 @@ dr_table <- reactive({
 
   response_list[[study]]$Response.Level <- factor(response_list[[study]]$Response.Level)
 
+  response_list[[study]] <- response_list[[study]] %>% dplyr::select(-Study)
+
   tab.df <- DT::datatable(response_list[[study]][order(response_list[[study]]$Arms),],
             style = "bootstrap",
             escape = FALSE,
@@ -392,9 +416,6 @@ dr_table <- reactive({
 
 output$tv_plot_EFS <- renderPlotly({
 
-  # temp <- data.frame(X = c(1,2,3,4), Y = c(2,3,4,5))
-  # p <- ggplot(temp, aes(x=X, y=Y)) + geom_point(size=3)
-  # return(p)
   df <- gen_data_filter_study()
   study <- unlist(levels(factor(df$Study)))[1]
 
@@ -420,18 +441,23 @@ output$tv_plot_EFS <- renderPlotly({
       s$x$data[[i]]$name = gsub('^\\(|,\\d+\\)$', '', s$x$data[[i]]$name)
     }
   }
+  # remove '(*,1)' from the legends
+
   s
+
 })
 
 output$tv_plot_waterfall <- renderPlotly({
 
-  # temp <- data.frame(X = c(1,2,3,4), Y = c(2,3,4,5))
-  # p <- ggplot(temp, aes(x=X, y=Y)) + geom_point(size=3)
-  # return(p)
-
   df <- gen_data_filter_study()
   study <- unlist(levels(factor(df$Study)))[1]
 
+  if (waterfall_metric() == 'AUC.Filtered.Measures') {
+      shinyjs::enable("tv_AUC.day.waterfall")
+  } else {
+        # Turn off Scaled Plot I/Os
+        shinyjs::disable("tv_AUC.day.waterfall")
+  }
   one_A_N_DRAP <- df %>%
     filter(Study == study) %>% droplevels()
 
@@ -440,10 +466,7 @@ output$tv_plot_waterfall <- renderPlotly({
     one_A_N_DRAP$Volume <- one_A_N_DRAP$Interpolated_Volume
   }
 
-  ### NEED TO GET INDIVIDUAL RESPONSE BEFORE PLOTTING. 
-
   resp <- IndividualMouseReponse(one_A_N_DRAP, last.measure.day = AUC.study.day())
-
 
   p1 <- ggplotly(WaterfallPlot_PDX(resp, waterfall_metric()))
 
@@ -452,11 +475,244 @@ output$tv_plot_waterfall <- renderPlotly({
       p1$x$data[[i]]$name = gsub('^\\(|,\\d+\\)$', '', p1$x$data[[i]]$name)
     }
   }
-
+  # remove '(*,1)' from the legends
 
   p1
 
 })
+
+output$tv_plot_tc <- renderPlotly({
+
+  df <- gen_data_filter_study()
+  study <- unlist(levels(factor(df$Study)))[1]
+
+  one_A_N_DRAP <- df %>%
+    filter(Study == study) %>% droplevels()
+
+  if (input$tv_TC_interpolate){
+    one_A_N_DRAP = get_interpolated_pdx_data(data = one_A_N_DRAP)
+    one_A_N_DRAP$Volume <- one_A_N_DRAP$Interpolated_Volume
+  }
+
+  tc_ratios <- T.C_ratio(one_A_N_DRAP, last.measure.day = TC.study.day())
+  
+  #plot_measure = c('TC.ratio', 'aov.TC.ratio')
+
+  plotTC.ratio(tc_ratios, plot_measure = 'aov.TC.ratio' )
+  # NOTE: aov.TC.ratio is used in manuscript. 
+})
+
+
+
+
+
+output$dt_tc_table <- DT::renderDataTable(
+  tc_table()
+)
+
+tc_table <- reactive({
+
+  df <- gen_data_filter_study()
+
+  if (input$tv_TC_interpolate){
+      df = get_interpolated_pdx_data(data = df)
+      df$Volume <- df$Interpolated_Volume
+  }
+
+  study <- unlist(levels(factor(df$Study)))[1]
+
+  one_A_N_DRAP <- df %>%
+    filter(Study == study) %>% droplevels()
+
+  response_list = list()
+  response_list <- T.C_ratio(one_A_N_DRAP, last.measure.day = TC.study.day())
+
+  # response_list[[study]]$Response.Level <- factor(response_list[[study]]$Response.Level)
+
+  response_list <- response_list %>% dplyr::select(-Tumor, -mean.TVratio,	-var.TVratio,	-mean.dVt, -TC.ratio) %>%
+                                     dplyr::select(Arms, TC.CalcDay, n.TVratio, aov.TC.ratio, se_TC.ratio, Contrast.pValue) %>%
+                                     dplyr::rename(pValue = Contrast.pValue)
+
+  print(response_list)
+
+  tab.df <- DT::datatable(response_list[order(response_list$Arms),],
+            style = "bootstrap",
+            escape = FALSE,
+            filter = 'none',
+            rownames= FALSE,
+            class = "cell-border stripe",
+            extensions = "Buttons",
+            options = list(
+              dom = "Blrtip", scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, pageLength = 20, paging = T,
+              buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download")))) %>%
+            formatRound(c('aov.TC.ratio', 'se_TC.ratio'), digits = 2) %>%
+            formatSignif(c('pValue'), 2)
+  tab.df
+})
+
+
+output$log2_foldchange <- renderPlotly({
+
+  s.data <- get_query_tv()$"df"
+
+  if (is.null(s.data) | (nrow(s.data) == 0)) {
+    plot_ly()
+  } else {
+    
+    if (input$main_log2_interpolate){
+      print('here')
+      s.data <- get_interpolated_pdx_data(data = s.data)
+      s.data$Volume <- s.data$Interpolated_Volume
+    }
+    vc_change <- IndividualMouseReponse(s.data)
+
+    log2FoldPlot(vc_change, caption_text_on = F)
+
+  }
+
+})
+
+output$hybrid_waterfall <- renderPlotly({
+
+
+  s.data <- get_query_tv()$"df"
+
+  if (is.null(s.data) | (nrow(s.data) == 0)) {
+    plot_ly()
+  } else {
+    
+    if (input$main_tc_interpolate){
+      s.data <- get_interpolated_pdx_data(data = s.data)
+      s.data$Volume <- s.data$Interpolated_Volume
+    }
+    tc_ratios <- T.C_ratio(s.data, last.measure.day = TCmain.study.day())
+
+
+
+    p1 <- ggplotly(WaterfallPlot_Hybrid(tc_ratios))
+
+    for (i in 1:length(p1$x$data)){
+      if (!is.null(p1$x$data[[i]]$name)){
+        p1$x$data[[i]]$name = gsub('^\\(|,\\d+\\)$', '', p1$x$data[[i]]$name)
+      }
+    }
+  # remove '(*,1)' from the legends
+
+    p1
+
+  }
+
+
+
+})
+
+
+response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANOVA','LMM'), last.measure.day = NULL, multi_test_anova = FALSE) {
+  
+  ## NOTE: 'Volume' is used here, but dVt could potentially be used. 
+  
+  data <- get_query_tv()$"df"
+
+  if(inherits(data, "data.frame")){
+    data<-as.data.frame(data)
+  }
+  
+  if (input$main_anova_interpolate){
+    data <- get_interpolated_pdx_data(data = data)
+    data$Volume <- data$Interpolated_Volume
+  }
+
+  if (!is.null(last.measure.day)) {
+    end_day_index = match(last.measure.day,data$Times)
+    if (is.na(end_day_index)) {
+      end_day_index = which.min(abs(data$Times - last.measure.day))
+    }   
+    data <- subset(data, Times <= data$Times[end_day_index])
+  }
+  
+  data$Arms <- relevel(as.factor(data$Arms), 'Control')
+  
+  Volume <- data[,'Volume']
+  
+  data <- subset(data,Volume != 0)
+
+  #get endpoint data
+  endpoint.data <- data[data$Times == max(data$Times),]
+  endpoint.data <- endpoint.data[,c('Arms','Volume')]
+  endpoint.data$Arms=factor(endpoint.data$Arms)
+  
+  #get mean growth rate
+  ID <- unique(as.character(data$ID))
+  
+  
+    dra.res <- switch (method,
+                        endpoint.ANOVA = summary(aov(Volume ~ Arms, data = endpoint.data)),
+                        endpoint.KW    = kruskal.test(Volume ~ Arms, data = endpoint.data),
+                        mixed.ANOVA    = summary(aov(Volume ~ Arms + Error(ID/Times), data = data)),
+                        LMM            = summary(lme(Volume ~ Arms, random = ~1|ID/Times,data = data))[[20]]
+    )
+
+    dra.res.full <- switch (method,
+                        endpoint.ANOVA = aov(Volume ~ Arms, data = endpoint.data),
+                        endpoint.KW    = kruskal.test(Volume ~ Arms, data = endpoint.data),
+                        mixed.ANOVA    = aov(Volume ~ Arms + Error(ID/Times), data = data),
+                        LMM            = lme(Volume ~ Arms, random = ~1|ID/Times,data = data)
+    )
+
+    multiple_comp_test <- TukeyHSD(dra.res.full)
+  if (!multi_test_anova) {
+    tab.df <- DT::datatable(dra.res[[1]],
+              style = "bootstrap",
+              escape = FALSE,
+              filter = 'none',
+              rownames= TRUE,
+              class = "cell-border stripe",
+              extensions = "Buttons",
+              options = list(
+                dom = "Blrti", scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, pageLength = 20, paging = T,
+                buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download")))) %>%
+              formatSignif(c('Sum Sq', 'Mean Sq', 'F value', 'Pr(>F)'), 4) 
+    return(tab.df)
+  } else {
+
+    mct <- as.data.frame(multiple_comp_test[['Arms']])
+    mct$'diff' <- round(mct$'diff', digits=2)
+    mct$'lwr' <- round(mct$'lwr', digits=2)
+    mct$'upr' <- round(mct$'upr', digits=2)
+    mct$'p adj' <- round(mct$'p adj', digits=4)
+
+
+    tab.df <- DT::datatable(mct,
+              style = "bootstrap",
+              escape = FALSE,
+              filter = list(position = "top", clear = T),
+              rownames= TRUE,
+              class = "cell-border stripe",
+              extensions = "Buttons",
+              options = list(
+                dom = "Blrtip", scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, pageLength = 20, paging = T,
+                buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download"))))
+    return(tab.df)
+  }
+}
+
+output$dt_anova_table <- DT::renderDataTable(
+  response_analysis(method = 'endpoint.ANOVA', last.measure.day = anova_measure_day(), multi_test_anova = FALSE)
+)
+
+output$dt_tukey_table <- DT::renderDataTable(
+  response_analysis(method = 'endpoint.ANOVA', last.measure.day = anova_measure_day(), multi_test_anova = TRUE)
+)
+
+# output$generic_plot_start <- renderPlotly({
+
+#   temp <- data.frame(X = c(1,2,3,4), Y = c(2,3,4,5))
+#   p <- ggplot(temp, aes(x=X, y=Y)) + geom_point(size=3)
+#   return(p)
+
+# })
+
+
 
 # landing page buttons
 observeEvent(input$btn_nav_tv, updateNavlistPanel(session, "nav_bco", selected = title_tumor_volume))

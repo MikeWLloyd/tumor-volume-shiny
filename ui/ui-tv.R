@@ -119,10 +119,10 @@ tabPanel(
     shinydashboard::box(
       
       width = 12,
-      title = "Matched Tumor Volume - Visual Analytics", status="primary",solidHeader = TRUE,
+      title = "Tumor Volume - Visual Analytics", status="primary",solidHeader = TRUE,
 
       tabsetPanel(type = "tabs",
-                  tabPanel("Tumor Volume Analytics",
+                  tabPanel("Response Plots",
 
                     fluidRow(
 
@@ -141,7 +141,7 @@ tabPanel(
                               div(
                                 column(
                                   width = 2,
-                                  pickerInput("tv_all_plot_type", "Plot Type",
+                                  pickerInput("tv_all_plot_type", "Plot Facet Type",
                                               choices = c("Study Plot", "Treatment Plot"),
                                               selected = c("Study Plot"),
                                               options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
@@ -156,12 +156,16 @@ tabPanel(
                                               options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
                                                                       showContent = TRUE),multiple = FALSE)
                                 ),
-
+                                column(
+                                  offset = 0,
+                                  width = 1,
+                                  checkboxInput("tv_all_semi.log", "Semi Log Plot", FALSE),
+                                  checkboxInput("tv_all_interpolate", "Interpolation", FALSE)
+                                ),
                                 column(
                                   offset = 2,
                                   width = 1,
-                                  checkboxInput("tv_all_scale", "Scaled Plot", FALSE),
-                                  checkboxInput("tv_all_interpolate", "Interpolation", FALSE)
+                                  checkboxInput("tv_all_scale", "Scaled Plot", FALSE)
                                 ),
 
                                 column(
@@ -204,6 +208,71 @@ tabPanel(
                         )
                       ))
         ),
+        tabPanel("Log2 Fold Change Plot",
+                    fluidRow(
+
+                      column(
+
+                        width = 12,
+
+                        div(
+
+                          fluidRow(
+                            column(
+                                     offset = 0,
+                                     width = 2,
+                                     checkboxInput("main_log2_interpolate", "Interpolate Data For Plot", FALSE)
+                            ),
+                            column(
+                              width = 12,
+                              div(
+                              withSpinner(
+                                plotlyOutput("log2_foldchange", width = "100%", height = "750px", inline = F),
+                                proxy.height = "100px", color="#0273B7"
+                              )
+                            )
+                            )
+                          )
+                        )
+                      )
+                    )
+        ),        
+        tabPanel("Hybrid Waterfall",
+                    fluidRow(
+
+                      column(
+
+                        width = 12,
+
+                        div(
+
+                          fluidRow(
+                            column(
+                                     width = 2,
+                                     numericInput("main_TC.day", "T/C Date",
+                                                  value = 24,
+                                                  min = 0, max = 500),  
+                            ),
+                            column(
+                                     offset = 0,
+                                     width = 2,
+                                     checkboxInput("main_tc_interpolate", "Interpolate Data For Plot", FALSE)
+                            ),
+                            column(
+                              width = 12,
+                              div(
+                              withSpinner(
+                                plotlyOutput("hybrid_waterfall", width = "100%", height = "750px", inline = F),
+                                proxy.height = "100px", color="#0273B7"
+                              )
+                            )
+
+                            )
+                          )
+                        )
+                      )
+                    )
+        ),
         tabPanel("Tumor Volume Data",
           shinydashboard::box(
             width = 12,
@@ -236,11 +305,8 @@ tabPanel(
     shinydashboard::box(
 
       width = 12,
-      title = "Matched Study Focused Tumor Volume - Visual Analytics", status="primary",solidHeader = TRUE,
-      # shinydashboard::box(
-      #   width = 12,
-      #   title = "Matched Tumor Volumes - Summary", status="primary",solidHeader = TRUE,
-        fluidRow(
+      title = "Study Focused Tumor Volume Analytics", status="primary",solidHeader = TRUE,
+      fluidRow(
                                    column(
                                      width = 2,
                                      pickerInput("tv_study_picker", "Study",
@@ -250,7 +316,6 @@ tabPanel(
                                                                          showContent = TRUE),multiple = FALSE),
                                    )
         ),
-      # ),
       tabsetPanel(type = "tabs",
                   tabPanel("Objective Response (RECIST)",
                            fluidRow(
@@ -262,12 +327,12 @@ tabPanel(
                                      width = 2,
                                      numericInput("tv_recist", "RECIST Day",
                                                   value = 24,
-                                                  min = 0, max = 100),
+                                                  min = 0, max = 500),
                                    ),
                                    column(
                                      offset = 0,
-                                     width = 1,
-                                     checkboxInput("tv_interpolate", "Interpolation", FALSE)
+                                     width = 2,
+                                     checkboxInput("tv_interpolate", "Interpolate Data For Plot", FALSE)
                                    )
                                  )
                                )
@@ -310,7 +375,7 @@ tabPanel(
                                    column(
                                      width = 2,
                                      pickerInput("waterfall_metric", "Waterfall Metric",
-                                                 choices = c('dVt', 'AUC.Filtered.Measures', 'AUC.All.Measures'),
+                                                 choices = c('dVt', 'AUC.All.Measures', 'AUC.Filtered.Measures'),
                                                  selected = 'dVt',
                                                  options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
                                                                          showContent = TRUE),multiple = FALSE)
@@ -319,12 +384,12 @@ tabPanel(
                                      width = 2,
                                      numericInput("tv_AUC.day.waterfall", "AUC Day",
                                                   value = 24,
-                                                  min = 0, max = 100), ### MAKE THIS SO IT ONLY TURNS ON WHEN AUC LAST DAY IS PICKED. 
+                                                  min = 0, max = 500),  
                                    ),
                                    column(
                                      offset = 0,
-                                     width = 1,
-                                     checkboxInput("tv_waterfall_interpolate", "Interpolation", FALSE)
+                                     width = 2,
+                                     checkboxInput("tv_waterfall_interpolate", "Interpolate Data For Plot", FALSE)
                                    )
                                  )
                                )
@@ -339,6 +404,46 @@ tabPanel(
                                  plotlyOutput("tv_plot_waterfall", width = "100%", height = '500px'),
                                  proxy.height = "100px", color="#0273B7"
                                ))
+                           )                           
+                  ),
+                  tabPanel("Tumor Growth Inhibition Plot",
+                          fluidRow(
+                             column(
+                               width = 12,
+                               div(
+                                 fluidRow(
+                                     column(
+                                     width = 2,
+                                     numericInput("tv_TC.day", "T/C Date",
+                                                  value = 24,
+                                                  min = 0, max = 500),  
+                                   ),
+                                   column(
+                                     offset = 0,
+                                     width = 2,
+                                     checkboxInput("tv_TC_interpolate", "Interpolate Data For Plot", FALSE)
+                                   )
+                                 )
+                               )
+                             )),
+
+                           hr(),
+
+                           fluidRow(
+                             column(
+                               width = 6, offset = 0,
+                               withSpinner(
+                                 plotlyOutput("tv_plot_tc", width = "100%", height = '500px'),
+                                 proxy.height = "100px", color="#0273B7"
+                               )),
+                              column(
+                               width = 6,
+                               HTML("<br>"),
+                               withSpinner(
+                                 DTOutput("dt_tc_table"),
+                                 proxy.height = "100px", color="#0273B7"
+                               )
+                             )
                            )                           
                   ),
                   tabPanel("Event Free Survival Plots",
@@ -367,7 +472,47 @@ tabPanel(
                                  proxy.height = "100px", color="#0273B7"
                                ))
                            )                           
-                  )
+                  ),
+                  tabPanel("ANOVA",
+                          fluidRow(
+                             column(
+                               width = 12,
+                               div(
+                                 fluidRow(
+                                   column(
+                                     width = 2,
+                                     numericInput("anova_Measure_Day", "ANOVA Calculation Day",
+                                                  value = 21,
+                                                  min = 0, max = 99999),
+                                   ),
+                                   column(
+                                     offset = 0,
+                                     width = 2,
+                                     checkboxInput("main_anova_interpolate", "Interpolate Data For Analysis", FALSE)
+                                   )
+                                 )
+                               )
+                             )),
+
+                           hr(),
+
+                           fluidRow(
+                             column(
+                               width = 6, offset = 0,
+                               withSpinner(
+                                 DTOutput("dt_anova_table"),
+                                 proxy.height = "100px", color="#0273B7"
+                               )),
+                               column(
+                               width = 6, offset = 0,
+                               withSpinner(
+                                 DTOutput("dt_tukey_table"),
+                                 proxy.height = "100px", color="#0273B7"
+                               ))
+                           )                           
+                  ) 
+                  # anova_Measure_Day box for input
+                  # main_anova_interpolate for interpolate. 
       )
     )
   ),
