@@ -22,7 +22,7 @@ query_tv <- function(tv_df, tv_contributor, tv_treatment, tv_disease_type) {
     return(list("df" = df,  "msg" = msg, "query_text" = "N/A", "hits_total" = 0))
   }
 
-  treatment_list <- tv_df$AgentName
+  treatment_list <- tv_df$Arms
 
   # 1.4 Disease Type
 
@@ -33,7 +33,7 @@ query_tv <- function(tv_df, tv_contributor, tv_treatment, tv_disease_type) {
     return(list("df" = df, "msg" = msg, "query_text" = "N/A", "hits_total" = 0))
   }
 
-  disease_type <- tv_df$SDC_Diagnosis_Description
+  disease_type <- tv_df$Disease_Type
 
   # 2. query the in-memory task log data frame
 
