@@ -25,7 +25,7 @@ library("DT")
 library("readxl")
 library("survival")
 library("survminer")
-
+library("multcomp")
 # Add variable to control whether login page will be allowed
 source(file.path("ui", "interface_variables.R"), local = TRUE)
 
