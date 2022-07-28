@@ -1,6 +1,22 @@
 # DATA
+
 data <- try(as.data.frame(readRDS("include/tv-test-new.rds")), silent = T)
 rownames(data) <- NULL
+
+# NOTE: This will likely need to be set as a reactive variable: 
+#/   diamond <- reactiveValues( df=NULL )
+  
+#  ###Initial setting
+#  observe({diamond$df <- diamonds})
+#  
+#  observeEvent(input$read, {
+#      df1 <- diamonds
+#      ...
+#/#
+# I tried a few different things to get this worked but couldn't figure it out. Note that the 'upload' button may have the same issues with breaking things as it did on the validate page, and might not be needed. 
+
+
+    
 
 # GET methods
 get_tv_contributor <- function() {
@@ -166,7 +182,7 @@ observeEvent(input$tv_submit_query, {
 
 output$tbl_msg_all <- renderText(
   if (query_all_submit$counter == 0L) {
-    "Please submit the query, then the magic will happen."
+    "Please submit the query."
   } else {
     get_query_tv()$"msg"
   }
@@ -408,7 +424,7 @@ dr_table <- reactive({
             class = "cell-border stripe",
             extensions = "Buttons",
             options = list(
-              dom = "Blrtip", scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, pageLength = 20, paging = T,
+              dom = "Blrtip", scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, lengthMenu = list(c(5, 20, 50, -1), c('5', '20', '50', 'All')), pageLength = 20, paging = T,
               buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download")))) %>%
             formatRound(c('Best.Response', 'Avg.Response'), digits = 2)
   tab.df
@@ -543,7 +559,7 @@ tc_table <- reactive({
             class = "cell-border stripe",
             extensions = "Buttons",
             options = list(
-              dom = "Blrtip", scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, pageLength = 20, paging = T,
+              dom = "Blrtip", scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, lengthMenu = list(c(5, 20, 50, -1), c('5', '20', '50', 'All')), pageLength = 20, paging = T,
               buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download")))) %>%
             formatRound(c('aov.TC.ratio', 'se_TC.ratio'), digits = 2) %>%
             formatSignif(c('pValue'), 2)
@@ -669,7 +685,7 @@ response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANO
               class = "cell-border stripe",
               extensions = "Buttons",
               options = list(
-                dom = "Blrti", scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, pageLength = 20, paging = T,
+                dom = "Blrti", info = FALSE, scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, pageLength = 20, paging = F,
                 buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download")))) %>%
               formatSignif(c('Sum Sq', 'Mean Sq', 'F value', 'Pr(>F)'), 4) 
     return(tab.df)
@@ -690,7 +706,7 @@ response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANO
               class = "cell-border stripe",
               extensions = "Buttons",
               options = list(
-                dom = "Blrtip", scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, pageLength = 20, paging = T,
+                dom = "Blrtip", scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, lengthMenu = list(c(5, 20, 50, -1), c('5', '20', '50', 'All')), pageLength = 20, paging = T,
                 buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download"))))
     return(tab.df)
   }

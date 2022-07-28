@@ -17,9 +17,10 @@ tabPanel(
              fluidRow(
                column(width=5,
                       fluidRow(actionButton("user_tv_upload", "Upload", class = "btn btn-block", icon = icon("upload"))),
+                      # Note: connect this to a version of the validation function used on the validate page, but return only the current text if invalid, additional information will be provided on validation page. 
                ),
                column(width=5,offset = 2,
-                      fluidRow(actionButton("user_tv_upload_default", "Load Example", class = "btn btn-block", icon = icon("download")))
+                      fluidRow(actionButton("user_tv_upload_default", "Load Example", class = "btn btn-block", icon = icon("arrow-right")))
                )
              )
       )
@@ -498,7 +499,7 @@ tabPanel(
 
                            fluidRow(
                              column(
-                               width = 6, offset = 0,
+                               width = 4, offset = 1,
                                withSpinner(
                                  DTOutput("dt_anova_table"),
                                  proxy.height = "100px", color="#0273B7"

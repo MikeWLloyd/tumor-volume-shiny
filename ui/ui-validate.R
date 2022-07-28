@@ -8,13 +8,14 @@ tabPanel(
         title="Data Upload", status="primary",solidHeader = T,
         column(width=12,
           column(width = 7,
-                 fluidRow(fileInput('user_tv_data_vald', 'Upload Your Tumor Volume',
+                 fluidRow(fileInput('user_tv_data_valid', 'Upload Your Tumor Volume',
                                     accept=c('.csv','.xls','.xlsx')))
-          ),
-          column(width = 4,
-                 style = "margin-left: 2px; margin-right: 1px; margin-top: 25px;",
-                 fluidRow(actionButton("user_tv_upload_vald", "Upload", class = "btn btn-block", icon = icon("upload")))
-          )
+          )#,
+          # column(width = 4,
+          #        style = "margin-left: 2px; margin-right: 1px; margin-top: 25px;",
+          #        fluidRow(actionButton("user_tv_upload_valid", "Upload", class = "btn btn-block", icon = icon("upload")))
+          # )
+          # NOTE: this button would break the app when clicked without a data file present. Removed it for now. 
         )
       )
     )
@@ -25,16 +26,13 @@ tabPanel(
 
     shinydashboard::box(
       width = 12,
-      title = "Uploaded Tumor Volume File", status = "primary", solidHeader = TRUE,
+      title = "Uploaded Tumor Volume File Check Report", status = "primary", solidHeader = TRUE,
 
       div(
-        span(textOutput("tv_text_upload_vald"), style="color:red")
+        span(verbatimTextOutput("tv_text_upload_valid"), style="color:red")
       ),
       br(),
-      withSpinner(
         DTOutput("table_tv_validate_user"),
-        proxy.height = "100px", color="#0273B7"
-      ),
       hr()
     )
   )),
@@ -44,7 +42,7 @@ tabPanel(
 
     shinydashboard::box(
       width = 12,
-      title = "Expected Tumor Volume File", status = "primary", solidHeader = TRUE,
+      title = "Example Expected Tumor Volume File Formatting", status = "primary", solidHeader = TRUE,
 
       withSpinner(
         DTOutput("table_tv_validate_default"),
