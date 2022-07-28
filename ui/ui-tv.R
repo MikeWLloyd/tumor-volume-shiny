@@ -190,6 +190,7 @@ tabPanel(
                               ),
                               column(
                                 width = 2,
+                                offset = 3,
                                 checkboxInput("tv_all_scale", "Scaled Plot", FALSE)
                               )
                             )
