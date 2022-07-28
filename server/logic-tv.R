@@ -442,7 +442,7 @@ output$tv_plot_EFS <- renderPlotly({
 
   s <- subplot(p1[[1]], p1[[2]], heights = c(0.75, 0.25), margin = 0.05, nrows=2, shareX = T, titleY = T)
 
-  print(levels(as.factor(p1$data.survtable$Arms)))
+  # print(levels(as.factor(p1$data.survtable$Arms)))
 
   for(i in 1:length(s$x$data)) {
     if (i <= length(levels(as.factor(p1$data.survtable$Arms)))) {
@@ -576,7 +576,6 @@ output$log2_foldchange <- renderPlotly({
   } else {
     
     if (input$main_log2_interpolate){
-      print('here')
       s.data <- get_interpolated_pdx_data(data = s.data)
       s.data$Volume <- s.data$Interpolated_Volume
     }
