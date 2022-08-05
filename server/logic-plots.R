@@ -421,8 +421,6 @@ get_interpolated_pdx_data <- function(data){
     dplyr::full_join( data.tmp, by = c( "Tumor" = "Tumor" , "Arms" = "Arms" ,  "ID" = "ID" , "Times" = "Times"))%>%
     arrange( ID, Times)
 
-  #print(data.tmp)
-
   # Add in missing measurements via na.approx from Zoo package.
   Interpolate.Data <- data.tmp %>%
     arrange( ID, Times) %>%
