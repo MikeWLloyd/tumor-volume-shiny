@@ -442,8 +442,6 @@ output$tv_plot_EFS <- renderPlotly({
 
   s <- subplot(p1[[1]], p1[[2]], heights = c(0.75, 0.25), margin = 0.05, nrows=2, shareX = T, titleY = T)
 
-  # print(levels(as.factor(p1$data.survtable$Arms)))
-
   for(i in 1:length(s$x$data)) {
     if (i <= length(levels(as.factor(p1$data.survtable$Arms)))) {
       s$x$data[[i]]$showlegend <- TRUE
@@ -548,8 +546,6 @@ tc_table <- reactive({
   response_list <- response_list %>% dplyr::select(-Tumor, -mean.TVratio,	-var.TVratio,	-mean.dVt, -TC.ratio) %>%
                                      dplyr::select(Arms, TC.CalcDay, n.TVratio, aov.TC.ratio, se_TC.ratio, Contrast.pValue) %>%
                                      dplyr::rename(pValue = Contrast.pValue)
-
-  print(response_list)
 
   tab.df <- DT::datatable(response_list[order(response_list$Arms),],
             style = "bootstrap",
