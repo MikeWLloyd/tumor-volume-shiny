@@ -133,7 +133,31 @@ observeEvent(input$user_tv_upload_default, {
 
 
 # QUERY
-get_query_tv <- eventReactive(input$tv_submit_query, {
+
+get_data <- eventReactive(input$continue_user_tv_btn, {
+    input_file_user <- input$user_tv_data
+    if (is.null(input_file_user)) {
+      curr_data <- data
+    }else{
+      curr_data <- read.csv(input_file_user$datapath, header = TRUE)
+    }
+
+    updatePickerInput(session, "tv_contributor", 
+                      choices = unique(curr_data$Contributor), 
+                      selected = unique(curr_data$Contributor)[1])
+
+    updatePickerInput(session, "tv_treatment", 
+                  choices = unique(curr_data$Arms), 
+                  selected = unique(curr_data$Arms)[1])
+    
+    updatePickerInput(session, "tv_disease_type", 
+                  choices = unique(curr_data$Disease_Type), 
+                  selected = unique(curr_data$Disease_Type)[1])
+
+    return(curr_data)
+}, ignoreNULL = FALSE)
+
+get_query_tv <- eventReactive(input$tv_submit_query | input$continue_user_tv_btn, {
 
   withProgress(
     message = "Querying Tumor Volume data:",
@@ -148,10 +172,12 @@ get_query_tv <- eventReactive(input$tv_submit_query, {
         Sys.sleep(0.03)
       }
 
-      df_query <- query_tv(data,
+      df_query <- query_tv(get_data(),
                           input$tv_contributor,
                           input$tv_treatment,
                           input$tv_disease_type)
+
+     
 
       updateProgressBar(
         session = session,
@@ -723,7 +749,13 @@ output$dt_tukey_table <- DT::renderDataTable(
 
 # })
 
-
+output$user_tv_download_default_btn <- downloadHandler(
+  filename = function() { 
+    paste("tv_suite-sample-input.csv", sep="")
+  },
+  content = function(file) {
+    write.csv(get_data(), file)
+  })
 
 # landing page buttons
 observeEvent(input$btn_nav_tv, updateNavlistPanel(session, "nav_bco", selected = title_tumor_volume))

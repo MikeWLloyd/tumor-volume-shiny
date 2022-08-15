@@ -14,7 +14,7 @@ navbarPage(
 
 
   title = div(
-    img(src = "logo.svg", height='20', style = "margin:0px 10px 10px 10px;"),
+    img(src = "logo-new.png", height='40', style = "margin:-10px -10px -10px -10px;"),
     br(), HTML("&emsp;&emsp;&emsp;&emsp;&emsp;")
   ),
   source(file.path("ui", "ui-home.R"), local = TRUE)$value,

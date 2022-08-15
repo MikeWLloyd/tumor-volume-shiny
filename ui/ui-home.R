@@ -26,8 +26,8 @@ tabPanel(
 
     br(),
 
-    span(h2("powered by Seven Bridges"), style = "color:#FFF; text-shadow: rgba(0, 0, 0, 0.7) 0px 0px 15px; text-align: center;", align = "center"),
-    ## note: if not actually powered by SB, can this text be removed? 
+    # span(h2("powered by Seven Bridges"), style = "color:#FFF; text-shadow: rgba(0, 0, 0, 0.7) 0px 0px 15px; text-align: center;", align = "center"),
+    ## note: if not actually powered by SB, can this text be removed?
 
     br(), br(),
 

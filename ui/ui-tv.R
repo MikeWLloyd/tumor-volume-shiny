@@ -8,23 +8,59 @@ tabPanel(
       width=4,
       title="Data Upload", status="primary",solidHeader = T,
       column(width = 12,
-             fluidRow(fileInput('user_tv_data', 'Upload Your Tumor Volume',
-                                accept=c('.csv','.xls','.xlsx'))),
-             div(
-               span(textOutput("tv_text_upload"), style="color:red")
+
+             fluidRow(
+               style = "margin-left: 2px; margin-right: 2px; margin-bottom: 10px;",
+
+               column(width=10, offset = 1,
+                      fluidRow(actionButton("user_tv_upload_btn", "Upload Tumor Volume", class = "btn btn-block btn-primary", icon = icon("upload"))),
+                      # Note: connect this to a version of the validation function used on the validate page, but return only the current text if invalid, additional information will be provided on validation page.
+               )
+
              ),
 
              fluidRow(
-               column(width=5,
-                      fluidRow(actionButton("user_tv_upload", "Upload", class = "btn btn-block", icon = icon("upload"))),
-                      # Note: connect this to a version of the validation function used on the validate page, but return only the current text if invalid, additional information will be provided on validation page. 
+               style = "margin-left: 2px; margin-right: 2px; margin-bottom: 10px;",
+               column(width=6,
+                      fluidRow(actionButton("user_tv_upload_default_btn", "Load Example", class = "btn btn-block", icon = icon("arrow-right")))
                ),
-               column(width=5,offset = 2,
-                      fluidRow(actionButton("user_tv_upload_default", "Load Example", class = "btn btn-block", icon = icon("arrow-right")))
+               column(width=6,
+                      fluidRow(downloadButton("user_tv_download_default_btn", "Download Example", class = "btn btn-block", icon = icon("download")))
                )
-             )
+
+             ),
+
+             div(
+               span(textOutput("tv_text_upload"), style="color:orange")
+             ),
       )
     ),
+
+        bsModal(
+            "upload_data_modal", "User Upload Message", "user_tv_upload_btn",
+
+            fluidRow(fileInput('user_tv_data', 'Upload Your Tumor Volume', accept=c('.csv','.xls','.xlsx'))),
+
+            p("Status of the Uploaded Data"),
+
+            hr(),
+
+            fluidRow(
+              column(
+                width = 10, offset = 1,
+                textAreaInput("tv_user_return_msg", label = "Upload Message: ", resize = "none", width = "400px", height = "250px")
+              )
+            ),
+
+            hr(),
+
+            fluidRow(
+              column(
+                width = 5, offset = 1,
+                actionButton("continue_user_tv_btn", "Continue", class = "btn btn-primary btn-block")
+              )
+            )
+          ),
 
     shinydashboard::box(
       width = 8,
@@ -39,12 +75,17 @@ tabPanel(
               column(
                 width = 4,
                 # wellPanel(
-                  checkboxGroupInput(
-                    "tv_contributor", "Contributor",
-                    inline = TRUE,
-                    choices = get_tv_contributor(),
-                    selected = get_tv_contributor()[1]
-                  )
+                  pickerInput("tv_contributor", "Contributor",
+                              choices = get_tv_contributor(),
+                              selected = get_tv_contributor()[1],
+                              options = pickerOptions(actionsBox = TRUE, style = 'btn-light',
+                                                      showContent = TRUE),multiple = T)
+                  # checkboxGroupInput(
+                  #   "tv_contributor", "Contributor",
+                  #   inline = TRUE,
+                  #   choices = get_tv_contributor(),
+                  #   selected = get_tv_contributor()[1]
+                  # )
                 # )
               ),
               column(
@@ -72,11 +113,11 @@ tabPanel(
               style = "margin-left: 2px; margin-right: 2px; margin-bottom: 10px;",
               column(
                 width = 6,
-                actionButton("tv_submit_query", "Submit Query", class = "btn btn-block", icon = icon("paper-plane"))
+                actionButton("tv_submit_query", "Submit Query", class = "btn btn-block btn-primary", icon = icon("paper-plane"))
               ),
               column(
                 width = 6,
-                actionButton("tv_reset_query", "Reset Query", class = "btn btn-block btn-primary", icon = icon("undo"))
+                actionButton("tv_reset_query", "Reset Query", class = "btn btn-block", icon = icon("undo"))
               ),
               # responsive button text for smaller screens https://stackoverflow.com/questions/19284153/
               tags$style(type = "text/css", ".btn { white-space: normal; }")
