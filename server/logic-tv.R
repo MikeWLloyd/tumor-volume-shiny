@@ -134,20 +134,35 @@ observeEvent(input$user_tv_load_default, {
 
 # QUERY
 
+  values <- reactiveValues(
+    upload_state = "default"
+  )
+
+  observeEvent(input$user_tv_data, {
+    values$upload_state <- 'uploaded'
+  })
+
+  observeEvent(input$user_tv_load_default_btn, {
+    values$upload_state <- 'reset'
+    output$tv_text_upload <- renderText({
+      paste0("Example Tumor Volume Data Still Active!")
+    })
+  })
+
 get_data <- reactive({
 
     curr_data <- data
 
-    if (input$add_user_tv_btn) {
+    if (values$upload_state == 'uploaded') {
       input_file_user <- input$user_tv_data
-      if (is.null(input_file_user)) {
-        curr_data <- data
+      if (is.null(input_file_user) | flag_user_data$flag != 1) {
+          curr_data <- data
       }else{
-        curr_data <- read.csv(input_file_user$datapath, header = TRUE)
+          curr_data <- read.csv(input_file_user$datapath, header = TRUE)
       }
-    }
-
-    if (input$user_tv_load_default_btn) {
+    }else if (values$upload_state == 'reset') {
+      curr_data <- data
+    } else {
       curr_data <- data
     }
 

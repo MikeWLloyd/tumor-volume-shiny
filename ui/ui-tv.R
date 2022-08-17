@@ -38,9 +38,9 @@ tabPanel(
     ),
 
         bsModal(
-            "upload_data_modal", "User Upload Message", "user_tv_upload_btn",
+            "upload_data_modal", "Upload Tumor Volume Data", "user_tv_upload_btn",
 
-            fluidRow(fileInput('user_tv_data', 'Upload Your Tumor Volume', accept=c('.csv','.xls','.xlsx'))),
+            fluidRow(fileInput('user_tv_data', 'Select Your Data', accept=c('.csv','.xls','.xlsx'))),
 
             p("Status of the Uploaded Data"),
 
@@ -49,26 +49,28 @@ tabPanel(
             fluidRow(
               column(
                 width = 10, offset = 1,
-                textAreaInput("tv_user_return_msg", label = "Upload Message: ", resize = "none", width = "400px", height = "250px")
+                textAreaInput("tv_user_return_msg", label = "Upload Validation Message: ", resize = "none", width = "400px", height = "250px")
               )
             ),
 
             hr(),
 
-            fluidRow(
-              column(
-                width = 5, offset = 1,
-                actionButton("add_user_tv_btn", "Add My Data", class = "btn btn-block")
-              )
-            ),
+            # fluidRow(
+            #   column(
+            #     width = 5, offset = 1,
+            #     actionButton("add_user_tv_btn", "Add My Data", class = "btn btn-block")
+            #   )
+            # ),
 
-            br(),
+            # br(),
 
             fluidRow(
               column(
                 width = 10, offset = 1,
                 div(
-                  span(textOutput("tv_text_continue"), style="color:green")
+                  span(textOutput("tv_text_continue"), style="color:green"),
+                  span(textOutput("tv_text_stop"), style="color:red"),
+                  span(textOutput("tv_text_guide"))
                 )
               )
             )

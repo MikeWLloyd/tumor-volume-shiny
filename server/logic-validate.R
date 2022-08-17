@@ -94,6 +94,7 @@ observeEvent(input$user_tv_data_valid, {
   })
 })
 
+flag_user_data <- reactiveValues(flag = 0L)
 
 observeEvent(input$user_tv_data, {
   # changed above from user_tv_upload_valid. The button was breaking the app when clicked without data present. 
@@ -170,6 +171,8 @@ observeEvent(input$user_tv_data, {
     error_check_string <- paste(error_check_string, '\n NO ISSUES! IMPORT TO MAIN TAB POSSIBLE.')
     shinyjs::enable("add_user_tv_btn")
 
+    flag_user_data$flag <- 1
+
     output$tv_text_continue <- renderText({
       paste0("Successfuly Validaded Your Tumor Volume Data!")
     })
@@ -178,9 +181,27 @@ observeEvent(input$user_tv_data, {
       paste0("Loaded Your Tumor Volume Data!")
     })
 
+    output$tv_text_stop <- renderText({
+      paste0("")
+    })
+
+    output$tv_text_guide <- renderText({
+      paste0("")
+    })
+
   } else if (check1 != 1 || check2 != 1) {
 
+    flag_user_data$flag <- 0
+
     shinyjs::disable("add_user_tv_btn")
+
+    output$tv_text_stop <- renderText({
+      paste0("Failed Validation!")
+    })
+
+    output$tv_text_guide <- renderText({
+      paste0("Edit Your Tumor Volume Data According to the Template under the Validation Tab!")
+    })
 
     output$tv_text_continue <- renderText({
       paste0("")
