@@ -12,7 +12,7 @@ tabPanel(
              fluidRow(
                style = "margin-left: 2px; margin-right: 2px; margin-bottom: 10px;",
 
-               column(width=10, offset = 1,
+               column(width=10,offset=1,
                       fluidRow(actionButton("user_tv_upload_btn", "Upload Tumor Volume", class = "btn btn-block btn-primary", icon = icon("upload"))),
                       # Note: connect this to a version of the validation function used on the validate page, but return only the current text if invalid, additional information will be provided on validation page.
                )
@@ -20,16 +20,13 @@ tabPanel(
              ),
 
              fluidRow(
-               style = "margin-left: 2px; margin-right: 2px; margin-bottom: 10px;",
-               column(width=6,
-                      fluidRow(actionButton("user_tv_upload_default_btn", "Load Example", class = "btn btn-block", icon = icon("arrow-right")))
-               ),
-               column(width=6,
-                      fluidRow(downloadButton("user_tv_download_default_btn", "Download Example", class = "btn btn-block", icon = icon("download")))
+
+               column(width=5,
+                      fluidRow(actionButton("user_tv_load_default_btn", "Load Example", class = "btn btn-block", icon = icon("arrow-right")))
                )
 
              ),
-
+             br(),
              div(
                span(textOutput("tv_text_upload"), style="color:orange")
              ),
@@ -57,9 +54,25 @@ tabPanel(
             fluidRow(
               column(
                 width = 5, offset = 1,
+                actionButton("add_user_tv_btn", "Add My Data", class = "btn btn-block")
+              ),
+              column(
+                width = 5, offset = 1,
                 actionButton("continue_user_tv_btn", "Continue", class = "btn btn-primary btn-block")
               )
+            ),
+
+            br(),
+
+            fluidRow(
+              column(
+                width = 10, offset = 1,
+                div(
+                  span(textOutput("tv_text_continue"), style="color:green")
+                )
+              )
             )
+
           ),
 
     shinydashboard::box(

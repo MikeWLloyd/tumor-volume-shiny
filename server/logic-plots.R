@@ -60,465 +60,491 @@ get_data_summary_study <- function(data, measure.var, group.vars){
 
 # Default
 get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment', 'Study'), orders = NULL, position.dodge, ...){
+  if (is.null(data) | nrow(data) == 0) {
+    plot_ly()
+  }else{
+  
+    if(class(data) != 'data.frame'){
+      data<-as.data.frame(data)
+    }
 
-  if(class(data) != 'data.frame'){
-    data<-as.data.frame(data)
-  }
+    data$Arms <- relevel(factor(data$Arms), 'Control')
 
-  data$Arms <- relevel(factor(data$Arms), 'Control')
+    if( level == 'Arm'){
+      s.data <- get_data_summary(data, plot.type="normal", measure.var = "Volume",
+                            group.vars = c('Study', "Times", "Arms"))
 
-  if( level == 'Arm'){
-    s.data <- get_data_summary(data, plot.type="normal", measure.var = "Volume",
-                          group.vars = c('Study', "Times", "Arms"))
+      s.data$Volume <- round(s.data$Volume, 2)
 
-    s.data$Volume <- round(s.data$Volume, 2)
+      if(pattern == 'Study'){
+        p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Arms)) +
+                    geom_line(position = position_dodge2(position.dodge),cex = 1.2) +
+                    geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
+                                  width = 1,
+                                  position = position_dodge2(position.dodge)) +
+                    geom_point(cex = 2,
+                              position = position_dodge2(position.dodge)
+                    )
+      }
+      if(pattern == 'Treatment'){
+
+        p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Study)) +
+              geom_line(position = position_dodge2(position.dodge),cex = 1.2) +
+              geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
+                            width = 1,
+                            position = position_dodge2(position.dodge)) +
+              geom_point(cex = 2,
+                        position = position_dodge2(position.dodge)
+              )
+      }
+
+
+    }
+
+    if( level == 'Animal') {
+      data$Volume <- round(data$Volume, 2)
+
+      if(pattern == 'Study'){
+        p <- ggplot(data, aes(x = Times, y = Volume, group = ID, color = Arms)) +
+          geom_line(size=0.8) +
+          geom_point(cex=1.5,aes(colour = Arms))
+      }
+      if(pattern == 'Treatment'){
+        p <- ggplot(data, aes(x = Times, y = Volume, group = ID, color = Study)) +
+          geom_line(size=0.8) +
+          geom_point(cex=1.5,aes(colour = Study))
+      }
+    }
+
+    p <- p + xlab('Time (days)') + ylab('Tumor Volume (mm3)')
+
+    p <- p + theme_bw() +
+      theme(
+        panel.background = element_rect(fill = "transparent"),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.background  = element_rect(fill = "transparent")
+      )   #backgroud
+    p <- p + theme(
+      axis.title.x = element_text(face = "bold",size = 8),
+      axis.text.x  = element_text(vjust = 0,size = 7),
+      axis.title.y = element_text(face = "bold",size = 8),
+      axis.text.y  = element_text(hjust = 1,size = 7)
+    )
 
     if(pattern == 'Study'){
-      p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Arms)) +
-                  geom_line(position = position_dodge2(position.dodge),cex = 1.2) +
-                  geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
-                                width = 1,
-                                position = position_dodge2(position.dodge)) +
-                  geom_point(cex = 2,
-                            position = position_dodge2(position.dodge)
-                  )
+      p <- p + facet_wrap(~ Study, dir = 'h')+ labs(color = "Treatments") +
+        theme(strip.text = element_text(colour = "black", face = "bold", size = rel(1)),
+              strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)
+        )
     }
+
     if(pattern == 'Treatment'){
-
-      p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Study)) +
-            geom_line(position = position_dodge2(position.dodge),cex = 1.2) +
-            geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
-                          width = 1,
-                          position = position_dodge2(position.dodge)) +
-            geom_point(cex = 2,
-                      position = position_dodge2(position.dodge)
-            )
+      p <- p + facet_wrap(~ Arms, dir = 'h')+ labs(color = "Study") +
+        theme(strip.text = element_text(colour = "black", face = "bold", size = rel(1)),
+              strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)
+        )
     }
 
-
+    p <- p + scale_color_manual(values=colorblind_pallet)
+    pdf(NULL)
+    p
   }
-
-  if( level == 'Animal') {
-    data$Volume <- round(data$Volume, 2)
-
-    if(pattern == 'Study'){
-      p <- ggplot(data, aes(x = Times, y = Volume, group = ID, color = Arms)) +
-        geom_line(size=0.8) +
-        geom_point(cex=1.5,aes(colour = Arms))
-    }
-    if(pattern == 'Treatment'){
-      p <- ggplot(data, aes(x = Times, y = Volume, group = ID, color = Study)) +
-        geom_line(size=0.8) +
-        geom_point(cex=1.5,aes(colour = Study))
-    }
-  }
-
-  p <- p + xlab('Time (days)') + ylab('Tumor Volume (mm3)')
-
-  p <- p + theme_bw() +
-    theme(
-      panel.background = element_rect(fill = "transparent"),
-      panel.grid.minor = element_blank(),
-      panel.grid.major = element_blank(),
-      plot.background  = element_rect(fill = "transparent")
-    )   #backgroud
-  p <- p + theme(
-    axis.title.x = element_text(face = "bold",size = 8),
-    axis.text.x  = element_text(vjust = 0,size = 7),
-    axis.title.y = element_text(face = "bold",size = 8),
-    axis.text.y  = element_text(hjust = 1,size = 7)
-  )
-
-  if(pattern == 'Study'){
-    p <- p + facet_wrap(~ Study, dir = 'h')+ labs(color = "Treatments") +
-      theme(strip.text = element_text(colour = "black", face = "bold", size = rel(1)),
-            strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)
-      )
-  }
-
-  if(pattern == 'Treatment'){
-    p <- p + facet_wrap(~ Arms, dir = 'h')+ labs(color = "Study") +
-      theme(strip.text = element_text(colour = "black", face = "bold", size = rel(1)),
-            strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)
-      )
-  }
-
-  p <- p + scale_color_manual(values=colorblind_pallet)
-  pdf(NULL)
-  p
 }
 
 # Scaled - Moscow
 get_plot_scaled <- function(data, orders = NULL, position.dodge, title = NULL, plot_on = TRUE, scale.factor, scale.by.volume = FALSE, level = 'Arm', pattern = "TAN", ...){
+  
+  if (is.null(data) | nrow(data) == 0) {
+    plot_ly()
+  }else{
+    if(inherits(data, "data.frame")){
+      data<-as.data.frame(data)
+    }
 
-  if(inherits(data, "data.frame")){
-    data<-as.data.frame(data)
-  }
+    #check the order
+    if (!is.null(orders)){
 
-  #check the order
-  if (!is.null(orders)){
+      arms <- unique(data$Arms)
+      judged.order <- is.element(orders,arms)
 
-    arms <- unique(data$Arms)
-    judged.order <- is.element(orders,arms)
+      if ("FALSE" %in% judged.order)
+        stop("The input order is improper. Please ensure the input order is the order of 'Arms' among data.")
 
-    if ("FALSE" %in% judged.order)
-      stop("The input order is improper. Please ensure the input order is the order of 'Arms' among data.")
+      data$Arms <- factor(data$Arms,levels=orders) # set the order
+    }
 
-    data$Arms <- factor(data$Arms,levels=orders) # set the order
-  }
+    Volume <-  data[ , 'Volume']
+    data <- subset(data,Volume >= 0)
 
-  Volume <-  data[ , 'Volume']
-  data <- subset(data,Volume >= 0)
+    if ('Control'%in%unique(data$Arms)){
+      data$Arms <- relevel(factor(data$Arms), 'Control')
+    }
 
-  if ('Control'%in%unique(data$Arms)){
-    data$Arms <- relevel(factor(data$Arms), 'Control')
-  }
+    if(scale.by.volume) {
+      adjusted.data <- data %>%
+        group_by(Study, Arms, Times) %>%
+        mutate(TimeMean = mean(Volume)) %>%
+        ungroup() %>%
+        group_by(Study, Arms, ID) %>%
+        mutate(zero_adjust = Volume - Volume[1L],
+              EndPoint = scale.factor,
+              ArmMean = mean(Volume),
+              Moscow = ifelse(zero_adjust == 0, 0,
+                              ifelse(zero_adjust < 0, ((((Volume - Volume[1L]) / Volume[1L]) * 100)),
+                                      ifelse(Volume >= EndPoint, 100, (((Volume / EndPoint) * 100))))))
+      caption_text = bquote('Endpoint Scale = ' ~ .(scale.factor) ~ 'mm'^3)
+    } else {
+      adjusted.data <- data %>%
+        group_by(Study, Arms, Times) %>%
+        mutate(TimeMean = mean(Volume)) %>%
+        ungroup() %>%
+        group_by(Study, Arms, ID) %>%
+        mutate(zero_adjust = Volume - Volume[1L],
+              EndPoint = TimeMean[1L] * scale.factor,
+              ArmMean = mean(Volume),
+              Moscow = ifelse(zero_adjust == 0, 0,
+                              ifelse(zero_adjust < 0, ((((Volume - Volume[1L]) / Volume[1L]) * 100)),
+                                      ifelse(Volume >= EndPoint, 100, (((Volume / EndPoint) * 100))))))
+      caption_text = paste0('Endpoint Scale = ', scale.factor, 'x')
+    }
 
-  if(scale.by.volume) {
-    adjusted.data <- data %>%
-      group_by(Study, Arms, Times) %>%
-      mutate(TimeMean = mean(Volume)) %>%
-      ungroup() %>%
-      group_by(Study, Arms, ID) %>%
-      mutate(zero_adjust = Volume - Volume[1L],
-             EndPoint = scale.factor,
-             ArmMean = mean(Volume),
-             Moscow = ifelse(zero_adjust == 0, 0,
-                             ifelse(zero_adjust < 0, ((((Volume - Volume[1L]) / Volume[1L]) * 100)),
-                                    ifelse(Volume >= EndPoint, 100, (((Volume / EndPoint) * 100))))))
-    caption_text = bquote('Endpoint Scale = ' ~ .(scale.factor) ~ 'mm'^3)
-  } else {
-    adjusted.data <- data %>%
-      group_by(Study, Arms, Times) %>%
-      mutate(TimeMean = mean(Volume)) %>%
-      ungroup() %>%
-      group_by(Study, Arms, ID) %>%
-      mutate(zero_adjust = Volume - Volume[1L],
-             EndPoint = TimeMean[1L] * scale.factor,
-             ArmMean = mean(Volume),
-             Moscow = ifelse(zero_adjust == 0, 0,
-                             ifelse(zero_adjust < 0, ((((Volume - Volume[1L]) / Volume[1L]) * 100)),
-                                    ifelse(Volume >= EndPoint, 100, (((Volume / EndPoint) * 100))))))
-    caption_text = paste0('Endpoint Scale = ', scale.factor, 'x')
-  }
+    if( level == 'Animal') {
+      adjusted.data$Moscow <- round(adjusted.data$Moscow, 2)
 
-  if( level == 'Animal') {
-    adjusted.data$Moscow <- round(adjusted.data$Moscow, 2)
+      if(pattern == 'Study'){
+        p <- ggplot(data = adjusted.data, aes(x = Times, y = Moscow, group = ID, color = Arms)) +
+          geom_line(position = position_dodge(position.dodge),cex = 1.2) +
+          geom_point(cex = 2, position = position_dodge(position.dodge)) +
+          ylim(-100, 100) + labs(caption = caption_text)
+      }
+      if(pattern == 'Treatment'){
+        p <- ggplot(data = adjusted.data, aes(x = Times, y = Moscow, group = ID, color = Study)) +
+          geom_line(position = position_dodge(position.dodge),cex = 1.2) +
+          geom_point(cex = 2, position = position_dodge(position.dodge)) +
+          ylim(-100, 100) + labs(caption = caption_text)
+      }
+    }
+
+    if( level == 'Arm') {
+      s.data <- adjusted.data %>%
+                group_by(Study, Arms, Times) %>%
+                summarise(N = n(), Mean = mean(Moscow), SD = sd(Moscow), SE = (SD / sqrt(N)), Study=Study, ID=ID, .groups = 'drop') %>%
+                dplyr::rename(Volume = Mean)
+
+      s.data$Volume <- round(s.data$Volume, 2)
+
+      if(pattern == 'Study'){
+        p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Arms)) +
+              geom_line(position = position_dodge(position.dodge),cex = 1.2) +
+              geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
+                            position = position_dodge(position.dodge)) +
+              geom_point(cex = 2,position = position_dodge(position.dodge)) +
+              ylim(-100, 100) + labs(caption = caption_text)
+      }
+
+      if(pattern == 'Treatment'){
+        p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Study)) +
+              geom_line(position = position_dodge(position.dodge),cex = 1.2) +
+              geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
+                            position = position_dodge(position.dodge)) +
+              geom_point(cex = 2,position = position_dodge(position.dodge)) +
+              ylim(-100, 100) + labs(caption = caption_text)
+      }
+
+    }
+    text <- "% progression / regression endpoint"
+
+    p <- p + xlab("Time (d)") + ylab(text)
+
+    p <- p + theme_bw() +
+      theme(
+        panel.background = element_rect(fill = "transparent"),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.background  = element_rect(fill = "transparent")
+      )   #backgroud
+    p <- p + theme(
+      axis.title.x = element_text(face = "bold",size = 12),
+      axis.text.x  = element_text(vjust = 0,size = 12),
+      axis.title.y = element_text(face = "bold",size = 12),
+      axis.text.y  = element_text(hjust = 1,size = 12)
+    )
 
     if(pattern == 'Study'){
-      p <- ggplot(data = adjusted.data, aes(x = Times, y = Moscow, group = ID, color = Arms)) +
-        geom_line(position = position_dodge(position.dodge),cex = 1.2) +
-        geom_point(cex = 2, position = position_dodge(position.dodge)) +
-        ylim(-100, 100) + labs(caption = caption_text)
-    }
-    if(pattern == 'Treatment'){
-      p <- ggplot(data = adjusted.data, aes(x = Times, y = Moscow, group = ID, color = Study)) +
-        geom_line(position = position_dodge(position.dodge),cex = 1.2) +
-        geom_point(cex = 2, position = position_dodge(position.dodge)) +
-        ylim(-100, 100) + labs(caption = caption_text)
-    }
-  }
 
-  if( level == 'Arm') {
-    s.data <- adjusted.data %>%
-              group_by(Study, Arms, Times) %>%
-              summarise(N = n(), Mean = mean(Moscow), SD = sd(Moscow), SE = (SD / sqrt(N)), Study=Study, ID=ID, .groups = 'drop') %>%
-              dplyr::rename(Volume = Mean)
-
-    s.data$Volume <- round(s.data$Volume, 2)
-
-    if(pattern == 'Study'){
-      p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Arms)) +
-            geom_line(position = position_dodge(position.dodge),cex = 1.2) +
-            geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
-                          position = position_dodge(position.dodge)) +
-            geom_point(cex = 2,position = position_dodge(position.dodge)) +
-            ylim(-100, 100) + labs(caption = caption_text)
+      p <- p + facet_wrap(~ Study, dir = 'h')+ labs(color = "Treatments") +
+        theme(strip.text = element_text(colour = "black", face = "bold", size = rel(1)),
+              strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)
+        )
     }
 
     if(pattern == 'Treatment'){
-      p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Study)) +
-            geom_line(position = position_dodge(position.dodge),cex = 1.2) +
-            geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
-                          position = position_dodge(position.dodge)) +
-            geom_point(cex = 2,position = position_dodge(position.dodge)) +
-            ylim(-100, 100) + labs(caption = caption_text)
+
+      p <- p + facet_wrap(~ Arms, dir = 'h')+ labs(color = "Study") +
+        theme(strip.text = element_text(colour = "black", face = "bold", size = rel(1)),
+              strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)
+        )
     }
 
-  }
-  text <- "% progression / regression endpoint"
+    p <- p + scale_color_manual(values=colorblind_pallet)
 
-  p <- p + xlab("Time (d)") + ylab(text)
+    if (! is.null(title)) {
+      p <- p + ggtitle(title)
+    }
 
-  p <- p + theme_bw() +
-    theme(
-      panel.background = element_rect(fill = "transparent"),
-      panel.grid.minor = element_blank(),
-      panel.grid.major = element_blank(),
-      plot.background  = element_rect(fill = "transparent")
-    )   #backgroud
-  p <- p + theme(
-    axis.title.x = element_text(face = "bold",size = 12),
-    axis.text.x  = element_text(vjust = 0,size = 12),
-    axis.title.y = element_text(face = "bold",size = 12),
-    axis.text.y  = element_text(hjust = 1,size = 12)
-  )
-
-  if(pattern == 'Study'){
-
-    p <- p + facet_wrap(~ Study, dir = 'h')+ labs(color = "Treatments") +
-      theme(strip.text = element_text(colour = "black", face = "bold", size = rel(1)),
-            strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)
-      )
-  }
-
-  if(pattern == 'Treatment'){
-
-    p <- p + facet_wrap(~ Arms, dir = 'h')+ labs(color = "Study") +
-      theme(strip.text = element_text(colour = "black", face = "bold", size = rel(1)),
-            strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)
-      )
-  }
-
-  p <- p + scale_color_manual(values=colorblind_pallet)
-
-  if (! is.null(title)) {
-    p <- p + ggtitle(title)
-  }
-
-  if (plot_on) {
-    plot(p)
-  } else {
-    p
+    if (plot_on) {
+      plot(p)
+    } else {
+      p
+    }
   }
 }
 
 ### get_plot_scaled_study is not presently used. Was used in the OCR plotting, but removed. Code saved in case is needed again. 
 get_plot_scaled_study <- function(data, orders = NULL, position.dodge, title = NULL, plot_on = TRUE, scale.factor, scale.by.volume = FALSE, ...){
 
-  if(inherits(data, "data.frame")){
-    data<-as.data.frame(data)
-  }
+  if (is.null(data) | nrow(data) == 0) {
 
-  #check the order
-  if (!is.null(orders)){
+    plot_ly()
 
-    arms <- unique(data$Arms)
-    judged.order <- is.element(orders,arms)
+  }else{
 
-    if ("FALSE" %in% judged.order)
-      stop("The input order is improper. Please ensure the input order is the order of 'Arms' among data.")
+    if(inherits(data, "data.frame")){
+      data<-as.data.frame(data)
+    }
 
-    data$Arms <- factor(data$Arms,levels=orders) # set the order
+    #check the order
+    if (!is.null(orders)){
+
+      arms <- unique(data$Arms)
+      judged.order <- is.element(orders,arms)
+
+      if ("FALSE" %in% judged.order)
+        stop("The input order is improper. Please ensure the input order is the order of 'Arms' among data.")
+
+      data$Arms <- factor(data$Arms,levels=orders) # set the order
 
 
-  }
+    }
 
-  Volume <-  data[ , 'Volume']
-  data <- subset(data,Volume >= 0)
+    Volume <-  data[ , 'Volume']
+    data <- subset(data,Volume >= 0)
 
-  if ('Control'%in%unique(data$Arms)){
-    data$Arms <- relevel(factor(data$Arms), 'Control')
-  }
+    if ('Control'%in%unique(data$Arms)){
+      data$Arms <- relevel(factor(data$Arms), 'Control')
+    }
 
-  if(scale.by.volume) {
-    adjusted.data <- data %>%
+    if(scale.by.volume) {
+      adjusted.data <- data %>%
+        group_by(Arms, Times) %>%
+        mutate(TimeMean = mean(Volume)) %>%
+        ungroup() %>%
+        group_by(Arms, ID) %>%
+        mutate(zero_adjust = Volume - Volume[1L],
+              EndPoint = scale.factor,
+              ArmMean = mean(Volume),
+              Moscow = ifelse(zero_adjust == 0, 0,
+                              ifelse(zero_adjust < 0, (( (Volume - Volume[1L]) / Volume[1L]) * 100),
+                                      ifelse(Volume >= EndPoint, 100, (((Volume / EndPoint) * 100))))))
+      caption_text = bquote('Endpoint Scale = ' ~ .(scale.factor) ~ 'mm'^3)
+    } else {
+      adjusted.data <- data %>%
+        group_by(Arms, Times) %>%
+        mutate(TimeMean = mean(Volume)) %>%
+        ungroup() %>%
+        group_by(Arms, ID) %>%
+        mutate(zero_adjust = Volume - Volume[1L],
+              EndPoint = TimeMean[1L] * scale.factor,
+              ArmMean = mean(Volume),
+              Moscow = ifelse(zero_adjust == 0, 0,
+                              ifelse(zero_adjust < 0, (( (Volume - Volume[1L]) / Volume[1L]) * 100),
+                                      ifelse(Volume >= EndPoint, 100, (((Volume / EndPoint) * 100))))))
+      caption_text = paste0('Endpoint Scale = ', scale.factor, 'x')
+    }
+
+    s.data <- adjusted.data %>%
       group_by(Arms, Times) %>%
-      mutate(TimeMean = mean(Volume)) %>%
-      ungroup() %>%
-      group_by(Arms, ID) %>%
-      mutate(zero_adjust = Volume - Volume[1L],
-             EndPoint = scale.factor,
-             ArmMean = mean(Volume),
-             Moscow = ifelse(zero_adjust == 0, 0,
-                             ifelse(zero_adjust < 0, (( (Volume - Volume[1L]) / Volume[1L]) * 100),
-                                    ifelse(Volume >= EndPoint, 100, (((Volume / EndPoint) * 100))))))
-    caption_text = bquote('Endpoint Scale = ' ~ .(scale.factor) ~ 'mm'^3)
-  } else {
-    adjusted.data <- data %>%
-      group_by(Arms, Times) %>%
-      mutate(TimeMean = mean(Volume)) %>%
-      ungroup() %>%
-      group_by(Arms, ID) %>%
-      mutate(zero_adjust = Volume - Volume[1L],
-             EndPoint = TimeMean[1L] * scale.factor,
-             ArmMean = mean(Volume),
-             Moscow = ifelse(zero_adjust == 0, 0,
-                             ifelse(zero_adjust < 0, (( (Volume - Volume[1L]) / Volume[1L]) * 100),
-                                    ifelse(Volume >= EndPoint, 100, (((Volume / EndPoint) * 100))))))
-    caption_text = paste0('Endpoint Scale = ', scale.factor, 'x')
-  }
+      summarise(N = n(), Mean = mean(Moscow), SD = sd(Moscow), SE = (SD / sqrt(N)), .groups = 'drop') %>%
+      dplyr::rename( Volume = Mean)
 
-  s.data <- adjusted.data %>%
-    group_by(Arms, Times) %>%
-    summarise(N = n(), Mean = mean(Moscow), SD = sd(Moscow), SE = (SD / sqrt(N)), .groups = 'drop') %>%
-    dplyr::rename( Volume = Mean)
+    s.data$Volume <- round(s.data$Volume, 2)
 
-  s.data$Volume <- round(s.data$Volume, 2)
-
-  p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Arms)) +
-    geom_line(position = position_dodge(position.dodge),cex = 1.2) +
-    geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
-                  position = position_dodge(position.dodge)) +
-    geom_point(cex = 2,position = position_dodge(position.dodge)) +
-    ylim(-100, 100) +
-    labs(caption = caption_text)
+    p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Arms)) +
+      geom_line(position = position_dodge(position.dodge),cex = 1.2) +
+      geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
+                    position = position_dodge(position.dodge)) +
+      geom_point(cex = 2,position = position_dodge(position.dodge)) +
+      ylim(-100, 100) +
+      labs(caption = caption_text)
 
 
-  text <- "% progression / regression endpoint"
+    text <- "% progression / regression endpoint"
 
-  p <- p + xlab("Time (d)") + ylab(text)
+    p <- p + xlab("Time (d)") + ylab(text)
 
-  p <- p + theme_bw() +
-    theme(
-      panel.background = element_rect(fill = "transparent"),
-      panel.grid.minor = element_blank(),
-      panel.grid.major = element_blank(),
-      plot.background  = element_rect(fill = "transparent")
-    )   #backgroud
-  p <- p + theme(
-    axis.title.x = element_text(face = "bold",size = 12),
-    axis.text.x  = element_text(vjust = 0,size = 12),
-    axis.title.y = element_text(face = "bold",size = 12),
-    axis.text.y  = element_text(hjust = 1,size = 12)
-  )
+    p <- p + theme_bw() +
+      theme(
+        panel.background = element_rect(fill = "transparent"),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.background  = element_rect(fill = "transparent")
+      )   #backgroud
+    p <- p + theme(
+      axis.title.x = element_text(face = "bold",size = 12),
+      axis.text.x  = element_text(vjust = 0,size = 12),
+      axis.title.y = element_text(face = "bold",size = 12),
+      axis.text.y  = element_text(hjust = 1,size = 12)
+    )
 
-  p <- p + scale_color_manual(values=colorblind_pallet)
+    p <- p + scale_color_manual(values=colorblind_pallet)
 
-  if (! is.null(title)) {
-    p <- p + ggtitle(title)
-  }
+    if (! is.null(title)) {
+      p <- p + ggtitle(title)
+    }
 
-  if (plot_on) {
-    plot(p)
-  } else {
-    return(p)
+    if (plot_on) {
+      plot(p)
+    } else {
+      return(p)
+    }
   }
 }
 
 # Interpolated - Moscow
 get_interpolated_pdx_data <- function(data){
 
-  # Get Max Days for Each Group
-  data.tmp <- data %>%
-    dplyr::arrange(ID, Times) %>%
-    dplyr::group_by(Tumor, Arms, ID) %>%
-    dplyr::summarise(Day_max=max(Times), Day_min=min(Times), N=n(), .groups = 'drop') %>%
-    dplyr::mutate(adjustment = case_when(Day_min == 0 ~ 1,
-                                         Day_min == 1 ~ 0)) %>%
-    dplyr::filter(N != 1)
+  if (is.null(data) | nrow(data) == 0) {
+    plot_ly()
+  }else{
 
-  # Back fill the data with all day numbers
-  data.tmp <- data.tmp %>%
-    dplyr::group_by(ID) %>%
-    do( data.frame(ID = rep(.$ID, each = .$Day_max+.$adjustment),
-                   Tumor = rep(.$Tumor, each = .$Day_max+.$adjustment),
-                   Arms = rep(.$Arms, each = .$Day_max+.$adjustment),
-                   Times=.$Day_min:.$Day_max,   stringsAsFactors = FALSE) )
+    # Get Max Days for Each Group
+    data.tmp <- data %>%
+      dplyr::arrange(ID, Times) %>%
+      dplyr::group_by(Tumor, Arms, ID) %>%
+      dplyr::summarise(Day_max=max(Times), Day_min=min(Times), N=n(), .groups = 'drop') %>%
+      dplyr::mutate(adjustment = case_when(Day_min == 0 ~ 1,
+                                          Day_min == 1 ~ 0)) %>%
+      dplyr::filter(N != 1)
 
-  # Add via Join all data we have for days that data were actually collected.
-  data.tmp <- data %>%
-    dplyr::full_join( data.tmp, by = c( "Tumor" = "Tumor" , "Arms" = "Arms" ,  "ID" = "ID" , "Times" = "Times"))%>%
-    arrange( ID, Times)
+    # Back fill the data with all day numbers
+    data.tmp <- data.tmp %>%
+      dplyr::group_by(ID) %>%
+      do( data.frame(ID = rep(.$ID, each = .$Day_max+.$adjustment),
+                    Tumor = rep(.$Tumor, each = .$Day_max+.$adjustment),
+                    Arms = rep(.$Arms, each = .$Day_max+.$adjustment),
+                    Times=.$Day_min:.$Day_max,   stringsAsFactors = FALSE) )
 
-  # Add in missing measurements via na.approx from Zoo package.
-  Interpolate.Data <- data.tmp %>%
-    arrange( ID, Times) %>%
-    dplyr::group_by(ID) %>%
-    mutate(Interpolated_Volume = na.approx(Volume, na.rm=FALSE))
+    # Add via Join all data we have for days that data were actually collected.
+    data.tmp <- data %>%
+      dplyr::full_join( data.tmp, by = c( "Tumor" = "Tumor" , "Arms" = "Arms" ,  "ID" = "ID" , "Times" = "Times"))%>%
+      arrange( ID, Times)
 
-  # Add in missing metadata with na.locf
-  Interpolate.Data <- arrange(Interpolate.Data, ID, Times)%>%
-    dplyr::mutate(Arms = na.locf(Arms, na.rm = F),
-                  Study = na.locf(Study, na.rm = F),
-                  Interpolated_Volume = na.locf(Interpolated_Volume, na.rm = F))
+    # Add in missing measurements via na.approx from Zoo package.
+    Interpolate.Data <- data.tmp %>%
+      arrange( ID, Times) %>%
+      dplyr::group_by(ID) %>%
+      mutate(Interpolated_Volume = na.approx(Volume, na.rm=FALSE))
 
-  return(Interpolate.Data)
+    # Add in missing metadata with na.locf
+    Interpolate.Data <- arrange(Interpolate.Data, ID, Times)%>%
+      dplyr::mutate(Arms = na.locf(Arms, na.rm = F),
+                    Study = na.locf(Study, na.rm = F),
+                    Interpolated_Volume = na.locf(Interpolated_Volume, na.rm = F))
+
+    return(Interpolate.Data)
+  }
 }
 
 get_plot_interpolated <- function(data, orders = NULL, position.dodge, title = NULL, plot_on = TRUE, level = 'Arm', pattern = 'TAN', ...) {
+  if (is.null(data) | nrow(data) == 0) {
 
-  if(inherits(data, "data.frame")){
-    data<-as.data.frame(data)
-  }
+    plot_ly()
 
-  #check the order
-  if (!is.null(orders)){
-    arms <- unique(data$Arms)
-    judged.order <- is.element(orders,arms)
+  }else{
 
-    if ("FALSE" %in% judged.order)
-      stop("The input order is improper. Please ensure the input order is the order of 'Arms' among data.")
-
-    data$Arms <- factor(data$Arms,levels=orders) # set the order
-  }
-
-  Volume <-  data[ , 'Interpolated_Volume']
-  data <- subset(data,Interpolated_Volume >= 0)
-
-  # Order Control to the top
-  if ('Control'%in%unique(data$Arms)){
-    data$Arms <- relevel(factor(data$Arms), 'Control')
-  }
-
-  if( level == 'Animal'){
-    data$Interpolated_Volume <- round(data$Interpolated_Volume, 2)
-
-
-    p <- ggplot(data, aes(x = Times, y = Interpolated_Volume, group = ID,color = Arms)) +
-      geom_line(size=0.8)+
-      geom_point(cex=1.5,aes(colour = Arms))
-  }
-  if( level == 'Arm'){
-    s.data <- get_data_summary_study(data,measure.var = "Interpolated_Volume", group.vars = c("Arms", "Times"))
-    s.data$Interpolated_Volume <- round(s.data$Interpolated_Volume, 2)
-
-    p <- ggplot(data = s.data, aes(x = Times, y = Interpolated_Volume, color = Arms)) +
-      geom_line(position = position_dodge(position.dodge),cex = 1.2) +
-      geom_errorbar(aes(ymin = Interpolated_Volume - SE, ymax = Interpolated_Volume + SE),
-                    width = 1.2,
-                    position = position_dodge(position.dodge)) +
-      geom_point(cex = 2,position = position_dodge(position.dodge))
-  }
-
-  p <- p + xlab("Time (d)") + ylab('Tumor Volume mm^3')
-
-  p <- p + theme_bw() +
-    theme(
-      panel.background = element_rect(fill = "transparent"),
-      panel.grid.minor = element_blank(),
-      panel.grid.major = element_blank(),
-      plot.background  = element_rect(fill = "transparent")
-    )   #backgroud
-  p <- p + theme(
-    axis.title.x = element_text(face = "bold",size = 12),
-    axis.text.x  = element_text(vjust = 0,size = 12),
-    axis.title.y = element_text(face = "bold",size = 12),
-    axis.text.y  = element_text(hjust = 1,size = 12)
-  )
-
-  if( level == 'Animal'){
-    p <- p + theme(legend.position='none')
-    p <- p + facet_wrap( ~ Arms,dir = 'h') +
-      theme(strip.text = element_text(colour = "black", face = "bold", size = rel(1)),
-            strip.background = element_rect(fill = "#E6AB02", size = rel(1.05), linetype = 1)
-      )
-  }
-
-  p <- p + scale_color_manual(values=colorblind_pallet)
-
-  if (plot_on) {
-    if (! is.null(title)) {
-      plot(p + ggtitle(title))
-    } else {
-      plot(p)
+    if(inherits(data, "data.frame")){
+      data<-as.data.frame(data)
     }
-  } else {
-    if (! is.null(title)) {
-      p <- p + ggtitle(title)
-      return(p)
+
+    #check the order
+    if (!is.null(orders)){
+      arms <- unique(data$Arms)
+      judged.order <- is.element(orders,arms)
+
+      if ("FALSE" %in% judged.order)
+        stop("The input order is improper. Please ensure the input order is the order of 'Arms' among data.")
+
+      data$Arms <- factor(data$Arms,levels=orders) # set the order
+    }
+
+    Volume <-  data[ , 'Interpolated_Volume']
+    data <- subset(data,Interpolated_Volume >= 0)
+
+    # Order Control to the top
+    if ('Control'%in%unique(data$Arms)){
+      data$Arms <- relevel(factor(data$Arms), 'Control')
+    }
+
+    if( level == 'Animal'){
+      data$Interpolated_Volume <- round(data$Interpolated_Volume, 2)
+
+
+      p <- ggplot(data, aes(x = Times, y = Interpolated_Volume, group = ID,color = Arms)) +
+        geom_line(size=0.8)+
+        geom_point(cex=1.5,aes(colour = Arms))
+    }
+    if( level == 'Arm'){
+      s.data <- get_data_summary_study(data,measure.var = "Interpolated_Volume", group.vars = c("Arms", "Times"))
+      s.data$Interpolated_Volume <- round(s.data$Interpolated_Volume, 2)
+
+      p <- ggplot(data = s.data, aes(x = Times, y = Interpolated_Volume, color = Arms)) +
+        geom_line(position = position_dodge(position.dodge),cex = 1.2) +
+        geom_errorbar(aes(ymin = Interpolated_Volume - SE, ymax = Interpolated_Volume + SE),
+                      width = 1.2,
+                      position = position_dodge(position.dodge)) +
+        geom_point(cex = 2,position = position_dodge(position.dodge))
+    }
+
+    p <- p + xlab("Time (d)") + ylab('Tumor Volume mm^3')
+
+    p <- p + theme_bw() +
+      theme(
+        panel.background = element_rect(fill = "transparent"),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.background  = element_rect(fill = "transparent")
+      )   #backgroud
+    p <- p + theme(
+      axis.title.x = element_text(face = "bold",size = 12),
+      axis.text.x  = element_text(vjust = 0,size = 12),
+      axis.title.y = element_text(face = "bold",size = 12),
+      axis.text.y  = element_text(hjust = 1,size = 12)
+    )
+
+    if( level == 'Animal'){
+      p <- p + theme(legend.position='none')
+      p <- p + facet_wrap( ~ Arms,dir = 'h') +
+        theme(strip.text = element_text(colour = "black", face = "bold", size = rel(1)),
+              strip.background = element_rect(fill = "#E6AB02", size = rel(1.05), linetype = 1)
+        )
+    }
+
+    p <- p + scale_color_manual(values=colorblind_pallet)
+
+    if (plot_on) {
+      if (! is.null(title)) {
+        plot(p + ggtitle(title))
+      } else {
+        plot(p)
+      }
     } else {
-      return(p)
+      if (! is.null(title)) {
+        p <- p + ggtitle(title)
+        return(p)
+      } else {
+        return(p)
+      }
     }
   }
 }
@@ -541,86 +567,91 @@ get_DRLevel <- function(data, neg.control, rm.neg.control=TRUE, last.measure.day
 get_plot_volumeGC_alt <- function(data, level = c('Animal','Arm'), orders = NULL,
                                   position.dodge, title = NULL, plot_on = TRUE, ...){
 
-  if(inherits(data, "data.frame")){
-    data<-as.data.frame(data)
-  }
+   if (is.null(data) | nrow(data) == 0) {
+    plot_ly()
+  }else{
 
-
-  #check the order
-  if (!is.null(orders)){
-    arms <- unique(data$Arms)
-    judged.order <- is.element(orders,arms)
-
-    if ("FALSE" %in% judged.order)
-      stop("The input order is improper. Please ensure the input order is the order of 'Arms' among data.")
-
-    data$Arms <- factor(data$Arms,levels=orders) # set the order
-  }
-
-  Volume <-  data[ , 'Volume']
-  data <- subset(data,Volume >= 0)
-
-  # Order Control to the top
-  if ('Control'%in%unique(data$Arms)){
-    data$Arms <- relevel(factor(data$Arms), 'Control')
-  }
-
-  if( level == 'Animal'){
-
-    p <- ggplot(data, aes(x = Times, y = Volume, group = ID, color = Arms)) +
-      geom_line(size=0.8)+
-      geom_point(cex=1.5,aes(colour = Arms))
-  }
-  if( level == 'Arm'){
-    s.data <- get_data_summary_study(data, measure.var = "Volume", group.vars = c("Arms","Times"))
-    s.data$Volume <- round(s.data$Volume, 2)
-
-    p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Arms)) +
-      geom_line(position = position_dodge(position.dodge),cex = 1.2) +
-      geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
-                    width = 1.2,
-                    position = position_dodge(position.dodge)) +
-      geom_point(cex = 2,position = position_dodge(position.dodge))
-  }
-
-  p <- p + xlab("Time (d)") + ylab(expression(bold(paste("Tumor Volume (",mm^3,")",sep = " "))))
-
-  p <- p + theme_bw() +
-    theme(
-      panel.background = element_rect(fill = "transparent"),
-      panel.grid.minor = element_blank(),
-      panel.grid.major = element_blank(),
-      plot.background  = element_rect(fill = "transparent")
-    )   #backgroud
-  p <- p + theme(
-    axis.title.x = element_text(face = "bold",size = 12),
-    axis.text.x  = element_text(vjust = 0,size = 12),
-    axis.title.y = element_text(face = "bold",size = 12),
-    axis.text.y  = element_text(hjust = 1,size = 12)
-  )
-
-  if( level == 'Animal'){
-    p <- p + theme(legend.position='none')
-    p <- p + facet_wrap( ~ Arms,dir = 'h') +
-      theme(strip.text = element_text(colour = "black", face = "bold", size = rel(1)),
-            strip.background = element_rect(fill = "#E6AB02", size = rel(1.05), linetype = 1)
-      )
-  }
-
-  p <- p + scale_color_manual(values=colorblind_pallet)
-
-  if (plot_on) {
-    if (! is.null(title)) {
-      plot(p + ggtitle(title))
-    } else {
-      plot(p)
+    if(inherits(data, "data.frame")){
+      data<-as.data.frame(data)
     }
-  } else {
-    if (! is.null(title)) {
-      p <- p + ggtitle(title)
-      return(p)
+
+
+    #check the order
+    if (!is.null(orders)){
+      arms <- unique(data$Arms)
+      judged.order <- is.element(orders,arms)
+
+      if ("FALSE" %in% judged.order)
+        stop("The input order is improper. Please ensure the input order is the order of 'Arms' among data.")
+
+      data$Arms <- factor(data$Arms,levels=orders) # set the order
+    }
+
+    Volume <-  data[ , 'Volume']
+    data <- subset(data,Volume >= 0)
+
+    # Order Control to the top
+    if ('Control'%in%unique(data$Arms)){
+      data$Arms <- relevel(factor(data$Arms), 'Control')
+    }
+
+    if( level == 'Animal'){
+
+      p <- ggplot(data, aes(x = Times, y = Volume, group = ID, color = Arms)) +
+        geom_line(size=0.8)+
+        geom_point(cex=1.5,aes(colour = Arms))
+    }
+    if( level == 'Arm'){
+      s.data <- get_data_summary_study(data, measure.var = "Volume", group.vars = c("Arms","Times"))
+      s.data$Volume <- round(s.data$Volume, 2)
+
+      p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Arms)) +
+        geom_line(position = position_dodge(position.dodge),cex = 1.2) +
+        geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
+                      width = 1.2,
+                      position = position_dodge(position.dodge)) +
+        geom_point(cex = 2,position = position_dodge(position.dodge))
+    }
+
+    p <- p + xlab("Time (d)") + ylab(expression(bold(paste("Tumor Volume (",mm^3,")",sep = " "))))
+
+    p <- p + theme_bw() +
+      theme(
+        panel.background = element_rect(fill = "transparent"),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.background  = element_rect(fill = "transparent")
+      )   #backgroud
+    p <- p + theme(
+      axis.title.x = element_text(face = "bold",size = 12),
+      axis.text.x  = element_text(vjust = 0,size = 12),
+      axis.title.y = element_text(face = "bold",size = 12),
+      axis.text.y  = element_text(hjust = 1,size = 12)
+    )
+
+    if( level == 'Animal'){
+      p <- p + theme(legend.position='none')
+      p <- p + facet_wrap( ~ Arms,dir = 'h') +
+        theme(strip.text = element_text(colour = "black", face = "bold", size = rel(1)),
+              strip.background = element_rect(fill = "#E6AB02", size = rel(1.05), linetype = 1)
+        )
+    }
+
+    p <- p + scale_color_manual(values=colorblind_pallet)
+
+    if (plot_on) {
+      if (! is.null(title)) {
+        plot(p + ggtitle(title))
+      } else {
+        plot(p)
+      }
     } else {
-      return(p)
+      if (! is.null(title)) {
+        p <- p + ggtitle(title)
+        return(p)
+      } else {
+        return(p)
+      }
     }
   }
 }

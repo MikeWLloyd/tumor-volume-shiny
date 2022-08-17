@@ -134,30 +134,47 @@ observeEvent(input$user_tv_upload_default, {
 
 # QUERY
 
-get_data <- eventReactive(input$continue_user_tv_btn, {
-    input_file_user <- input$user_tv_data
-    if (is.null(input_file_user)) {
-      curr_data <- data
-    }else{
-      curr_data <- read.csv(input_file_user$datapath, header = TRUE)
+get_data <- reactive({
+
+    curr_data <- data
+
+    if (input$add_user_tv_btn) {
+      input_file_user <- input$user_tv_data
+      if (is.null(input_file_user)) {
+        curr_data <- data
+      }else{
+        print("In Upload Button")
+        curr_data <- read.csv(input_file_user$datapath, header = TRUE)
+      }
     }
 
+    if (input$user_tv_load_default_btn) {
+      print("In Load Button")
+      curr_data <- data
+    }
+
+
+    n_unique_arms <- length(unique(curr_data$Arms))
     updatePickerInput(session, "tv_contributor", 
                       choices = unique(curr_data$Contributor), 
                       selected = unique(curr_data$Contributor)[1])
 
     updatePickerInput(session, "tv_treatment", 
                   choices = unique(curr_data$Arms), 
-                  selected = unique(curr_data$Arms)[1])
+                  selected = unique(curr_data$Arms)[1:min(3,n_unique_arms)])
     
     updatePickerInput(session, "tv_disease_type", 
                   choices = unique(curr_data$Disease_Type), 
                   selected = unique(curr_data$Disease_Type)[1])
 
-    return(curr_data)
-}, ignoreNULL = FALSE)
+    updatePickerInput(session, "tv_study_picker", 
+                  choices = unique(curr_data$Study), 
+                  selected = unique(curr_data$Study)[1])
 
-get_query_tv <- eventReactive(input$tv_submit_query | input$continue_user_tv_btn, {
+    return(curr_data)
+})
+
+get_query_tv <- reactive( {
 
   withProgress(
     message = "Querying Tumor Volume data:",
@@ -171,8 +188,8 @@ get_query_tv <- eventReactive(input$tv_submit_query | input$continue_user_tv_btn
         incProgress(0.025, detail = "[Status] Executing query, please wait...")
         Sys.sleep(0.03)
       }
-
-      df_query <- query_tv(get_data(),
+      curr_data <- get_data()
+      df_query <- query_tv(curr_data,
                           input$tv_contributor,
                           input$tv_treatment,
                           input$tv_disease_type)
@@ -183,7 +200,7 @@ get_query_tv <- eventReactive(input$tv_submit_query | input$continue_user_tv_btn
         session = session,
         id = "pbar_tv",
         value = length(unique((df_query$df)$Study)),
-        total = length(unique(data$Study))
+        total = length(unique(curr_data$Study))
       )
 
 
@@ -197,7 +214,7 @@ get_query_tv <- eventReactive(input$tv_submit_query | input$continue_user_tv_btn
   )
 
   df_query
-}, ignoreNULL = FALSE)
+})
 
 # DATA TABLE
 query_all_submit <- reactiveValues(counter = 0L)

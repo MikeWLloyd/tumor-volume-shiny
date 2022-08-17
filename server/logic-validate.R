@@ -168,7 +168,28 @@ observeEvent(input$user_tv_data, {
 
   if (check1 == 1 && check2 == 1) {
     error_check_string <- paste(error_check_string, '\n NO ISSUES! IMPORT TO MAIN TAB POSSIBLE.')
+    shinyjs::enable("add_user_tv_btn")
+
+    output$tv_text_continue <- renderText({
+      paste0("Successfuly Validaded Your Tumor Volume Data!")
+    })
+
+    output$tv_text_upload <- renderText({
+      paste0("Loaded Your Tumor Volume Data!")
+    })
+
   } else if (check1 != 1 || check2 != 1) {
+
+    shinyjs::disable("add_user_tv_btn")
+
+    output$tv_text_continue <- renderText({
+      paste0("")
+    })
+
+    output$tv_text_upload <- renderText({
+      paste0("Example Tumor Volume Data Still Active!")
+    })
+
      error_check_string <- paste(error_check_string, '\nImported data are not in expected format for reasons above.\nCorrect issues in local file and re-upload to test. Example valid input data is provided below for reference.')
   }
 
