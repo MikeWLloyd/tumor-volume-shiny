@@ -5,9 +5,9 @@ source(file.path("ui", "interface_variables.R"), local = TRUE)
 tabPanel(
   title = title_home, icon = icon("home"),
   tags$head(HTML(
-    '<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    '<link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png">
   <meta name="theme-color" content="#ffffff">')),
   includeCSS(path = "www/custom.css"),
   includeCSS(path = "css/AdminLTE.css"),
@@ -23,11 +23,6 @@ tabPanel(
     br(), br(),
 
     span(h1("Tumor Volume Suite", style = "color:#FFF; text-shadow: rgba(0, 0, 0, 0.3) 0px 0px 15px; text-align: center; font-weight: 700;") , align = "center"),
-
-    br(),
-
-    # span(h2("powered by Seven Bridges"), style = "color:#FFF; text-shadow: rgba(0, 0, 0, 0.7) 0px 0px 15px; text-align: center;", align = "center"),
-    ## note: if not actually powered by SB, can this text be removed?
 
     br(), br(),
 

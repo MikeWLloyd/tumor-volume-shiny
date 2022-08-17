@@ -52,7 +52,5 @@ tabPanel(
     )
   )),
 
-  fluidRow(
-    HTML('<h6 align="center">&copy; 2022 Seven Bridges &nbsp; &middot; &nbsp; <a href="https://www.sbgenomics.com/privacy-policy/" target="_blank">Privacy</a> &nbsp;&nbsp; <a href="https://www.sbgenomics.com/copyright-policy/" target="_blank">Copyright</a> &nbsp;&nbsp; <a href="https://www.sbgenomics.com/terms-of-service/" target="_blank">Terms</a> &nbsp;&nbsp; <a href="https://www.sbgenomics.com/offices/" target="_blank">Contact</a></h6>')
-  )
+  br()
 )

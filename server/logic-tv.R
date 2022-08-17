@@ -3,20 +3,20 @@
 data <- try(as.data.frame(readRDS("include/tv-test-new.rds")), silent = T)
 rownames(data) <- NULL
 
-# NOTE: This will likely need to be set as a reactive variable: 
+# NOTE: This will likely need to be set as a reactive variable:
 #/   diamond <- reactiveValues( df=NULL )
-  
+
 #  ###Initial setting
 #  observe({diamond$df <- diamonds})
-#  
+#
 #  observeEvent(input$read, {
 #      df1 <- diamonds
 #      ...
 #/#
-# I tried a few different things to get this worked but couldn't figure it out. Note that the 'upload' button may have the same issues with breaking things as it did on the validate page, and might not be needed. 
+# I tried a few different things to get this worked but couldn't figure it out. Note that the 'upload' button may have the same issues with breaking things as it did on the validate page, and might not be needed.
 
 
-    
+
 
 # GET methods
 get_tv_contributor <- function() {
@@ -116,7 +116,7 @@ output$card_tv_treatment <- shinydashboard::renderValueBox({
 
 # UPLOAD
 output$tv_text_upload <- renderText({
-  paste0("Example Tumor Volume Data is Preloaded. Select Your Tumor Volume File and Click Upload Button!")
+    paste0("Example Tumor Volume Data is Preloaded. \nClick Upload Button to Load Your Tumor Volume Data!")
 })
 
 observeEvent(input$user_tv_upload, {
@@ -125,9 +125,9 @@ observeEvent(input$user_tv_upload, {
   })
 })
 
-observeEvent(input$user_tv_upload_default, {
+observeEvent(input$user_tv_load_default, {
   output$tv_text_upload <- renderText({
-    paste0("Example Tumor Volume Data is Preloaded. Select Your Tumor Volume File and Click Upload Button!")
+    paste0("Example Tumor Volume Data is Preloaded. \nClick Upload Button to Load Your Tumor Volume Data!")
   })
 })
 
@@ -143,32 +143,30 @@ get_data <- reactive({
       if (is.null(input_file_user)) {
         curr_data <- data
       }else{
-        print("In Upload Button")
         curr_data <- read.csv(input_file_user$datapath, header = TRUE)
       }
     }
 
     if (input$user_tv_load_default_btn) {
-      print("In Load Button")
       curr_data <- data
     }
 
 
     n_unique_arms <- length(unique(curr_data$Arms))
-    updatePickerInput(session, "tv_contributor", 
-                      choices = unique(curr_data$Contributor), 
+    updatePickerInput(session, "tv_contributor",
+                      choices = unique(curr_data$Contributor),
                       selected = unique(curr_data$Contributor)[1])
 
-    updatePickerInput(session, "tv_treatment", 
-                  choices = unique(curr_data$Arms), 
+    updatePickerInput(session, "tv_treatment",
+                  choices = unique(curr_data$Arms),
                   selected = unique(curr_data$Arms)[1:min(3,n_unique_arms)])
-    
-    updatePickerInput(session, "tv_disease_type", 
-                  choices = unique(curr_data$Disease_Type), 
+
+    updatePickerInput(session, "tv_disease_type",
+                  choices = unique(curr_data$Disease_Type),
                   selected = unique(curr_data$Disease_Type)[1])
 
-    updatePickerInput(session, "tv_study_picker", 
-                  choices = unique(curr_data$Study), 
+    updatePickerInput(session, "tv_study_picker",
+                  choices = unique(curr_data$Study),
                   selected = unique(curr_data$Study)[1])
 
     return(curr_data)
@@ -194,7 +192,7 @@ get_query_tv <- reactive( {
                           input$tv_treatment,
                           input$tv_disease_type)
 
-     
+
 
       updateProgressBar(
         session = session,
@@ -281,14 +279,14 @@ output$plot_tumorvol <- renderPlotly({
       level_type <- "Animal"
     }
 
-    # interpolate the data if asked for. 
+    # interpolate the data if asked for.
     if (input$tv_all_interpolate){
         s.data = get_interpolated_pdx_data(data = s.data)
         s.data$Volume <- s.data$Interpolated_Volume
     }
 
-    #semi-log the data if asked for. 
-    
+    #semi-log the data if asked for.
+
 
     if (input$tv_all_semi.log){
         s.data$Volume <- log(s.data$Volume)
@@ -298,11 +296,11 @@ output$plot_tumorvol <- renderPlotly({
     } else {
       shinyjs::enable("tv_all_scale")
     }
-    
+
 
     # Call plot
     if (input$tv_all_scale) {
-
+      shinyjs::enable("tv_all_interpolate")
       shinyjs::enable("tv_div_all_endpoint")
       shinyjs::enable("tv_div_all_scale_picker")
 
@@ -331,6 +329,7 @@ output$plot_tumorvol <- renderPlotly({
 
     } else {
       # Turn off Scaled Plot I/Os
+      shinyjs::disable("tv_all_interpolate")
       shinyjs::disable("tv_div_all_endpoint")
       shinyjs::disable("tv_div_all_scale_picker")
 
@@ -552,11 +551,11 @@ output$tv_plot_tc <- renderPlotly({
   }
 
   tc_ratios <- T.C_ratio(one_A_N_DRAP, last.measure.day = TC.study.day())
-  
+
   #plot_measure = c('TC.ratio', 'aov.TC.ratio')
 
   plotTC.ratio(tc_ratios, plot_measure = 'aov.TC.ratio' )
-  # NOTE: aov.TC.ratio is used in manuscript. 
+  # NOTE: aov.TC.ratio is used in manuscript.
 })
 
 
@@ -613,7 +612,7 @@ output$log2_foldchange <- renderPlotly({
   if (is.null(s.data) | (nrow(s.data) == 0)) {
     plot_ly()
   } else {
-    
+
     if (input$main_log2_interpolate){
       s.data <- get_interpolated_pdx_data(data = s.data)
       s.data$Volume <- s.data$Interpolated_Volume
@@ -634,7 +633,7 @@ output$hybrid_waterfall <- renderPlotly({
   if (is.null(s.data) | (nrow(s.data) == 0)) {
     plot_ly()
   } else {
-    
+
     if (input$main_tc_interpolate){
       s.data <- get_interpolated_pdx_data(data = s.data)
       s.data$Volume <- s.data$Interpolated_Volume
@@ -662,15 +661,15 @@ output$hybrid_waterfall <- renderPlotly({
 
 
 response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANOVA','LMM'), last.measure.day = NULL, multi_test_anova = FALSE) {
-  
-  ## NOTE: 'Volume' is used here, but dVt could potentially be used. 
-  
+
+  ## NOTE: 'Volume' is used here, but dVt could potentially be used.
+
   data <- get_query_tv()$"df"
 
   if(inherits(data, "data.frame")){
     data<-as.data.frame(data)
   }
-  
+
   if (input$main_anova_interpolate){
     data <- get_interpolated_pdx_data(data = data)
     data$Volume <- data$Interpolated_Volume
@@ -680,25 +679,25 @@ response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANO
     end_day_index = match(last.measure.day,data$Times)
     if (is.na(end_day_index)) {
       end_day_index = which.min(abs(data$Times - last.measure.day))
-    }   
+    }
     data <- subset(data, Times <= data$Times[end_day_index])
   }
-  
+
   data$Arms <- relevel(as.factor(data$Arms), 'Control')
-  
+
   Volume <- data[,'Volume']
-  
+
   data <- subset(data,Volume != 0)
 
   #get endpoint data
   endpoint.data <- data[data$Times == max(data$Times),]
   endpoint.data <- endpoint.data[,c('Arms','Volume')]
   endpoint.data$Arms=factor(endpoint.data$Arms)
-  
+
   #get mean growth rate
   ID <- unique(as.character(data$ID))
-  
-  
+
+
     dra.res <- switch (method,
                         endpoint.ANOVA = summary(aov(Volume ~ Arms, data = endpoint.data)),
                         endpoint.KW    = kruskal.test(Volume ~ Arms, data = endpoint.data),
@@ -725,7 +724,7 @@ response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANO
               options = list(
                 dom = "Blrti", info = FALSE, scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, pageLength = 20, paging = F,
                 buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download")))) %>%
-              formatSignif(c('Sum Sq', 'Mean Sq', 'F value', 'Pr(>F)'), 4) 
+              formatSignif(c('Sum Sq', 'Mean Sq', 'F value', 'Pr(>F)'), 4)
     return(tab.df)
   } else {
 
@@ -767,7 +766,7 @@ output$dt_tukey_table <- DT::renderDataTable(
 # })
 
 output$user_tv_download_default_btn <- downloadHandler(
-  filename = function() { 
+  filename = function() {
     paste("tv_suite-sample-input.csv", sep="")
   },
   content = function(file) {

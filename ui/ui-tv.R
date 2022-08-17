@@ -23,6 +23,10 @@ tabPanel(
 
                column(width=5,
                       fluidRow(actionButton("user_tv_load_default_btn", "Load Example", class = "btn btn-block", icon = icon("arrow-right")))
+               ),
+
+               column(width=5, offset=2,
+                      fluidRow(downloadButton("user_tv_download_default_btn", "Download Example", class = "btn btn-block", icon = icon("download")))
                )
 
              ),
@@ -55,10 +59,6 @@ tabPanel(
               column(
                 width = 5, offset = 1,
                 actionButton("add_user_tv_btn", "Add My Data", class = "btn btn-block")
-              ),
-              column(
-                width = 5, offset = 1,
-                actionButton("continue_user_tv_btn", "Continue", class = "btn btn-primary btn-block")
               )
             ),
 
@@ -589,9 +589,5 @@ tabPanel(
     )
   ),
 
-  fluidRow(column(width = 12)),
-
-  fluidRow(
-    HTML('<p align="center">&copy; 2022 Seven Bridges &nbsp; &middot; &nbsp; <a href="https://www.sevenbridges.com/privacy-policy/" target="_blank">Privacy</a> &nbsp;&nbsp; <a href="https://www.sevenbridges.com/copyright-policy/" target="_blank">Copyright</a> &nbsp;&nbsp; <a href="https://www.sevenbridges.com/terms-of-service/" target="_blank">Terms</a> &nbsp;&nbsp; <a href="https://www.sevenbridges.com/contact/" target="_blank">Contact</a></p>')
-  )
+  fluidRow(column(width = 12))
 )

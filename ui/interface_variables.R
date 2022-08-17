@@ -1,12 +1,3 @@
-# Copyright (C) 2019 Seven Bridges Genomics Inc. All rights reserved.
-#
-# This document is the property of Seven Bridges Genomics Inc.
-# It is considered confidential and proprietary.
-#
-# This document may not be reproduced or transmitted in any form,
-# in whole or in part, without the express written permission of
-# Seven Bridges Genomics Inc.
-
 # Need access to include_ui_login_page variable (Hardcoded in first pass)
 include_ui_login_page = FALSE
 
