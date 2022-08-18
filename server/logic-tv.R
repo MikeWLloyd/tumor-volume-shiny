@@ -315,7 +315,6 @@ output$plot_tumorvol <- renderPlotly({
 
     # Call plot
     if (input$tv_all_scale) {
-      shinyjs::enable("tv_all_interpolate")
       shinyjs::enable("tv_div_all_endpoint")
       shinyjs::enable("tv_div_all_scale_picker")
 
@@ -344,7 +343,6 @@ output$plot_tumorvol <- renderPlotly({
 
     } else {
       # Turn off Scaled Plot I/Os
-      shinyjs::disable("tv_all_interpolate")
       shinyjs::disable("tv_div_all_endpoint")
       shinyjs::disable("tv_div_all_scale_picker")
 

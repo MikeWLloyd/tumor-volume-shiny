@@ -758,7 +758,8 @@ EFSplot <- function(data, PercChange_EventSize = 100, plot_on = TRUE) {
                   surv.median.line = "hv",
                   risk.table.height = 0.25,
                   legend.title="Arms",
-                  risk.table.title=''
+                  risk.table.title='',
+                  break.time.by = 5
   )
 
   return(p)
