@@ -179,7 +179,7 @@ tabPanel(
       title = "Tumor Volume - Visual Analytics", status="primary",solidHeader = TRUE,
 
       tabsetPanel(type = "tabs",
-                  tabPanel("Response Plots",
+                  tabPanel("Response Plot",
                     br(),
                     fluidRow(
 
@@ -274,6 +274,43 @@ tabPanel(
                         )
                       ))
         ),
+        tabPanel("Average Volume Plot",
+                 br(),
+                    fluidRow(
+
+                      column(
+
+                        width = 12,
+
+                        div(
+
+                          fluidRow(
+                            column(
+                                     width = 2,
+                                     numericInput("main_avgplot.day", "Avg Measure Study Day",
+                                                  value = 21,
+                                                  min = 0, max = 500),
+                            ),
+                            column(
+                                     offset = 0,
+                                     width = 2,
+                                     checkboxInput("main_avgplot_interpolate", "Interpolate Data For Calculation", FALSE)
+                            ),
+                            column(
+                              width = 12,
+                              div(
+                              withSpinner(
+                                plotlyOutput("avg_growth_plot", width = "100%", height = "750px", inline = F),
+                                proxy.height = "100px", color="#0273B7"
+                              )
+                            )
+
+                            )
+                          )
+                        )
+                      )
+                    )
+        ),
         tabPanel("Log2 Fold Change Plot",
                  br(),
                     fluidRow(
@@ -304,7 +341,7 @@ tabPanel(
                       )
                     )
         ),
-        tabPanel("Hybrid Waterfall",
+        tabPanel("Hybrid Waterfall Plot",
                  br(),
                     fluidRow(
 
@@ -331,6 +368,88 @@ tabPanel(
                               div(
                               withSpinner(
                                 plotlyOutput("hybrid_waterfall", width = "100%", height = "750px", inline = F),
+                                proxy.height = "100px", color="#0273B7"
+                              )
+                            )
+
+                            )
+                          )
+                        )
+                      )
+                    )
+        ),
+        tabPanel("Tumor Growth Inhibition",
+                 br(),
+                    fluidRow(
+
+                      column(
+
+                        width = 12,
+
+                        div(
+
+                          fluidRow(
+                            column(
+                                     width = 2,
+                                     numericInput("main_TGI.day", "TGI Date",
+                                                  value = 21,
+                                                  min = 0, max = 500),
+                            ),
+                            column(
+                                     offset = 0,
+                                     width = 2,
+                                     checkboxInput("main_tgi_interpolate", "Interpolate Data For Calculation", FALSE)
+                            )),
+
+                            hr(),
+
+                             fluidRow(
+                             column(
+                               width = 6, offset = 0,
+                               withSpinner(
+                                 plotlyOutput("main_tgi", width = "100%", height = '500px'),
+                                 proxy.height = "100px", color="#0273B7"
+                               )),
+                              column(
+                               width = 6,
+                               HTML("<br>"),
+                               withSpinner(
+                                 DTOutput("main_tc_table"),
+                                 proxy.height = "100px", color="#0273B7"
+                               )
+                             )
+                           )                          
+                        )
+                      )
+                    )
+        ),
+        tabPanel("Stacked Objective Response Plot",
+                 br(),
+                    fluidRow(
+
+                      column(
+
+                        width = 12,
+
+                        div(
+
+                          fluidRow(
+                            column(
+                                     width = 2,
+                                     numericInput("main_orc.day", "RECIST Calculation Day",
+                                                  value = 21,
+                                                  min = 0, max = 500),
+                            ),
+                            column(
+                                     offset = 0,
+                                     width = 2,
+                                     checkboxInput("main_stackedorc_interpolate", "Interpolate Data For Calculation", FALSE)
+                            ),
+                            column(
+                              width = 12,
+                              div(
+                              withSpinner(
+                                plotlyOutput("main_orc_plot", width = "100%", height = "750px", inline = F),
                                 proxy.height = "100px", color="#0273B7"
                               )
                             )
@@ -436,7 +555,7 @@ tabPanel(
                              )
                            )
                   ),
-                  tabPanel("Waterfall Plots",
+                  tabPanel("Waterfall Plot",
                            br(),
                           fluidRow(
                              column(
@@ -477,7 +596,7 @@ tabPanel(
                                ))
                            )
                   ),
-                  tabPanel("Tumor Growth Inhibition Plot",
+                  tabPanel("Tumor Growth Inhibition",
                            br(),
                           fluidRow(
                              column(
@@ -518,7 +637,7 @@ tabPanel(
                              )
                            )
                   ),
-                  tabPanel("Event Free Survival Plots",
+                  tabPanel("Event Free Survival",
                            br(),
                           fluidRow(
                              column(

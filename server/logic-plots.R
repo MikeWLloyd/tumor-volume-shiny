@@ -301,7 +301,7 @@ get_plot_scaled <- function(data, orders = NULL, position.dodge, title = NULL, p
   }
 }
 
-### get_plot_scaled_study is not presently used. Was used in the OCR plotting, but removed. Code saved in case is needed again. 
+### get_plot_scaled_study is not presently used. Was used in the ORC plotting, but removed. Code saved in case is needed again. 
 get_plot_scaled_study <- function(data, orders = NULL, position.dodge, title = NULL, plot_on = TRUE, scale.factor, scale.by.volume = FALSE, ...){
 
   if (is.null(data) | nrow(data) == 0) {
@@ -707,6 +707,17 @@ get_response_level <- function(data, last.measure.day){
       response.level <- "PD"
     }
 
+    # NOTE: The RECIST classification needs to be adjusted to fit the classification used in the MS. Currently this is the Jax PDX classification.
+    #
+    # Funda suggested the following for individual mice:  
+    # 
+    # dplyr::mutate(ORC = case_when(dVt <= -30 ~ 'PR', 
+    #                           dVt > -30 & dVt < 20 ~ 'SD',
+    #                           dVt > 20 ~ 'PD')) %>%  
+    #
+    # # MWL Question: should the RECIST individual animal waterfall plots be shown? 
+    # # MWL Question: how is RECIST for individual animals translated into a model specific value? 
+
     response.level.id.i <- data.frame(Arms = Arms[i],
                                       Best.Response = best.response,
                                       Avg.Response = avg.response,
@@ -867,7 +878,10 @@ IndividualMouseReponse <- function(data, last.measure.day = NULL) {
         dplyr::select(ID, Times, AUC.Filtered.Measures) %>%
         dplyr::full_join(data.id.i, by = c('ID', 'Times')) %>%
         dplyr::filter(Times == last.avail.day) %>%
-        dplyr::select(c('ID', 'Times',  'Arms', 'Tumor', 'Volume', 'dVt', 'log2.Fold.Change', 'AUC.Filtered.Measures', 'AUC.All.Measures'))
+        dplyr::mutate(ORC = case_when(dVt <= -30 ~ 'PR', 
+                                      dVt > -30 & dVt < 20 ~ 'SD',
+                                      dVt > 20 ~ 'PD')) %>% 
+        dplyr::select(c('ID', 'Times',  'Arms', 'Tumor', 'Volume', 'dVt', 'log2.Fold.Change', 'AUC.Filtered.Measures', 'AUC.All.Measures', 'ORC'))
 
 
       data.id.sub <- as.data.frame(data.id.sub)
@@ -1034,7 +1048,8 @@ T.C_ratio <- function(data, last.measure.day = NULL) {
       var.T <- var(data.id.i$TV.ratio)
       n.T <- length(data.id.i$TV.ratio)
       mean.dVt <- mean(data.id.i$dVt)
-      
+      SE.dVt <- sd(data.id.i$dVt)/sqrt(length((data.id.i$dVt)))
+
       TC.ratio <- (mean.T / mean.C)
       se_TC.ratio <- 1 / mean.C * ((var.T / n.T + (mean.T / mean.C) * (var.C / n.C))^0.5)
     
@@ -1042,6 +1057,7 @@ T.C_ratio <- function(data, last.measure.day = NULL) {
                            Tumor = data.id.sub.c$Tumor[1],
                            TC.CalcDay = last.avail.day,
                            mean.dVt = mean.dVt,
+                           SE.dVt = SE.dVt,
                            mean.TVratio = mean.T, 
                            var.TVratio = var.T, 
                            n.TVratio = n.T,
@@ -1135,7 +1151,7 @@ plotTC.ratio <- function(data,
                    legend.background = element_rect(fill = 'white', colour = 'black'),
                    legend.title = element_text( size = 12, face = "bold"),
                    legend.text = element_text( size = 12)) +
-      geom_vline(xintercept = seq(1.5, (length(levels(as.factor(data$Tumor))) + 1), by = 1))
+      geom_vline(xintercept = seq(1.5, (length(levels(as.factor(data$Tumor))) + 1), by = 1), color = 'gray', linetype = 'dashed')
     
   }
   
@@ -1194,7 +1210,7 @@ log2FoldPlot <- function(data,
     p <- p + theme(legend.background = element_rect(fill = 'white', colour = 'black'),
                    legend.title = element_text( size = 12, face = "bold"),
                    legend.text = element_text( size = 12)) +
-      geom_vline(xintercept = seq(1.5, (length(levels(as.factor(data$Tumor))) + 1), by = 1), linetype = "dashed")
+      geom_vline(xintercept = seq(1.5, (length(levels(as.factor(data$Tumor))) + 1), by = 1), color = 'gray', linetype = 'dashed')
     
   }
 
@@ -1238,8 +1254,97 @@ WaterfallPlot_Hybrid <- function(data) {
 
   p <- p + theme(legend.background = element_rect(fill = 'white', colour = 'black'),
                  legend.title = element_text( size = 12, face = "bold"),
-                 legend.text = element_text( size = 12))
+                 legend.text = element_text( size = 12)) +
+                 geom_vline(xintercept = seq(1.5, (length(levels(as.factor(data$Tumor))) + 1), by = 1), color = 'gray', linetype = 'dashed')
   
 
   return(p)
+}
+
+plotAvgGrowthBar <- function(data) {
+
+  adjusted.data <- data %>%
+    dplyr::filter(Arms != 'Control')
+
+  Volume <- data[ , 'mean.dVt']
+  
+  p <- ggplot(data, aes(x = Tumor, y = mean.dVt, fill = Arms, Group = Tumor)) + 
+    geom_hline(yintercept = 0) + 
+    geom_bar(stat = 'identity', position = "dodge") +
+    geom_errorbar(aes(x = Tumor, ymin = mean.dVt - SE.dVt , ymax = mean.dVt + SE.dVt ), width=0.2, position = position_dodge(0.9)) +
+    scale_fill_manual(values=colorblind_pallet) +
+    scale_y_continuous(limits = c(-150, max(data$mean.dVt) + max(data$SE.dVt )), breaks = c(-100, seq(0, max(data$mean.dVt) + max(data$SE.dVt ), by = 100))) 
+  
+  p <- p + xlab('') + ylab("Average Tumor Volume Change (%)")
+  p <- p + theme_bw()+
+    theme(
+      panel.background = element_rect(fill = "transparent"),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank(),
+      plot.background  = element_rect(fill = "transparent"),
+      axis.text.x=element_blank(),
+      axis.ticks.x=element_blank()
+    )   #backgroud
+ 
+  p <- p + theme(axis.title.y = element_text(face = "bold",size = 12),
+                 axis.text.y  = element_text(hjust = 1,size = 12)
+  )
+
+  if(length(levels(as.factor(data$Tumor))) == 1) {
+    p <- p + theme(legend.background = element_rect(fill = 'white', colour = 'black'),
+                   legend.title = element_text( size = 12, face = "bold"),
+                   legend.text = element_text( size = 12))
+  } else {
+    p <- p + theme(axis.text.x  = element_text(hjust = 1,vjust = 1,size = 12,angle = 45),
+                   legend.background = element_rect(fill = 'white', colour = 'black'),
+                   legend.title = element_text( size = 12, face = "bold"),
+                   legend.text = element_text( size = 12)) +
+      geom_vline(xintercept = seq(1.5, (length(levels(as.factor(data$Tumor))) + 1), by = 1), linetype = "dashed", color = 'gray50')
+
+  }
+  return(p)
+
+}
+
+
+plotStackedORC <- function(data) {
+
+  adjusted.data <- data %>%
+    dplyr::group_by(Tumor, Arms) %>%
+    count(ORC) %>% 
+    dplyr::mutate(pct = n / sum(n)) %>% 
+    dplyr::filter(Arms != 'Control')
+  
+  adjusted.data$ORC<-factor(adjusted.data$ORC, levels=c('PD', 'SD', 'PR'), ordered = TRUE)
+  
+  p <- ggplot(adjusted.data, aes(x = Tumor, y = pct, fill = ORC, Group = Arms)) + 
+    geom_col(width=0.7) +
+    geom_text(aes(label = n), position = position_stack(vjust = 0.5)) +
+    scale_fill_manual(name = "Objective Response", values = colorblind_pallet, labels = c('PD', 'SD', 'PR'), drop = F)
+    
+  
+  p <- p + xlab('') + ylab("Proportion Animals in ORC Class")
+  p <- p + theme_bw() +
+    theme(
+      panel.background = element_rect(fill = "transparent"),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_blank(),
+      plot.background  = element_rect(fill = "transparent"),
+      axis.text.x=element_blank(),
+      axis.ticks.x=element_blank()
+    )   #backgroud
+  
+  p <- p + theme(axis.title.y = element_text(face = "bold",size = 12),
+                 axis.text.y  = element_text(hjust = 1,size = 12)
+  )
+  
+  
+  p <- p + theme(axis.text.x  = element_text(hjust = 1,vjust = 1,size = 12,angle = 45),
+                 legend.background = element_rect(fill = 'white', colour = 'black'),
+                 legend.title = element_text( size = 12, face = "bold"),
+                 legend.text = element_text( size = 12)) +
+    geom_vline(xintercept = seq(1.5, (length(levels(as.factor(data$Tumor))) + 1), by = 1), linetype = "dashed", color = 'gray50') +
+    geom_hline(yintercept = 0)
+  
+    return(p)
 }

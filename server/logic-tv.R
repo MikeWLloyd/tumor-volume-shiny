@@ -368,11 +368,19 @@ last.study.day <- reactive({
   return(input$tv_recist)
 })
 
+avgplot.study.day <- reactive({
+  return(input$main_avgplot.day)
+})
+
 AUC.study.day <- reactive({
   return(input$tv_AUC.day.waterfall)
 })
 
-TCmain.study.day <- reactive({
+mainORC.day <- reactive({
+  return(input$main_orc.day)
+})
+
+mainTC.study.day <- reactive({
   return(input$main_TC.day)
 })
 
@@ -380,6 +388,9 @@ TC.study.day <- reactive({
   return(input$tv_TC.day)
 })
 
+mainTGI.study.day <- reactive({
+  return(input$main_TGI.day)
+})
 
 anova_measure_day <- reactive({
   return(input$anova_Measure_Day)
@@ -571,10 +582,6 @@ output$tv_plot_tc <- renderPlotly({
   # NOTE: aov.TC.ratio is used in manuscript.
 })
 
-
-
-
-
 output$dt_tc_table <- DT::renderDataTable(
   tc_table()
 )
@@ -618,6 +625,62 @@ tc_table <- reactive({
 })
 
 
+output$main_tc_table <- DT::renderDataTable(
+  main_tc_table()
+)
+
+
+
+output$main_tgi <- renderPlotly({
+
+  df <- get_query_tv()$"df"
+
+  if (input$main_tgi_interpolate){
+    df = get_interpolated_pdx_data(data = df)
+    df$Volume <- df$Interpolated_Volume
+  }
+
+  tc_ratios <- T.C_ratio(df, last.measure.day = mainTGI.study.day())
+
+  #plot_measure = c('TC.ratio', 'aov.TC.ratio')
+
+  plotTC.ratio(tc_ratios, plot_measure = 'aov.TC.ratio' )
+  # NOTE: aov.TC.ratio is used in manuscript.
+})
+
+main_tc_table <- reactive({
+
+  df <- get_query_tv()$"df"
+
+  if (input$main_tgi_interpolate){
+      df = get_interpolated_pdx_data(data = df)
+      df$Volume <- df$Interpolated_Volume
+  }
+
+  response_list = list()
+  response_list <- T.C_ratio(df, last.measure.day = mainTGI.study.day())
+
+  # response_list[[study]]$Response.Level <- factor(response_list[[study]]$Response.Level)
+
+  response_list <- response_list %>% dplyr::select(-Tumor, -mean.TVratio,	-var.TVratio,	-mean.dVt, -TC.ratio) %>%
+                                     dplyr::select(Arms, TC.CalcDay, n.TVratio, aov.TC.ratio, se_TC.ratio, Contrast.pValue) %>%
+                                     dplyr::rename(pValue = Contrast.pValue)
+
+  tab.df <- DT::datatable(response_list[order(response_list$Arms),],
+            style = "bootstrap",
+            escape = FALSE,
+            filter = 'none',
+            rownames= FALSE,
+            class = "cell-border stripe",
+            extensions = "Buttons",
+            options = list(
+              dom = "Blrtip", scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, lengthMenu = list(c(5, 20, 50, -1), c('5', '20', '50', 'All')), pageLength = 20, paging = T,
+              buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download")))) %>%
+            formatRound(c('aov.TC.ratio', 'se_TC.ratio'), digits = 2) %>%
+            formatSignif(c('pValue'), 2)
+  tab.df
+})
+
 output$log2_foldchange <- renderPlotly({
 
   s.data <- get_query_tv()$"df"
@@ -638,8 +701,31 @@ output$log2_foldchange <- renderPlotly({
 
 })
 
-output$hybrid_waterfall <- renderPlotly({
 
+
+output$avg_growth_plot <- renderPlotly({
+
+  s.data <- get_query_tv()$"df"
+
+  if (is.null(s.data) | (nrow(s.data) == 0)) {
+    plot_ly()
+  } else {
+
+    if (input$main_avgplot_interpolate){
+      s.data <- get_interpolated_pdx_data(data = s.data)
+      s.data$Volume <- s.data$Interpolated_Volume
+    }
+
+    tc_ratios <- T.C_ratio(s.data, last.measure.day = avgplot.study.day())
+
+    plotAvgGrowthBar(tc_ratios)
+
+  }
+
+})
+
+
+output$hybrid_waterfall <- renderPlotly({
 
   s.data <- get_query_tv()$"df"
 
@@ -651,7 +737,7 @@ output$hybrid_waterfall <- renderPlotly({
       s.data <- get_interpolated_pdx_data(data = s.data)
       s.data$Volume <- s.data$Interpolated_Volume
     }
-    tc_ratios <- T.C_ratio(s.data, last.measure.day = TCmain.study.day())
+    tc_ratios <- T.C_ratio(s.data, last.measure.day = mainTC.study.day())
 
 
 
@@ -668,7 +754,28 @@ output$hybrid_waterfall <- renderPlotly({
 
   }
 
+})
 
+
+
+output$main_orc_plot <- renderPlotly({
+
+  s.data <- get_query_tv()$"df"
+
+  if (is.null(s.data) | (nrow(s.data) == 0)) {
+    plot_ly()
+  } else {
+
+    if (input$main_stackedorc_interpolate){
+      s.data <- get_interpolated_pdx_data(data = s.data)
+      s.data$Volume <- s.data$Interpolated_Volume
+    }
+
+    vc_change <- IndividualMouseReponse(s.data, last.measure.day = mainORC.day())
+
+    plotStackedORC(vc_change)
+
+  }
 
 })
 
@@ -677,9 +784,11 @@ response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANO
 
   ## NOTE: 'Volume' is used here, but dVt could potentially be used.
 
-#  data <- get_query_tv()$"df"
-
   data <- gen_data_filter_study()
+  study <- unlist(levels(factor(data$Study)))[1]
+
+  data <- data %>%
+    filter(Study == study) %>% droplevels()
 
   if(inherits(data, "data.frame")){
     data<-as.data.frame(data)
@@ -792,6 +901,3 @@ output$user_tv_download_default_btn <- downloadHandler(
 observeEvent(input$btn_nav_tv, updateNavlistPanel(session, "nav_bco", selected = title_tumor_volume))
 observeEvent(input$btn_nav_val, updateNavlistPanel(session, "nav_bco", selected = title_validate))
 observeEvent(input$btn_nav_help, updateNavlistPanel(session, "nav_bco", selected = title_help))
-
-
-
