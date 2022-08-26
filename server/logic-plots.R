@@ -858,12 +858,12 @@ IndividualMouseReponse <- function(data, last.measure.day = NULL) {
 
       data.id.i <- data.id.i %>%
         dplyr::group_by(ID) %>%
-        dplyr::mutate(AUC.All.Measures = auc(Times, dVt, type = 'spline') / max(Times))
+        dplyr::mutate(AUC.All.Measures = round(auc(Times, dVt, type = 'spline') / max(Times), 2))
 
       data.id.sub <- data.id.i %>%
         dplyr::group_by(ID) %>%
         dplyr::filter(Times <= last.avail.day) %>%
-        dplyr::mutate(AUC.Filtered.Measures = auc(Times, dVt, type = 'spline') / max(Times)) %>%
+        dplyr::mutate(AUC.Filtered.Measures = round(auc(Times, dVt, type = 'spline') / max(Times), 2)) %>%
         dplyr::select(ID, Times, AUC.Filtered.Measures) %>%
         dplyr::full_join(data.id.i, by = c('ID', 'Times')) %>%
         dplyr::filter(Times == last.avail.day) %>%
@@ -1050,14 +1050,14 @@ T.C_ratio <- function(data, last.measure.day = NULL) {
       
       Response.Level.tmp <- rbind(Response.Level.tmp,tmp.df)
     }
-  
+
     aov.df$TV.ratio <- ifelse(aov.df$TV.ratio==0, 0.001, aov.df$TV.ratio)
     
     lm.fit <- aov(log2(TV.ratio) ~ Arms, data = aov.df)
     
     beta <- lm.fit$coefficients[-1]
     
-    aov.TC.ratio <- (2^beta)
+    aov.TC.ratio <- round((2^beta), 2)
     
     names(aov.TC.ratio) <- sub("Arms","", names(aov.TC.ratio))
     

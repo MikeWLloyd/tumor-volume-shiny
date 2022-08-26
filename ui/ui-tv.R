@@ -288,7 +288,7 @@ tabPanel(
                             column(
                                      offset = 0,
                                      width = 2,
-                                     checkboxInput("main_log2_interpolate", "Interpolate Data For Plot", FALSE)
+                                     checkboxInput("main_log2_interpolate", "Interpolate Data For Calculation", FALSE)
                             ),
                             column(
                               width = 12,
@@ -318,13 +318,13 @@ tabPanel(
                             column(
                                      width = 2,
                                      numericInput("main_TC.day", "T/C Date",
-                                                  value = 24,
+                                                  value = 21,
                                                   min = 0, max = 500),
                             ),
                             column(
                                      offset = 0,
                                      width = 2,
-                                     checkboxInput("main_tc_interpolate", "Interpolate Data For Plot", FALSE)
+                                     checkboxInput("main_tc_interpolate", "Interpolate Data For Calculation", FALSE)
                             ),
                             column(
                               width = 12,
@@ -396,13 +396,13 @@ tabPanel(
                                    column(
                                      width = 2,
                                      numericInput("tv_recist", "RECIST Day",
-                                                  value = 24,
+                                                  value = 21,
                                                   min = 0, max = 500),
                                    ),
                                    column(
                                      offset = 0,
                                      width = 2,
-                                     checkboxInput("tv_interpolate", "Interpolate Data For Plot", FALSE)
+                                     checkboxInput("tv_interpolate", "Interpolate Data For Calculation", FALSE)
                                    )
                                  )
                                )
@@ -454,13 +454,13 @@ tabPanel(
                                    column(
                                      width = 2,
                                      numericInput("tv_AUC.day.waterfall", "AUC Day",
-                                                  value = 24,
+                                                  value = 21,
                                                   min = 0, max = 500),
                                    ),
                                    column(
                                      offset = 0,
                                      width = 2,
-                                     checkboxInput("tv_waterfall_interpolate", "Interpolate Data For Plot", FALSE)
+                                     checkboxInput("tv_waterfall_interpolate", "Interpolate Data For Calculation", FALSE)
                                    )
                                  )
                                )
@@ -487,13 +487,13 @@ tabPanel(
                                      column(
                                      width = 2,
                                      numericInput("tv_TC.day", "T/C Date",
-                                                  value = 24,
+                                                  value = 21,
                                                   min = 0, max = 500),
                                    ),
                                    column(
                                      offset = 0,
                                      width = 2,
-                                     checkboxInput("tv_TC_interpolate", "Interpolate Data For Plot", FALSE)
+                                     checkboxInput("tv_TC_interpolate", "Interpolate Data For Calculation", FALSE)
                                    )
                                  )
                                )

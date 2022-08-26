@@ -1,6 +1,6 @@
 # DATA
 
-data <- try(as.data.frame(readRDS("include/tv-test-new.rds")), silent = T)
+data <- try(as.data.frame(readRDS("include/tv-test.rds")), silent = T)
 rownames(data) <- NULL
 
 # NOTE: This will likely need to be set as a reactive variable:
@@ -677,7 +677,9 @@ response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANO
 
   ## NOTE: 'Volume' is used here, but dVt could potentially be used.
 
-  data <- get_query_tv()$"df"
+#  data <- get_query_tv()$"df"
+
+  data <- gen_data_filter_study()
 
   if(inherits(data, "data.frame")){
     data<-as.data.frame(data)
