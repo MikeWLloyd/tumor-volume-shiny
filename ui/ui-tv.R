@@ -1,5 +1,8 @@
 tabPanel(
   title = title_tumor_volume, icon = icon("fa-solid fa-chart-line"),
+
+
+  
   shinydashboard::box(
     width=12,
     title="Data and Query", status="primary",solidHeader = T,
@@ -140,26 +143,24 @@ tabPanel(
           )
         )
       )
-    )
-  ),
-  br(),
-  hr(),
-  br(),
-  shinydashboard::box(
-    width = 12,
-    title = "Results", status="primary",solidHeader = TRUE,
-
+    ),
+    br(),
     shinydashboard::box(
       width = 12,
-      title = "Matched Tumor Volumes - Summary", status="primary",solidHeader = TRUE,
+      title = "Selected Volume Data - Summary", status="primary",solidHeader = TRUE,
 
-      div(
-        progressBar(
-          id = "pbar_tv", value = 100,
-          total = 100, display_pct = TRUE,
-          title = "Number of Studies"
-        )
-      ),
+      # div(
+      #   fluidRow(
+      #     column(offset = 0, width = 3,
+      #       progressBar(
+      #         id = "pbar_tv", value = 100,
+      #         total = 100, display_pct = TRUE,
+      #         title = "Selected Number of Studies"
+      #       )
+      #     )
+      #   ) 
+      # ), 
+      # MWL NOTE: At present we do not have a way to select studies. This bar confused me the first few times I looked at it. The data presented is also redundant with 'card_tv_studies'. Removing for now. 
 
       fluidRow(
         column(offset = 0, width = 12,
@@ -172,12 +173,31 @@ tabPanel(
         )
       )
     ),
+  ),
+  br(),
+  hr(),
+  br(),
 
-    shinydashboard::box(
 
-      width = 12,
-      title = "Tumor Volume - Visual Analytics", status="primary",solidHeader = TRUE,
 
+  shinydashboard::tabBox(
+    width = 12,
+    title = "Available Analyses",
+    id = "main_tabset", height = "250px",
+    # tags$style(".nav-tabs {
+    # background-color: #142A44;
+    # }
+
+    # .nav-tabs-custom .nav-tabs li.active:hover a, .nav-tabs-custom .nav-tabs li.active a {
+    # background-color: transparent;
+    # border-color: transparent;
+    # }
+
+    # .nav-tabs-custom .nav-tabs li.active {
+    #     border-top-color: #273D54;
+    # }"),
+    tabPanel("Cross Study Plots & Analysis",
+    
       tabsetPanel(type = "tabs",
                   tabPanel("Response Plot",
                     br(),
@@ -488,20 +508,19 @@ tabPanel(
           )
         )
       )
+    
+    
+    
     ),
-
-    shinydashboard::box(
-
-      width = 12,
-      title = "Study Focused Tumor Volume Analytics", status="primary",solidHeader = TRUE,
+    tabPanel("Individual Study Plots & Analysis",
       fluidRow(
-                                   column(
-                                     width = 2,
-                                     pickerInput("tv_study_picker", "Study",
-                                                 choices = get_tv_study(),
-                                                 options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
-                                                                         showContent = TRUE),multiple = FALSE),
-                                   )
+          column(
+            width = 2,
+            pickerInput("tv_study_picker", "Study",
+                        choices = get_tv_study(),
+                        options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                                                showContent = TRUE),multiple = FALSE),
+          )
         ),
       tabsetPanel(type = "tabs",
                   tabPanel("Objective Response (RECIST)",
@@ -705,8 +724,14 @@ tabPanel(
                   )
                   # anova_Measure_Day box for input
                   # main_anova_interpolate for interpolate.
+      
       )
-    )
+    ),
+  
+
+  
+
+
   ),
 
   fluidRow(column(width = 12))
