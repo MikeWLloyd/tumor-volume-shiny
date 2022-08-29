@@ -1309,6 +1309,8 @@ plotAvgGrowthBar <- function(data) {
 
 plotStackedORC <- function(data) {
 
+  color_pallet <- c("#888888", "#A1D2CE", "#50858B", "#000000")
+
   adjusted.data <- data %>%
     dplyr::group_by(Tumor, Arms) %>%
     count(ORC) %>% 
@@ -1317,10 +1319,10 @@ plotStackedORC <- function(data) {
   
   adjusted.data$ORC<-factor(adjusted.data$ORC, levels=c('PD', 'SD', 'PR'), ordered = TRUE)
   
-  p <- ggplot(adjusted.data, aes(x = Tumor, y = pct, fill = ORC, Group = Arms)) + 
+  p <- ggplot(adjusted.data, aes(x = Arms, y = pct, fill = ORC, Group = Tumor)) + 
     geom_col(width=0.7) +
     geom_text(aes(label = n), position = position_stack(vjust = 0.5)) +
-    scale_fill_manual(name = "Objective Response", values = colorblind_pallet, labels = c('PD', 'SD', 'PR'), drop = F)
+    scale_fill_manual(name = "Objective Response", values = color_pallet, labels = c('PD', 'SD', 'PR'), drop = F)
     
   
   p <- p + xlab('') + ylab("Proportion Animals in ORC Class")
@@ -1337,14 +1339,23 @@ plotStackedORC <- function(data) {
   p <- p + theme(axis.title.y = element_text(face = "bold",size = 12),
                  axis.text.y  = element_text(hjust = 1,size = 12)
   )
-  
-  
-  p <- p + theme(axis.text.x  = element_text(hjust = 1,vjust = 1,size = 12,angle = 45),
+
+  if (length(levels(as.factor(data$Arms))) > 2) {
+      p <- p + theme(axis.text.x  = element_text(hjust = 1,vjust = 1,size = 12,angle = 45),
                  legend.background = element_rect(fill = 'white', colour = 'black'),
                  legend.title = element_text( size = 12, face = "bold"),
                  legend.text = element_text( size = 12)) +
-    geom_vline(xintercept = seq(1.5, (length(levels(as.factor(data$Tumor))) + 1), by = 1), linetype = "dashed", color = 'gray50') +
+    geom_vline(xintercept = seq(1.5, (length(levels(as.factor(data$Arms))) + 1), by = 1), linetype = "dashed", color = 'gray50') +
     geom_hline(yintercept = 0)
-  
-    return(p)
+  } else {
+    p <- p + theme(axis.text.x  = element_text(hjust = 1,vjust = 1,size = 12,angle = 45),
+                 legend.background = element_rect(fill = 'white', colour = 'black'),
+                 legend.title = element_text( size = 12, face = "bold"),
+                 legend.text = element_text( size = 12)) +
+    geom_hline(yintercept = 0)
+  }
+
+  p <- p + facet_wrap(~ Tumor,dir = 'h', scales = "free_x")
+
+  return(p)
 }
