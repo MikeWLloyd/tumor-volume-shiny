@@ -47,9 +47,9 @@ get_tv_disease <- function() {
 
 get_tv_study <- function() {
   if (length(unique(data$Study)) < 2) {
-    unique(data$Study)
+    unique(sort(data$Study))
   } else {
-    sort(unique(data$Study), na.last = T)
+    unique(sort(data$Study, na.last = T))
   }
 }
 
@@ -169,20 +169,20 @@ get_data <- reactive({
 
     n_unique_arms <- length(unique(curr_data$Arms))
     updatePickerInput(session, "tv_contributor",
-                      choices = unique(curr_data$Contributor),
-                      selected = unique(curr_data$Contributor)[1])
+                      choices = unique(sort(curr_data$Contributor)),
+                      selected = unique(sort(curr_data$Contributor)[1]))
 
     updatePickerInput(session, "tv_treatment",
                   choices = unique(curr_data$Arms),
                   selected = unique(curr_data$Arms)[1:min(3,n_unique_arms)])
 
     updatePickerInput(session, "tv_disease_type",
-                  choices = unique(curr_data$Disease_Type),
-                  selected = unique(curr_data$Disease_Type)[1])
+                  choices = unique(sort(curr_data$Disease_Type)),
+                  selected = unique(sort(curr_data$Disease_Type)[1]))
 
     updatePickerInput(session, "tv_study_picker",
-                  choices = unique(curr_data$Study),
-                  selected = unique(curr_data$Study)[1])
+                  choices = unique(sort(curr_data$Study)),
+                  selected = unique(sort(curr_data$Study)[1]))
 
     return(curr_data)
 })

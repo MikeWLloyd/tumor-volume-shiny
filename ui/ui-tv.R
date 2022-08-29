@@ -499,7 +499,6 @@ tabPanel(
                                      width = 2,
                                      pickerInput("tv_study_picker", "Study",
                                                  choices = get_tv_study(),
-                                                 selected = get_tv_study()[1],
                                                  options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
                                                                          showContent = TRUE),multiple = FALSE),
                                    )
