@@ -1339,7 +1339,7 @@ plotStackedORC <- function(data) {
   p <- p + theme(axis.title.y = element_text(face = "bold",size = 12),
                  axis.text.y  = element_text(hjust = 1,size = 12)
   )
-
+  
   if (length(levels(as.factor(data$Arms))) > 2) {
       p <- p + theme(axis.text.x  = element_text(hjust = 1,vjust = 1,size = 12,angle = 45),
                  legend.background = element_rect(fill = 'white', colour = 'black'),
