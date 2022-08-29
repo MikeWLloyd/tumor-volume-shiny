@@ -614,47 +614,47 @@ tabPanel(
                                ))
                            )
                   ),
-                  tabPanel("Tumor Growth Inhibition",
-                           br(),
-                          fluidRow(
-                             column(
-                               width = 12,
-                               div(
-                                 fluidRow(
-                                     column(
-                                     width = 2,
-                                     numericInput("tv_TC.day", "T/C Date",
-                                                  value = 21,
-                                                  min = 0, max = 500),
-                                   ),
-                                   column(
-                                     offset = 0,
-                                     width = 2,
-                                     checkboxInput("tv_TC_interpolate", "Interpolate Data For Calculation", FALSE)
-                                   )
-                                 )
-                               )
-                             )),
+                  # tabPanel("Tumor Growth Inhibition",
+                  #          br(),
+                  #         fluidRow(
+                  #            column(
+                  #              width = 12,
+                  #              div(
+                  #                fluidRow(
+                  #                    column(
+                  #                    width = 2,
+                  #                    numericInput("tv_TC.day", "T/C Date",
+                  #                                 value = 21,
+                  #                                 min = 0, max = 500),
+                  #                  ),
+                  #                  column(
+                  #                    offset = 0,
+                  #                    width = 2,
+                  #                    checkboxInput("tv_TC_interpolate", "Interpolate Data For Calculation", FALSE)
+                  #                  )
+                  #                )
+                  #              )
+                  #            )),
 
-                           hr(),
+                  #          hr(),
 
-                           fluidRow(
-                             column(
-                               width = 6, offset = 0,
-                               withSpinner(
-                                 plotlyOutput("tv_plot_tc", width = "100%", height = '500px'),
-                                 proxy.height = "100px", color="#0273B7"
-                               )),
-                              column(
-                               width = 6,
-                               HTML("<br>"),
-                               withSpinner(
-                                 DTOutput("dt_tc_table"),
-                                 proxy.height = "100px", color="#0273B7"
-                               )
-                             )
-                           )
-                  ),
+                  #          fluidRow(
+                  #            column(
+                  #              width = 6, offset = 0,
+                  #              withSpinner(
+                  #                plotlyOutput("tv_plot_tc", width = "100%", height = '500px'),
+                  #                proxy.height = "100px", color="#0273B7"
+                  #              )),
+                  #             column(
+                  #              width = 6,
+                  #              HTML("<br>"),
+                  #              withSpinner(
+                  #                DTOutput("dt_tc_table"),
+                  #                proxy.height = "100px", color="#0273B7"
+                  #              )
+                  #            )
+                  #          )
+                  # ),
                   tabPanel("Event Free Survival",
                            br(),
                           fluidRow(
