@@ -29,7 +29,7 @@ tabPanel(
                ),
 
                column(width=5, offset=2,
-                      fluidRow(downloadButton("user_tv_download_default_btn", "Download Example", class = "btn btn-block", icon = icon("download")))
+                      fluidRow(downloadButton("user_tv_download_default_btn", "Download Loaded Data", class = "btn btn-block", icon = icon("download")))
                )
 
              ),
@@ -182,7 +182,7 @@ tabPanel(
 
   shinydashboard::tabBox(
     width = 12,
-    title = "Available Analyses",
+    title = "",
     id = "main_tabset", height = "250px",
     # tags$style(".nav-tabs {
     # background-color: #142A44;
@@ -480,33 +480,7 @@ tabPanel(
                       )
                     )
         ),
-        tabPanel("Tumor Volume Data",
-                 br(),
-          shinydashboard::box(
-            width = 12,
-            title = "", solidHeader = TRUE,
-
-            fluidRow(
-              column(
-                width = 12,
-                tags$script(
-                  "Shiny.addCustomMessageHandler('resetInputValue', function(variableNameTask){Shiny.onInputChange(variableNameTask, null);});"
-                ),
-
-                textOutput("tbl_msg_all"),
-
-                # table with css spinner
-                HTML("<br>"),
-                withSpinner(
-                  DTOutput("tbl_tv_all"),
-                  proxy.height = "100px", color="#0273B7"
-                ),
-
-                hr()
-              )
-            )
-          )
-        )
+        
       )
     
     
@@ -728,11 +702,20 @@ tabPanel(
       )
     ),
   
-
-  
-
-
+    tabPanel("Current Data Table",
+            fluidRow(
+              column(
+                width = 12,
+                # table with css spinner
+                HTML("<br>"),
+                withSpinner(
+                  DTOutput("tbl_tv_all"),
+                  proxy.height = "100px", color="#0273B7"
+                ),
+                hr()
+              )
+          )
+        )
   ),
-
   fluidRow(column(width = 12))
 )
