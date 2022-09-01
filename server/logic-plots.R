@@ -878,7 +878,8 @@ IndividualMouseReponse <- function(data, last.measure.day = NULL) {
         dplyr::select(ID, Times, AUC.Filtered.Measures) %>%
         dplyr::full_join(data.id.i, by = c('ID', 'Times')) %>%
         dplyr::filter(Times == last.avail.day) %>%
-        dplyr::mutate(ORC = case_when(dVt <= -30 ~ 'PR', 
+        dplyr::mutate(ORC = case_when(dVt <= -95 ~ 'CR', 
+                                      dVt <= -30 ~ 'PR', 
                                       dVt > -30 & dVt < 20 ~ 'SD',
                                       dVt > 20 ~ 'PD')) %>% 
         dplyr::select(c('ID', 'Times',  'Arms', 'Tumor', 'Volume', 'dVt', 'log2.Fold.Change', 'AUC.Filtered.Measures', 'AUC.All.Measures', 'ORC'))
@@ -1309,7 +1310,7 @@ plotAvgGrowthBar <- function(data) {
 
 plotStackedORC <- function(data) {
 
-  color_pallet <- c("#888888", "#A1D2CE", "#50858B", "#000000")
+  color_pallet <- c("#888888", "#A1D2CE", "#50858B", "#237593")
 
   adjusted.data <- data %>%
     dplyr::group_by(Tumor, Arms) %>%
@@ -1317,12 +1318,12 @@ plotStackedORC <- function(data) {
     dplyr::mutate(pct = n / sum(n)) %>% 
     dplyr::filter(Arms != 'Control')
   
-  adjusted.data$ORC<-factor(adjusted.data$ORC, levels=c('PD', 'SD', 'PR'), ordered = TRUE)
+  adjusted.data$ORC<-factor(adjusted.data$ORC, levels=c('PD', 'SD', 'PR', 'CR'), ordered = TRUE)
   
   p <- ggplot(adjusted.data, aes(x = Arms, y = pct, fill = ORC, Group = Tumor)) + 
     geom_col(width=0.7) +
     geom_text(aes(label = n), position = position_stack(vjust = 0.5)) +
-    scale_fill_manual(name = "Objective Response", values = color_pallet, labels = c('PD', 'SD', 'PR'), drop = F)
+    scale_fill_manual(name = "Objective Response", values = color_pallet, labels = c('PD', 'SD', 'PR', 'CR'), drop = F)
     
   
   p <- p + xlab('') + ylab("Proportion Animals in ORC Class")
