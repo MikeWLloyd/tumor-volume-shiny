@@ -53,20 +53,20 @@ tabPanel(
               )
             ),
             br(),
-            fluidRow(
-              style = "margin-left: 2px; margin-right: 2px; margin-bottom: 10px;",
-              column(
-                width = 6,
-                actionButton("tv_submit_query", "Submit Query", class = "btn btn-block btn-primary", icon = icon("paper-plane"))
-              ),
-              column(
-                width = 6,
-                actionButton("tv_reset_query", "Reset Query", class = "btn btn-block", icon = icon("undo"))
-              ),
+            # fluidRow(
+            #   style = "margin-left: 2px; margin-right: 2px; margin-bottom: 10px;",
+            #   column(
+            #     width = 6,
+            #     actionButton("tv_submit_query", "Submit Query", class = "btn btn-block btn-primary", icon = icon("paper-plane"))
+            #   ),
+            #   column(
+            #     width = 6,
+            #     actionButton("tv_reset_query", "Reset Query", class = "btn btn-block", icon = icon("undo"))
+            #   ),
               
               # responsive button text for smaller screens https://stackoverflow.com/questions/19284153/
-              tags$style(type = "text/css", ".btn { white-space: normal; }")
-            )
+              # tags$style(type = "text/css", ".btn { white-space: normal; }")
+            # )
           )
         )
       )

@@ -165,7 +165,8 @@ get_data <- reactive({
     } else {
       curr_data <- data
     }
-
+    # This is where the data that is imported is either loaded or not. When an upload is triggered, it is tested and if valid passed in. 
+    # If the data is not valid, the base dataset is loaded in. 
 
     n_unique_arms <- length(unique(curr_data$Arms))
     updatePickerInput(session, "tv_contributor",
