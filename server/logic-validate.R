@@ -1,8 +1,7 @@
 flag_user_data <- reactiveValues(flag = 0L)
 
 observeEvent(input$user_tv_data, {
-  # changed above from user_tv_upload_valid. The button was breaking the app when clicked without data present. 
-  
+
   file <- input$user_tv_data
   ext <- tools::file_ext(file$datapath)
 

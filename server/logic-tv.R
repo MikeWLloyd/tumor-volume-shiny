@@ -3,21 +3,6 @@
 data <- try(as.data.frame(readRDS("include/tv-test.rds")), silent = T)
 rownames(data) <- NULL
 
-# NOTE: This will likely need to be set as a reactive variable:
-#/   diamond <- reactiveValues( df=NULL )
-
-#  ###Initial setting
-#  observe({diamond$df <- diamonds})
-#
-#  observeEvent(input$read, {
-#      df1 <- diamonds
-#      ...
-#/#
-# I tried a few different things to get this worked but couldn't figure it out. Note that the 'upload' button may have the same issues with breaking things as it did on the validate page, and might not be needed.
-
-
-
-
 # GET methods
 get_tv_contributor <- function() {
   if (length(unique(data$Contributor)) < 1) {

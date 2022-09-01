@@ -30,11 +30,6 @@ tabPanel(
                 )
               )
             )
-          # column(width = 4,
-          #        style = "margin-left: 2px; margin-right: 1px; margin-top: 25px;",
-          #        fluidRow(actionButton("user_tv_upload_valid", "Upload", class = "btn btn-block", icon = icon("upload")))
-          # )
-          # NOTE: this button would break the app when clicked without a data file present. Removed it for now. 
         )
       )
     )
