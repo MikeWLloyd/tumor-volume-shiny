@@ -1,87 +1,13 @@
 tabPanel(
   title = title_tumor_volume, icon = icon("fa-solid fa-chart-line"),
-
-
   
   shinydashboard::box(
     width=12,
-    title="Data and Query", status="primary",solidHeader = T,
+    title="Query and Data Summary", status="primary",solidHeader = T,
 
+    
     shinydashboard::box(
-      width=4,
-      title="Data Upload", status="primary",solidHeader = T,
-      column(width = 12,
-
-             fluidRow(
-               style = "margin-left: 2px; margin-right: 2px; margin-bottom: 10px;",
-
-               column(width=10,offset=1,
-                      fluidRow(actionButton("user_tv_upload_btn", "Upload Tumor Volume", class = "btn btn-block btn-primary", icon = icon("upload"))),
-                      # Note: connect this to a version of the validation function used on the validate page, but return only the current text if invalid, additional information will be provided on validation page.
-               )
-
-             ),
-
-             fluidRow(
-
-               column(width=5,
-                      fluidRow(actionButton("user_tv_load_default_btn", "Load Example", class = "btn btn-block", icon = icon("arrow-right")))
-               ),
-
-               column(width=5, offset=2,
-                      fluidRow(downloadButton("user_tv_download_default_btn", "Download Loaded Data", class = "btn btn-block", icon = icon("download")))
-               )
-
-             ),
-             br(),
-             div(
-               span(textOutput("tv_text_upload"), style="color:orange")
-             ),
-      )
-    ),
-
-        bsModal(
-            "upload_data_modal", "Upload Tumor Volume Data", "user_tv_upload_btn",
-
-            fluidRow(fileInput('user_tv_data', 'Select Your Data', accept=c('.csv','.xls','.xlsx'))),
-
-            p("Status of the Uploaded Data"),
-
-            hr(),
-
-            fluidRow(
-              column(
-                width = 10, offset = 1,
-                textAreaInput("tv_user_return_msg", label = "Upload Validation Message: ", resize = "none", width = "400px", height = "250px")
-              )
-            ),
-
-            hr(),
-
-            # fluidRow(
-            #   column(
-            #     width = 5, offset = 1,
-            #     actionButton("add_user_tv_btn", "Add My Data", class = "btn btn-block")
-            #   )
-            # ),
-
-            # br(),
-
-            fluidRow(
-              column(
-                width = 10, offset = 1,
-                div(
-                  span(textOutput("tv_text_continue"), style="color:green"),
-                  span(textOutput("tv_text_stop"), style="color:red"),
-                  span(textOutput("tv_text_guide"))
-                )
-              )
-            )
-
-          ),
-
-    shinydashboard::box(
-      width = 8,
+      width = 12,
       title = "Data Query", status = "primary", solidHeader = TRUE,
 
       fluidRow(
@@ -137,6 +63,7 @@ tabPanel(
                 width = 6,
                 actionButton("tv_reset_query", "Reset Query", class = "btn btn-block", icon = icon("undo"))
               ),
+              
               # responsive button text for smaller screens https://stackoverflow.com/questions/19284153/
               tags$style(type = "text/css", ".btn { white-space: normal; }")
             )

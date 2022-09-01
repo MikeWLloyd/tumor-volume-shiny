@@ -6,7 +6,7 @@ include_ui_login_page = FALSE
 
 # Tab titles
 title_home = "Home"
-title_validate = "Data Validation"
+title_validate = "Data Upload and Validation"
 title_tumor_volume = "Tumor Volume Analysis"
 
 # title_validate = "Validator"

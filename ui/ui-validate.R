@@ -7,10 +7,29 @@ tabPanel(
         width=12,
         title="Data Upload", status="primary",solidHeader = T,
         column(width=12,
-          column(width = 7,
-                 fluidRow(fileInput('user_tv_data_valid', 'Upload Your Tumor Volume',
+          column(width = 12,
+                 fluidRow(fileInput('user_tv_data', 'Upload Your Tumor Volume',
                                     accept=c('.csv','.xls','.xlsx')))
-          )#,
+          ),
+          #p("Status of the Uploaded Data"),
+          hr(),
+          fluidRow(
+            column(
+              width = 10, offset = 1,
+              textAreaInput("tv_user_return_msg", label = "Upload Validation Message: ", resize = "none", height = "250px")
+            )
+          ),
+          hr(),
+          fluidRow(
+              column(
+                width = 10, offset = 1,
+                div(
+                  span(textOutput("tv_text_continue"), style="color:green"),
+                  span(textOutput("tv_text_stop"), style="color:red"),
+                  span(textOutput("tv_text_guide"))
+                )
+              )
+            )
           # column(width = 4,
           #        style = "margin-left: 2px; margin-right: 1px; margin-top: 25px;",
           #        fluidRow(actionButton("user_tv_upload_valid", "Upload", class = "btn btn-block", icon = icon("upload")))
@@ -20,22 +39,6 @@ tabPanel(
       )
     )
   ),
-
-  fluidRow(column(
-    width = 10, offset = 1,
-
-    shinydashboard::box(
-      width = 12,
-      title = "Uploaded Tumor Volume File Check Report", status = "primary", solidHeader = TRUE,
-
-      div(
-        span(verbatimTextOutput("tv_text_upload_valid"), style="color:red")
-      ),
-      br(),
-        DTOutput("table_tv_validate_user"),
-      hr()
-    )
-  )),
 
   fluidRow(column(
     width = 10, offset = 1,
