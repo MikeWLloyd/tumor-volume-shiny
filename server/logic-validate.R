@@ -21,7 +21,6 @@ observeEvent(input$user_tv_data_valid, {
     is.numeric(Volume) | is.integer(Volume),
     is.character(Study),
     is.character(ID),
-    is.character(Model_ID) | is.numeric(Model_ID) | is.integer(Model_ID),
     is.character(Tumor) | is.numeric(Tumor) | is.integer(Tumor),
     is.character((Disease_Type)),
     Volume >= 0,
@@ -34,8 +33,8 @@ observeEvent(input$user_tv_data_valid, {
 
   out <- confront(df, rules)
   test_results <- as.data.frame(summary(out))
-  test_results$ColumnCheck <- c("Contributor", "Arms", "Times", "Volume", "Study", "ID", "Model_ID", "Tumor", "Disease_Type", "VolnotNeg", "ControlPresent")
-  test_results$ExpectedType <- c('Character', 'Character', 'Numeric or Integer', 'Numeric or Integer', 'Character', 'Character', 'Character or Numeric or Integer', 'Character or Numeric or Integer', 'Character', 'Volume >= 0', 'Arms contains "Control"')
+  test_results$ColumnCheck <- c("Contributor", "Arms", "Times", "Volume", "Study", "ID", "Tumor", "Disease_Type", "VolnotNeg", "ControlPresent")
+  test_results$ExpectedType <- c('Character', 'Character', 'Numeric or Integer', 'Numeric or Integer', 'Character', 'Character', 'Character or Numeric or Integer', 'Character', 'Volume >= 0', 'Arms contains "Control"')
 
   error_check_string <- ' COLUMN NAME ERRORS: \n'
   if(nrow(test_results %>% dplyr::filter(error == 'TRUE') > 0)) {
@@ -80,7 +79,7 @@ observeEvent(input$user_tv_data_valid, {
   }
 
   if (check1 == 1 && check2 == 1 && check3 == 1) {
-    error_check_string <- paste(error_check_string, '\n NO ISSUES! IMPORT TO MAIN TAB POSSIBLE.')
+    error_check_string <- paste(error_check_string, '\n NO ISSUES!')
   } else if (check1 != 1 || check2 != 1 || check3 != 3) {
      error_check_string <- paste(error_check_string, '\nImported data are not in expected format for reasons above.\nCorrect issues in local file and re-upload to test. Example valid input data is provided below for reference.')
   }
@@ -114,7 +113,6 @@ observeEvent(input$user_tv_data, {
     is.numeric(Volume) | is.integer(Volume),
     is.character(Study),
     is.character(ID),
-    is.character(Model_ID) | is.numeric(Model_ID) | is.integer(Model_ID),
     is.character(Tumor) | is.numeric(Tumor) | is.integer(Tumor),
     is.character((Disease_Type)),
     Volume >= 0,
@@ -127,8 +125,8 @@ observeEvent(input$user_tv_data, {
 
   out <- confront(df, rules)
   test_results <- as.data.frame(summary(out))
-  test_results$ColumnCheck <- c("Contributor", "Arms", "Times", "Volume", "Study", "ID", "Model_ID", "Tumor", "Disease_Type", "VolnotNeg", "ControlPresent")
-  test_results$ExpectedType <- c('Character', 'Character', 'Numeric or Integer', 'Numeric or Integer', 'Character', 'Character', 'Character or Numeric or Integer', 'Character or Numeric or Integer', 'Character', 'Volume >= 0', 'Arms contains "Control"')
+  test_results$ColumnCheck <- c("Contributor", "Arms", "Times", "Volume", "Study", "ID", "Tumor", "Disease_Type", "VolnotNeg", "ControlPresent")
+  test_results$ExpectedType <- c('Character', 'Character', 'Numeric or Integer', 'Numeric or Integer', 'Character', 'Character', 'Character or Numeric or Integer', 'Character', 'Volume >= 0', 'Arms contains "Control"')
 
   error_check_string <- ' COLUMN NAME ERRORS: \n'
   if(nrow(test_results %>% dplyr::filter(error == 'TRUE') > 0)) {
@@ -173,7 +171,7 @@ observeEvent(input$user_tv_data, {
   }
 
   if (check1 == 1 && check2 == 1 && check3 == 1) {
-    error_check_string <- paste(error_check_string, '\n NO ISSUES! IMPORT ON MAIN TAB POSSIBLE.')
+    error_check_string <- paste(error_check_string, '\n NO ISSUES!')
     shinyjs::enable("add_user_tv_btn")
 
     flag_user_data$flag <- 1
