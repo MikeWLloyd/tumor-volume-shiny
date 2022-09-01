@@ -111,7 +111,7 @@ observeEvent(input$user_tv_data, {
     })
 
     output$tv_text_guide <- renderText({
-      paste0("Edit Your Tumor Volume Data According to the Template under the Validation Tab!")
+      paste0("Edit your data import based on the example data presented below.!")
     })
 
     output$tv_text_continue <- renderText({
