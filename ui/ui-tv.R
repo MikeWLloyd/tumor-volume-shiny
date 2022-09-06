@@ -30,7 +30,7 @@ tabPanel(
                 # wellPanel(
                   pickerInput("tv_treatment", "Treatment Arm",
                               choices = get_tv_treatment(),
-                              #selected = c('Control', get_tv_treatment()[1:3]),
+                              selected = c('Control', get_tv_treatment()[1:3]),
                               options = pickerOptions(actionsBox = TRUE, style = 'btn-light',
                                                       showContent = TRUE),multiple = T)
                 # )
@@ -378,7 +378,7 @@ tabPanel(
       fluidRow(
           column(
             width = 2,
-            pickerInput("tv_study_picker_filtered", "Study",
+            pickerInput("tv_study_filtered", "Study",
                         choices = get_tv_study(),
                         options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
                                                 showContent = TRUE),multiple = FALSE),
@@ -422,9 +422,10 @@ tabPanel(
                              column(
                                width = 6, offset = 0,
                                withSpinner(
-                                 plotlyOutput("plot_tumorvol_study", width = "100%", inline=TRUE, height = '500px'),
+                                 plotlyOutput("plot_tumorvol_study", width = "100%", inline=F, height = '500px'),
                                  proxy.height = "100px", color="#0273B7"
                                )),
+
                              column(
                                width = 6,
                                HTML("<br>"),
