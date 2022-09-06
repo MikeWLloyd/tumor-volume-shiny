@@ -1,6 +1,6 @@
 
 # Query TV Data
-query_tv <- function(tv_df, tv_contributor, tv_treatment, tv_disease_type) {
+query_tv <- function(tv_df, tv_contributor, tv_treatment, tv_study, tv_disease_type) {
 
   # 1.2 Contributor
 
@@ -24,6 +24,18 @@ query_tv <- function(tv_df, tv_contributor, tv_treatment, tv_disease_type) {
 
   treatment_list <- tv_df$Arms
 
+  # 1.3 Study
+
+  if (length(tv_study) < 0.5) {
+    df <- NULL
+    df_raw <- NULL
+    msg <- "Please select at least one Treatment Arm."
+    return(list("df" = df,  "msg" = msg, "query_text" = "N/A", "hits_total" = 0))
+  }
+
+  studies <- tv_df$Study
+
+
   # 1.4 Disease Type
 
   if (length(tv_disease_type) < 0.5) {
@@ -40,6 +52,7 @@ query_tv <- function(tv_df, tv_contributor, tv_treatment, tv_disease_type) {
   df <- base::subset(
     tv_df, source_list %in% tv_contributor &
       treatment_list %in% tv_treatment &
+      studies %in% tv_study &
       disease_type %in% tv_disease_type
   )
 
@@ -69,7 +82,8 @@ query_tv <- function(tv_df, tv_contributor, tv_treatment, tv_disease_type) {
   # query string
   q_final <- paste0(
     "Contributor %in% ", paste0('c("', paste(tv_contributor, collapse = '", "'), '")'),
-    " & Treatment %in% ", paste0('c("', paste(tv_treatment, collapse = '", "'), '")'),
+    " & Treatment Arms %in% ", paste0('c("', paste(tv_treatment, collapse = '", "'), '")'),
+    " & Studies %in% ", paste0('c("', paste(tv_study, collapse = '", "'), '")'),
     " & Disease Type %in% ", paste0('c("', paste(tv_disease_type, collapse = '", "'), '")')
   )
 

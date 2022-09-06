@@ -154,13 +154,18 @@ get_data <- reactive({
     # If the data is not valid, the base dataset is loaded in. 
 
     n_unique_arms <- length(unique(curr_data$Arms))
+
+    agents <- factor(unique(curr_data$Arms))
+    agents <- levels(relevel(agents, 'Control'))
+
     updatePickerInput(session, "tv_contributor",
                       choices = unique(sort(curr_data$Contributor)),
                       selected = unique(sort(curr_data$Contributor)[1]))
 
     updatePickerInput(session, "tv_treatment",
-                  choices = unique(curr_data$Arms),
-                  selected = unique(curr_data$Arms)[1:min(3,n_unique_arms)])
+                  choices = agents,
+                  selected = c('Control', unique(curr_data$Arms)[1:min(3,n_unique_arms)]))
+    # Note: the pick lists are updated in two places. here, and in the above 'get_tv_treatment' function. 
 
     updatePickerInput(session, "tv_disease_type",
                   choices = unique(sort(curr_data$Disease_Type)),
@@ -169,6 +174,10 @@ get_data <- reactive({
     updatePickerInput(session, "tv_study_picker",
                   choices = unique(sort(curr_data$Study)),
                   selected = unique(sort(curr_data$Study)[1]))
+
+    updatePickerInput(session, inputId = "tv_study_picker_filtered",
+        choices = input$tv_study)
+    # This updated the 'study' pick list in the individual study plot area. 
 
     return(curr_data)
 })
@@ -188,12 +197,12 @@ get_query_tv <- reactive( {
         Sys.sleep(0.03)
       }
       curr_data <- get_data()
+
       df_query <- query_tv(curr_data,
                           input$tv_contributor,
                           input$tv_treatment,
+                          input$tv_study,
                           input$tv_disease_type)
-
-
 
       updateProgressBar(
         session = session,
@@ -201,7 +210,6 @@ get_query_tv <- reactive( {
         value = length(unique((df_query$df)$Study)),
         total = length(unique(curr_data$Study))
       )
-
 
       for (i in 1:10) {
         incProgress(0.025, detail = "[Status] Finishing up...")
@@ -343,9 +351,9 @@ output$plot_tumorvol <- renderPlotly({
 # PLOT - Study
 
 # Get Data for Study Default
-gen_data_filter_study <- eventReactive(c(input$tv_study_picker, input$tv_submit_query), {
+gen_data_filter_study <- eventReactive(c(input$tv_study_picker_filtered, input$tv_submit_query), {
   data_study <- base::subset(
-    get_query_tv()$"df", Study %in% c(input$tv_study_picker)
+    get_query_tv()$"df", Study %in% c(input$tv_study_picker_filtered)
   )
   data_study
 }, ignoreNULL = F)

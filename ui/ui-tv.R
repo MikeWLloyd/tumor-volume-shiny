@@ -17,7 +17,7 @@ tabPanel(
           column(width = 12,
             fluidRow(
               column(
-                width = 4,
+                width = 3,
                 # wellPanel(
                   pickerInput("tv_contributor", "Contributor",
                               choices = get_tv_contributor(),
@@ -26,24 +26,34 @@ tabPanel(
                                                       showContent = TRUE),multiple = T)
               ),
               column(
-                width = 4,
+                width = 3,
                 # wellPanel(
-                  pickerInput("tv_treatment", "Treatment",
+                  pickerInput("tv_treatment", "Treatment Arms",
                               choices = get_tv_treatment(),
-                              selected = get_tv_treatment()[1:3],
+                              #selected = c('Control', get_tv_treatment()[1:3]),
                               options = pickerOptions(actionsBox = TRUE, style = 'btn-light',
                                                       showContent = TRUE),multiple = T)
                 # )
               ),
 
               column(
-                width = 4,
+                width = 3,
+                pickerInput("tv_study", "Study",
+                            choices = get_tv_study(),
+                            selected = get_tv_study()[1:length(get_tv_study())],
+                            options = pickerOptions(actionsBox = TRUE, style = 'btn-light',
+                                                    showContent = TRUE),multiple = T)
+              ),
+
+               column(
+                width = 3,
                 pickerInput("tv_disease_type", "Disease Type",
                             choices = get_tv_disease(),
                             selected = get_tv_disease()[1],
                             options = pickerOptions(actionsBox = TRUE, style = 'btn-light',
                                                     showContent = TRUE),multiple = T)
               )
+
             )
           )
         )
@@ -360,18 +370,15 @@ tabPanel(
                         )
                       )
                     )
-        ),
-        
+        ), 
       )
-    
-    
     
     ),
     tabPanel("Individual Study Plots & Analysis",
       fluidRow(
           column(
             width = 2,
-            pickerInput("tv_study_picker", "Study",
+            pickerInput("tv_study_picker_filtered", "Study",
                         choices = get_tv_study(),
                         options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
                                                 showContent = TRUE),multiple = FALSE),
