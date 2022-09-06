@@ -28,7 +28,7 @@ tabPanel(
               column(
                 width = 3,
                 # wellPanel(
-                  pickerInput("tv_treatment", "Treatment Arms",
+                  pickerInput("tv_treatment", "Treatment Arm",
                               choices = get_tv_treatment(),
                               #selected = c('Control', get_tv_treatment()[1:3]),
                               options = pickerOptions(actionsBox = TRUE, style = 'btn-light',

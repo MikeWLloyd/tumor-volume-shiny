@@ -94,7 +94,7 @@ get_tv_treatment_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"
 output$card_tv_treatment <- shinydashboard::renderValueBox({
   ret <- get_query_tv()$"df"
   shinydashboard::valueBox(
-    get_tv_treatment_count(ret), "Treatments",
+    get_tv_treatment_count(ret), "Treatment Arms",
     icon = icon("pills"), color = "maroon"
   )
 })
