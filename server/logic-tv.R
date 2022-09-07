@@ -116,11 +116,14 @@ observeEvent(input$user_tv_load_default, {
   })
 })
 
-
 # QUERY
 
 values <- reactiveValues(
   upload_state = "default"
+)
+
+check_state <- reactiveValues(
+  loaded_data = FALSE
 )
 
 observeEvent(input$user_tv_data, {
@@ -188,11 +191,12 @@ get_data <- reactive({
     # The app loads, then would 'updatePickerInput' for all pick lists. This only needs to be done if the app changes data.
     # The updatePickerInput was moved to a block when a new upload is done. If 'RESET' is reimplemented, the pick lists will need to be updated in that block as well. 
 
+    check_state$loaded_data = TRUE
+
     return(curr_data)
 })
 
   observeEvent(input$tv_study, {
-
     choices <- input$tv_study
 
     updatePickerInput(
@@ -200,8 +204,19 @@ get_data <- reactive({
       inputId = "tv_study_filtered",
       choices = choices
     )
+
   })
 
+  observeEvent(input$tv_treatment, {
+    if (check_state$loaded_data) {
+      if( !('Control' %in% input$tv_treatment)) {
+        showNotification(id = 'missing_control', "You must select 'Control' in the treatment arm list", type = c("error"), duration = NULL, closeButton = FALSE)
+      } else {
+        removeNotification(id = 'missing_control')
+      }
+    }
+  },ignoreNULL = F)
+  # Watch to see if 'Control' is or is not selected in treatment Arms. Notify user that 'Control' must be selected. 
 
 get_query_tv <- reactive( {
 
