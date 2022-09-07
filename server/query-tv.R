@@ -8,7 +8,10 @@ query_tv <- function(tv_df, tv_contributor, tv_treatment, tv_study, tv_disease_t
     df <- NULL
     df_raw <- NULL
     msg <- "Please select the contributor to query from."
+    showNotification(id = 'contrib_notice', "You must select at least one Contributor.", type = c("error"), duration = NULL, closeButton = FALSE)
     return(list("df" = df, "msg" = msg, "query_text" = "N/A", "hits_total" = 0))
+  } else {
+    removeNotification(id = 'contrib_notice')
   }
 
   source_list <- tv_df$Contributor
@@ -18,7 +21,7 @@ query_tv <- function(tv_df, tv_contributor, tv_treatment, tv_study, tv_disease_t
   if (length(tv_treatment) < 0.5) {
     df <- NULL
     df_raw <- NULL
-    msg <- "Please select at least one Treatment."
+    msg <- "Please select at least one Treatment Arm."
     return(list("df" = df,  "msg" = msg, "query_text" = "N/A", "hits_total" = 0))
   }
 
@@ -29,8 +32,11 @@ query_tv <- function(tv_df, tv_contributor, tv_treatment, tv_study, tv_disease_t
   if (length(tv_study) < 0.5) {
     df <- NULL
     df_raw <- NULL
-    msg <- "Please select at least one Treatment Arm."
+    msg <- "Please select at least one Study"
+    showNotification(id = 'study_notice', "You must select at least one Study", type = c("error"), duration = NULL, closeButton = FALSE)
     return(list("df" = df,  "msg" = msg, "query_text" = "N/A", "hits_total" = 0))
+  } else {
+    removeNotification(id = 'study_notice')
   }
 
   studies <- tv_df$Study
@@ -42,7 +48,10 @@ query_tv <- function(tv_df, tv_contributor, tv_treatment, tv_study, tv_disease_t
     df <- NULL
     df_raw <- NULL
     msg <- "Please select at least one Disease Type."
+    showNotification(id = 'disease_notice', "You must select at least one Disease Type", type = c("error"), duration = 5, closeButton = FALSE)
     return(list("df" = df, "msg" = msg, "query_text" = "N/A", "hits_total" = 0))
+  } else {
+    removeNotification(id = 'disease_notice')
   }
 
   disease_type <- tv_df$Disease_Type

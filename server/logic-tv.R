@@ -126,6 +126,10 @@ check_state <- reactiveValues(
   loaded_data = FALSE
 )
 
+# Two states are needed to track if data is uploaded, and if data in general is loaded. 
+# The first is to check what data to load to the app, the second is to allow for checks to be done on selected items
+# Without checking if any data is loaded, the app will display invalid messages to the splash page on instantiation of the app. 
+
 observeEvent(input$user_tv_data, {
   values$upload_state <- 'uploaded'
 })
@@ -206,6 +210,7 @@ get_data <- reactive({
     )
 
   })
+  # Watch the selected study list, and pass that list to the study pick list for the study specific metrics. 
 
   observeEvent(input$tv_treatment, {
     if (check_state$loaded_data) {
@@ -258,21 +263,25 @@ get_query_tv <- reactive( {
 
   df_query
 })
+# This function controls the data selection from the filters. The function `query_tv` subsets the data based on selected pick lists.  
+# Notifications will report out if user has deselected entire lists. 
 
 # DATA TABLE
-query_all_submit <- reactiveValues(counter = 0L)
+# query_all_submit <- reactiveValues(counter = 0L)
+#
+# observeEvent(input$tv_submit_query, {
+#   query_all_submit$counter <- input$tv_submit_query
+# })
+#
+# output$tbl_msg_all <- renderText(
+#   if (query_all_submit$counter == 0L) {
+#     "Please submit the query."
+#   } else {
+#     get_query_tv()$"msg"
+#   }
+# )
+# Hold over code from prior 'query' button implementation. 
 
-observeEvent(input$tv_submit_query, {
-  query_all_submit$counter <- input$tv_submit_query
-})
-
-output$tbl_msg_all <- renderText(
-  if (query_all_submit$counter == 0L) {
-    "Please submit the query."
-  } else {
-    get_query_tv()$"msg"
-  }
-)
 
 output$tbl_tv_all <- DT::renderDataTable(
   get_query_tv()$"df",
@@ -286,6 +295,8 @@ output$tbl_tv_all <- DT::renderDataTable(
     buttons = list(I("colvis"), "copy", "print", list(extend = "collection", buttons = c("csv", "excel"), text = "Download"))
   )
 )
+# Render selected data for "Current Data Table" tab. 
+
 
 # PLOT
 
