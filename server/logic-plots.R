@@ -160,6 +160,7 @@ get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment'
 
     p <- p + scale_color_manual(values=colorblind_pallet)
     pdf(NULL)
+    dev.off()
     p
   }
 }
@@ -312,6 +313,7 @@ get_plot_scaled <- function(data, orders = NULL, position.dodge, title = NULL, p
     if (plot_on) {
       plot(p)
     } else {
+      dev.off()
       p
     }
   }
@@ -422,6 +424,7 @@ get_plot_scaled_study <- function(data, orders = NULL, position.dodge, title = N
     if (plot_on) {
       plot(p)
     } else {
+      dev.off()
       return(p)
     }
   }
@@ -695,9 +698,7 @@ EFSplot <- function(data, PercChange_EventSize = 100, plot_on = TRUE) {
                   risk.table.title='',
                   break.time.by = 5
   )
-
   return(p)
-  
 }
 
 auc <- function(x, y, from = min(x, na.rm=TRUE), to = max(x, na.rm=TRUE), type=c("linear", "spline"), absolutearea=FALSE, subdivisions = 100, ...) {
@@ -878,6 +879,7 @@ WaterfallPlot_PDX <- function(data,
   if (plot_on) {
     plot(p)
   } else {
+    dev.off()
     return(p)
   }
 }
@@ -1082,6 +1084,7 @@ plotTC.ratio <- function(data,
   if (plot_on) {
     plot(p)
   } else {
+    dev.off()
     return(p)
   }
   
@@ -1146,6 +1149,7 @@ log2FoldPlot <- function(data,
   if (plot_on) {
     plot(p)
   } else {
+    dev.off()
     return(p)
   }
 }
@@ -1181,7 +1185,7 @@ WaterfallPlot_Hybrid <- function(data) {
                  legend.text = element_text( size = 12)) +
                  geom_vline(xintercept = seq(1.5, (length(levels(as.factor(data$Tumor))) + 1), by = 1), color = 'gray', linetype = 'dashed')
   
-
+  dev.off()
   return(p)
 }
 
@@ -1226,6 +1230,7 @@ plotAvgGrowthBar <- function(data) {
       geom_vline(xintercept = seq(1.5, (length(levels(as.factor(data$Tumor))) + 1), by = 1), linetype = "dashed", color = 'gray50')
 
   }
+
   return(p)
 
 }
@@ -1280,6 +1285,6 @@ plotStackedORC <- function(data) {
   }
 
   p <- p + facet_wrap(~ Tumor,dir = 'h', scales = "free_x")
-
+  dev.off()
   return(p)
 }

@@ -181,7 +181,6 @@ tabPanel(
                                                   options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
                                                                           showContent = TRUE),multiple = FALSE)
                               ),
-
                               column(
                                 width = 3,
                                 parameter_tabs
@@ -214,13 +213,9 @@ tabPanel(
         tabPanel("Average Volume Plot",
                  br(),
                     fluidRow(
-
                       column(
-
                         width = 12,
-
                         div(
-
                           fluidRow(
                             column(
                                      width = 2,
@@ -231,7 +226,7 @@ tabPanel(
                             column(
                                      offset = 0,
                                      width = 2,
-                                     checkboxInput("main_avgplot_interpolate", "Interpolate Data For Calculation", FALSE)
+                                     checkboxInput("main_avgplot_interpolate", "Interpolate Data\nFor Calculation", FALSE)
                             ),
                             column(
                               width = 12,
