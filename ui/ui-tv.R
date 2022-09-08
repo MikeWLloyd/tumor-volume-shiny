@@ -1,3 +1,58 @@
+parameter_tabs <- tabsetPanel(
+  id = "scale_options",
+  type = "hidden",
+  tabPanel("Scaled",
+    pickerInput("tv_all_scaleby", "Scale Plot By",
+                choices = c("Growth Factor", "Volume"),
+                selected = c("Growth Factor"),
+                options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                                        showContent = TRUE),multiple = FALSE),
+    numericInput("tv_all_endpoint_scale", "Endpoint Scaling", value = 4, min = 1, max = 15000)
+  ),
+  tabPanel("Volume",
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br()
+    # used to keep spacing the same, so the UI doesn't jump as noticeably. 
+  ),
+  tabPanel("Percent Change",
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br()
+  ),
+  tabPanel("Semi-Log",
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br()
+  )
+)
+# This is a dynamic tab set used when 'scaled' is selected in the main plot function. 
+# There are three parts to make dynamic UI work. 
+# 1. The above code that sets tabPanels by input provided to the 'function'
+# 2. calling 'parameter_tabs' in the main UI body below: 
+    # column(
+    #   width = 3,
+    #   parameter_tabs
+    # )
+# 3. Observing the plot type pick list on the server, and triggering updates to the UI when changes are made to the list.
+    # observeEvent(input$tv_all_plotType, {
+    #   updateTabsetPanel(inputId = "scale_options", selected = input$tv_all_plotType)
+    # }) 
+
+
+
 tabPanel(
   title = title_tumor_volume, icon = icon("fa-solid fa-chart-line"),
   
@@ -27,13 +82,11 @@ tabPanel(
               ),
               column(
                 width = 3,
-                # wellPanel(
                   pickerInput("tv_treatment", "Treatment Arm",
                               choices = get_tv_treatment(),
                               selected = c('Control', get_tv_treatment()[1:3]),
                               options = pickerOptions(actionsBox = TRUE, style = 'btn-light',
                                                       showContent = TRUE),multiple = T)
-                # )
               ),
 
               column(
@@ -93,30 +146,24 @@ tabPanel(
                 tabPanel("Response Plot",
                   br(),
                   fluidRow(
-
                     column(
-
                       width = 12,
-
                       div(
-
                         fluidRow(
-
                           column(
-
                             width = 12,
-
                             div(
                               column(
                                 width = 3,
-                                pickerInput("tv_all_plot_type", "Plot Facet Type",
-                                            choices = c("Study Plot", "Treatment Plot"),
-                                            selected = c("Study Plot"),
-                                            options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
-                                                                    showContent = TRUE),multiple = FALSE)
+                                tabPanel("test",
+                                  pickerInput("tv_all_plot_type", "Plot Facet Type",
+                                              choices = c("Study Plot", "Treatment Plot"),
+                                              selected = c("Study Plot"),
+                                              options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                                                                      showContent = TRUE),multiple = FALSE),
+                                  checkboxInput("tv_all_interpolate", "Interpolate Data", FALSE)
+                                )
                               ),
-
-
                               column(
                                 width = 3,
                                 pickerInput("tv_all_plot_style", "Plot Style",
@@ -125,43 +172,22 @@ tabPanel(
                                             options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
                                                                     showContent = TRUE),multiple = FALSE)
                               ),
-
                               column(
                                 width = 3,
-                                div(id="tv_div_all_scale_picker",
-                                    pickerInput("tv_all_scaleby", "Scale Plot By",
-                                                choices = c("Growth Factor", "Volume"),
-                                                selected = c("Growth Factor"),
-                                                options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
-                                                                        showContent = TRUE),multiple = FALSE))
+                                # checkboxInput("tv_all_semi.log", "Semi Log Plot", FALSE)
+                                pickerInput("tv_all_plotType", "Plot Type",
+                                                  choices = c("Volume", "Scaled", "Percent Change", "Semi-Log"),
+                                                  selected = c("Volume"),
+                                                  options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                                                                          showContent = TRUE),multiple = FALSE)
                               ),
+
                               column(
                                 width = 3,
-                                div(id="tv_div_all_endpoint",
-                                    numericInput("tv_all_endpoint_scale", "Endpoint Scaling", value = 4, min = 1, max = 15000))
+                                parameter_tabs
                               )
-
                             )
                           )),
-
-                        fluidRow(
-                          column(
-                            width = 12,
-                            column(
-                              width = 2,
-                              checkboxInput("tv_all_semi.log", "Semi Log Plot", FALSE)
-                            ),
-                            column(
-                              width = 2,
-                              checkboxInput("tv_all_interpolate", "Interpolation", FALSE)
-                            ),
-                            column(
-                              width = 2,
-                              offset = 3,
-                              checkboxInput("tv_all_scale", "Scaled Plot", FALSE)
-                            )
-                          )
-                        ),
 
                         hr(),
 
@@ -566,3 +592,6 @@ tabPanel(
   ),
   fluidRow(column(width = 12))
 )
+
+
+

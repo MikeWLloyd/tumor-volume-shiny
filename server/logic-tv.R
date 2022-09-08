@@ -313,6 +313,12 @@ observeEvent(input$tv_all_scaleby,{
   }
 })
 
+
+observeEvent(input$tv_all_plotType, {
+  updateTabsetPanel(inputId = "scale_options", selected = input$tv_all_plotType)
+}) 
+
+
 output$plot_tumorvol <- renderPlotly({
   # Data
   s.data <- get_query_tv()$"df"
@@ -341,24 +347,21 @@ output$plot_tumorvol <- renderPlotly({
         s.data$Volume <- s.data$Interpolated_Volume
     }
 
-    #semi-log the data if asked for.
-
-
-    if (input$tv_all_semi.log){
+       #Adjust the data to semi-log if asked for.
+    if (input$tv_all_plotType == 'Semi-Log'){
         s.data$Volume <- log(s.data$Volume)
-        updateCheckboxInput(session, 'tv_all_scale', value = FALSE)
-        shinyjs::disable("tv_all_scale")
-        #input$ = FALSE
-    } else {
-      shinyjs::enable("tv_all_scale")
+
+      # Adjust the data to percent change the data if asked for
+    } else if (input$tv_all_plotType == 'Percent Change'){
+        s.data <- s.data %>%
+          dplyr::arrange(Study, Tumor, Arms, ID, Times) %>%
+          dplyr::group_by(Study, Tumor, Arms, ID) %>%
+          dplyr::mutate(dVt = (((Volume - Volume[1]) / Volume[1] ) * 100))
+        s.data$Volume <- s.data$dVt
     }
 
-
     # Call plot
-    if (input$tv_all_scale) {
-      shinyjs::enable("tv_div_all_endpoint")
-      shinyjs::enable("tv_div_all_scale_picker")
-
+    if (input$tv_all_plotType == 'Scaled') {
       if(input$tv_all_scaleby == "Volume") {
         scale_by_volume_all <- TRUE
 
@@ -383,9 +386,6 @@ output$plot_tumorvol <- renderPlotly({
       get_plot_scaled(data = s.data, position.dodge = 0.5,  title = NULL, scale.factor = endpoint_scale_all, scale.by.volume = scale_by_volume_all, level = level_type, pattern = pattern_type)
 
     } else {
-      # Turn off Scaled Plot I/Os
-      shinyjs::disable("tv_div_all_endpoint")
-      shinyjs::disable("tv_div_all_scale_picker")
 
       # Reset Info Text of the Scaled Plot
       output$tv_all_text_scaled <- renderText({""})
@@ -453,7 +453,7 @@ output$plot_tumorvol_study <- renderPlotly({
   one_A_N_DRAP <- df %>%
     filter(Study == study) %>% droplevels()
 
-  p1 <- get_plot_volumeGC_alt(one_A_N_DRAP, level = 'Arm',
+  p1 <- study_volume_plot(one_A_N_DRAP, level = 'Arm',
                                 position.dodge = 0.2,
                                 title = paste('Study:', study), plot_on = FALSE )
 
