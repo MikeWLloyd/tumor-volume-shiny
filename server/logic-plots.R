@@ -1184,8 +1184,6 @@ WaterfallPlot_Hybrid <- function(data) {
                  legend.title = element_text( size = 12, face = "bold"),
                  legend.text = element_text( size = 12)) +
                  geom_vline(xintercept = seq(1.5, (length(levels(as.factor(data$Tumor))) + 1), by = 1), color = 'gray', linetype = 'dashed')
-  
-  dev.off()
   return(p)
 }
 
@@ -1285,6 +1283,5 @@ plotStackedORC <- function(data) {
   }
 
   p <- p + facet_wrap(~ Tumor,dir = 'h', scales = "free_x")
-  dev.off()
   return(p)
 }

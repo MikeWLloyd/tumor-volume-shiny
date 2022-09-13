@@ -219,7 +219,7 @@ tabPanel(
                           fluidRow(
                             column(
                                      width = 2,
-                                     numericInput("main_avgplot.day", "Avg Measure Study Day",
+                                     numericInput("main_avgplot.day", "Avg Measure Calc. Day",
                                                   value = 21,
                                                   min = 0, max = 500),
                             ),
@@ -286,7 +286,7 @@ tabPanel(
                           fluidRow(
                             column(
                                      width = 2,
-                                     numericInput("main_TC.day", "T/C Date",
+                                     numericInput("main_TC.day", "Waterfall Calc. Day",
                                                   value = 21,
                                                   min = 0, max = 500),
                             ),
@@ -323,7 +323,7 @@ tabPanel(
                           fluidRow(
                             column(
                                      width = 2,
-                                     numericInput("main_TGI.day", "TGI Date",
+                                     numericInput("main_TGI.day", "TGI Calc. Day",
                                                   value = 21,
                                                   min = 0, max = 500),
                             ),
@@ -368,7 +368,7 @@ tabPanel(
                           fluidRow(
                             column(
                                      width = 2,
-                                     numericInput("main_orc.day", "RECIST Calculation Day",
+                                     numericInput("main_orc.day", "RECIST Calc. Day",
                                                   value = 21,
                                                   min = 0, max = 500),
                             ),
@@ -391,7 +391,7 @@ tabPanel(
                         )
                       )
                     )
-        )
+        ) 
       )
     
     ),
@@ -415,7 +415,7 @@ tabPanel(
                                  fluidRow(
                                    column(
                                      width = 2,
-                                     numericInput("tv_recist", "RECIST Day",
+                                     numericInput("tv_recist", "RECIST Calc. Day",
                                                   value = 21,
                                                   min = 0, max = 500),
                                    ),
@@ -474,7 +474,7 @@ tabPanel(
                                    ),
                                    column(
                                      width = 2,
-                                     numericInput("tv_AUC.day.waterfall", "AUC Day",
+                                     numericInput("tv_AUC.day.waterfall", "AUC Calc. Day",
                                                   value = 21,
                                                   min = 0, max = 500),
                                    ),
@@ -535,7 +535,7 @@ tabPanel(
                                  fluidRow(
                                    column(
                                      width = 2,
-                                     numericInput("anova_Measure_Day", "ANOVA Calculation Day",
+                                     numericInput("anova_Measure_Day", "ANOVA Calc. Day",
                                                   value = 21,
                                                   min = 0, max = 99999),
                                    ),
@@ -569,7 +569,13 @@ tabPanel(
                   # main_anova_interpolate for interpolate.
       )
     ),
-  
+    tabPanel("Body Weight Analysis",
+            fluidRow(
+              column(
+                width = 12,
+              )
+            )
+    ),
     tabPanel("Current Data Table",
             fluidRow(
               column(
