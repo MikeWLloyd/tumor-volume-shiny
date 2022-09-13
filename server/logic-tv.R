@@ -3,21 +3,6 @@
 data <- try(as.data.frame(readRDS("include/tv-test.rds")), silent = T)
 rownames(data) <- NULL
 
-# NOTE: This will likely need to be set as a reactive variable:
-#/   diamond <- reactiveValues( df=NULL )
-
-#  ###Initial setting
-#  observe({diamond$df <- diamonds})
-#
-#  observeEvent(input$read, {
-#      df1 <- diamonds
-#      ...
-#/#
-# I tried a few different things to get this worked but couldn't figure it out. Note that the 'upload' button may have the same issues with breaking things as it did on the validate page, and might not be needed.
-
-
-
-
 # GET methods
 get_tv_contributor <- function() {
   if (length(unique(data$Contributor)) < 1) {
@@ -109,7 +94,7 @@ get_tv_treatment_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"
 output$card_tv_treatment <- shinydashboard::renderValueBox({
   ret <- get_query_tv()$"df"
   shinydashboard::valueBox(
-    get_tv_treatment_count(ret), "Treatments",
+    get_tv_treatment_count(ret), "Treatment Arms",
     icon = icon("pills"), color = "maroon"
   )
 })
@@ -131,23 +116,30 @@ observeEvent(input$user_tv_load_default, {
   })
 })
 
-
 # QUERY
 
-  values <- reactiveValues(
-    upload_state = "default"
-  )
+values <- reactiveValues(
+  upload_state = "default"
+)
 
-  observeEvent(input$user_tv_data, {
-    values$upload_state <- 'uploaded'
-  })
+check_state <- reactiveValues(
+  loaded_data = FALSE
+)
 
-  observeEvent(input$user_tv_load_default_btn, {
-    values$upload_state <- 'reset'
-    output$tv_text_upload <- renderText({
-      paste0("Example Tumor Volume Data Still Active!")
-    })
+# Two states are needed to track if data is uploaded, and if data in general is loaded. 
+# The first is to check what data to load to the app, the second is to allow for checks to be done on selected items
+# Without checking if any data is loaded, the app will display invalid messages to the splash page on instantiation of the app. 
+
+observeEvent(input$user_tv_data, {
+  values$upload_state <- 'uploaded'
+})
+
+observeEvent(input$user_tv_load_default_btn, {
+  values$upload_state <- 'reset'
+  output$tv_text_upload <- renderText({
+    paste0("Example Tumor Volume Data Still Active!")
   })
+})
 
 get_data <- reactive({
 
@@ -160,32 +152,76 @@ get_data <- reactive({
       }else{
           curr_data <- read.csv(input_file_user$datapath, header = TRUE)
       }
-    }else if (values$upload_state == 'reset') {
-      curr_data <- data
-    } else {
-      curr_data <- data
-    }
 
 
     n_unique_arms <- length(unique(curr_data$Arms))
+
+    agents <- factor(unique(curr_data$Arms))
+    agents <- levels(relevel(agents, 'Control'))
+
+    n_studies <- length(unique(sort(curr_data$Study)))
+
     updatePickerInput(session, "tv_contributor",
                       choices = unique(sort(curr_data$Contributor)),
-                      selected = unique(sort(curr_data$Contributor)[1]))
+                      selected = unique(sort(curr_data$Contributor))[1])
 
     updatePickerInput(session, "tv_treatment",
-                  choices = unique(curr_data$Arms),
-                  selected = unique(curr_data$Arms)[1:min(3,n_unique_arms)])
+                  choices = agents,
+                  selected = c('Control', unique(curr_data$Arms)[1:min(3,n_unique_arms)]))
+    # Note: the pick lists are updated in two places. here, and in the above 'get_tv_treatment' function. 
 
     updatePickerInput(session, "tv_disease_type",
                   choices = unique(sort(curr_data$Disease_Type)),
-                  selected = unique(sort(curr_data$Disease_Type)[1]))
+                  selected = unique(sort(curr_data$Disease_Type))[1])
 
-    updatePickerInput(session, "tv_study_picker",
+    updatePickerInput(session, "tv_study",
                   choices = unique(sort(curr_data$Study)),
-                  selected = unique(sort(curr_data$Study)[1]))
+                  selected = unique(sort(curr_data$Study))[1:n_studies])
+
+    updatePickerInput(session, inputId = "tv_study_filtered",
+        choices = unique(sort(curr_data$Study)))
+
+    } else if (values$upload_state == 'reset') {
+      curr_data <- data
+      ## Need to reimplement the 'RESET' button. 
+
+    } else {
+      curr_data <- data
+    }
+    # This is where the data that is imported is either loaded or not. When an upload is triggered, it is tested and if valid passed in. 
+    # If the data is not valid, the base dataset is loaded in. 
+
+    # There was an issue with the data loaded, and then 'reloaded' when the app was first instantiated. This was because of the logic block above.
+    # The app loads, then would 'updatePickerInput' for all pick lists. This only needs to be done if the app changes data.
+    # The updatePickerInput was moved to a block when a new upload is done. If 'RESET' is reimplemented, the pick lists will need to be updated in that block as well. 
+
+    check_state$loaded_data = TRUE
 
     return(curr_data)
 })
+
+  observeEvent(input$tv_study, {
+    choices <- input$tv_study
+
+    updatePickerInput(
+      session,
+      inputId = "tv_study_filtered",
+      choices = choices
+    )
+
+  })
+  # Watch the selected study list, and pass that list to the study pick list for the study specific metrics. 
+
+  observeEvent(input$tv_treatment, {
+    if (check_state$loaded_data) {
+      if( !('Control' %in% input$tv_treatment)) {
+        showNotification(id = 'missing_control', "You must select 'Control' in the treatment arm list", type = c("error"), duration = NULL, closeButton = FALSE)
+      } else {
+        removeNotification(id = 'missing_control')
+      }
+    }
+  },ignoreNULL = F)
+  # Watch to see if 'Control' is or is not selected in treatment Arms. Notify user that 'Control' must be selected. 
 
 get_query_tv <- reactive( {
 
@@ -202,12 +238,12 @@ get_query_tv <- reactive( {
         Sys.sleep(0.03)
       }
       curr_data <- get_data()
+
       df_query <- query_tv(curr_data,
                           input$tv_contributor,
                           input$tv_treatment,
+                          input$tv_study,
                           input$tv_disease_type)
-
-
 
       updateProgressBar(
         session = session,
@@ -215,7 +251,6 @@ get_query_tv <- reactive( {
         value = length(unique((df_query$df)$Study)),
         total = length(unique(curr_data$Study))
       )
-
 
       for (i in 1:10) {
         incProgress(0.025, detail = "[Status] Finishing up...")
@@ -228,21 +263,25 @@ get_query_tv <- reactive( {
 
   df_query
 })
+# This function controls the data selection from the filters. The function `query_tv` subsets the data based on selected pick lists.  
+# Notifications will report out if user has deselected entire lists. 
 
 # DATA TABLE
-query_all_submit <- reactiveValues(counter = 0L)
+# query_all_submit <- reactiveValues(counter = 0L)
+#
+# observeEvent(input$tv_submit_query, {
+#   query_all_submit$counter <- input$tv_submit_query
+# })
+#
+# output$tbl_msg_all <- renderText(
+#   if (query_all_submit$counter == 0L) {
+#     "Please submit the query."
+#   } else {
+#     get_query_tv()$"msg"
+#   }
+# )
+# Hold over code from prior 'query' button implementation. 
 
-observeEvent(input$tv_submit_query, {
-  query_all_submit$counter <- input$tv_submit_query
-})
-
-output$tbl_msg_all <- renderText(
-  if (query_all_submit$counter == 0L) {
-    "Please submit the query."
-  } else {
-    get_query_tv()$"msg"
-  }
-)
 
 output$tbl_tv_all <- DT::renderDataTable(
   get_query_tv()$"df",
@@ -256,6 +295,8 @@ output$tbl_tv_all <- DT::renderDataTable(
     buttons = list(I("colvis"), "copy", "print", list(extend = "collection", buttons = c("csv", "excel"), text = "Download"))
   )
 )
+# Render selected data for "Current Data Table" tab. 
+
 
 # PLOT
 
@@ -271,6 +312,12 @@ observeEvent(input$tv_all_scaleby,{
                        value = 4, min = 0, max = 10000)
   }
 })
+
+
+observeEvent(input$tv_all_plotType, {
+  updateTabsetPanel(inputId = "scale_options", selected = input$tv_all_plotType)
+}) 
+
 
 output$plot_tumorvol <- renderPlotly({
   # Data
@@ -300,24 +347,21 @@ output$plot_tumorvol <- renderPlotly({
         s.data$Volume <- s.data$Interpolated_Volume
     }
 
-    #semi-log the data if asked for.
-
-
-    if (input$tv_all_semi.log){
+       #Adjust the data to semi-log if asked for.
+    if (input$tv_all_plotType == 'Semi-Log'){
         s.data$Volume <- log(s.data$Volume)
-        updateCheckboxInput(session, 'tv_all_scale', value = FALSE)
-        shinyjs::disable("tv_all_scale")
-        #input$ = FALSE
-    } else {
-      shinyjs::enable("tv_all_scale")
+
+      # Adjust the data to percent change the data if asked for
+    } else if (input$tv_all_plotType == 'Percent Change'){
+        s.data <- s.data %>%
+          dplyr::arrange(Study, Tumor, Arms, ID, Times) %>%
+          dplyr::group_by(Study, Tumor, Arms, ID) %>%
+          dplyr::mutate(dVt = (((Volume - Volume[1]) / Volume[1] ) * 100))
+        s.data$Volume <- s.data$dVt
     }
 
-
     # Call plot
-    if (input$tv_all_scale) {
-      shinyjs::enable("tv_div_all_endpoint")
-      shinyjs::enable("tv_div_all_scale_picker")
-
+    if (input$tv_all_plotType == 'Scaled') {
       if(input$tv_all_scaleby == "Volume") {
         scale_by_volume_all <- TRUE
 
@@ -342,9 +386,6 @@ output$plot_tumorvol <- renderPlotly({
       get_plot_scaled(data = s.data, position.dodge = 0.5,  title = NULL, scale.factor = endpoint_scale_all, scale.by.volume = scale_by_volume_all, level = level_type, pattern = pattern_type)
 
     } else {
-      # Turn off Scaled Plot I/Os
-      shinyjs::disable("tv_div_all_endpoint")
-      shinyjs::disable("tv_div_all_scale_picker")
 
       # Reset Info Text of the Scaled Plot
       output$tv_all_text_scaled <- renderText({""})
@@ -355,14 +396,6 @@ output$plot_tumorvol <- renderPlotly({
 })
 
 # PLOT - Study
-
-# Get Data for Study Default
-gen_data_filter_study <- eventReactive(c(input$tv_study_picker, input$tv_submit_query), {
-  data_study <- base::subset(
-    get_query_tv()$"df", Study %in% c(input$tv_study_picker)
-  )
-  data_study
-}, ignoreNULL = F)
 
 last.study.day <- reactive({
   return(input$tv_recist)
@@ -406,49 +439,32 @@ waterfall_metric <- reactive({
 
 output$plot_tumorvol_study <- renderPlotly({
 
+  df <- base::subset(
+    get_query_tv()$"df", Study %in% c(input$tv_study_filtered)
+  )
+  
   if (input$tv_interpolate){
+      df = get_interpolated_pdx_data(data = df)
+      df$Volume <- df$Interpolated_Volume
+  }
 
-    # Data
+  study <- unlist(levels(factor(df$Study)))[1]
 
-    Data_Response <- gen_data_filter_study()
+  one_A_N_DRAP <- df %>%
+    filter(Study == study) %>% droplevels()
 
-    #print(Data_Response)
-
-    study <- unlist(levels(factor(Data_Response$Study)))[1]
-
-    one_A_N_DRAP <- Data_Response %>%
-      filter(Study == study) %>% droplevels()
-
-
-    p1 <- get_plot_interpolated(data = get_interpolated_pdx_data(data = one_A_N_DRAP), position.dodge = 0.5,  title = study)
-
-    p1 <- p1 + geom_vline(xintercept = last.study.day(), linetype="dashed",
-                          color = "black", size=1.2)
-
-    return(p1)
-
-  } else {
-
-    df <- gen_data_filter_study()
-
-    study <- unlist(levels(factor(df$Study)))[1]
-
-    one_A_N_DRAP <- df %>%
-      filter(Study == study) %>% droplevels()
-
-    p1 <- get_plot_volumeGC_alt(one_A_N_DRAP, level = 'Arm',
+  p1 <- study_volume_plot(one_A_N_DRAP, level = 'Arm',
                                 position.dodge = 0.2,
                                 title = paste('Study:', study), plot_on = FALSE )
 
-    p1 <- p1 + geom_vline(xintercept = last.study.day(), linetype="dashed",
-                          color = "black", size=1.2)
+  p1 <- p1 + geom_vline(xintercept = last.study.day(), linetype="dashed",
+                        color = "black", size=1.2)
 
 
-    p1 <- p1 + xlab("Time (d)") + ylab("Tumor Volume (mm3)")
+  p1 <- p1 + xlab("Time (d)") + ylab("Tumor Volume (mm3)")
 
-    return(p1)
+  p1
 
-  }
 })
 
 output$dt_dr_table <- DT::renderDataTable(
@@ -456,9 +472,11 @@ output$dt_dr_table <- DT::renderDataTable(
 )
 
 dr_table <- reactive({
-
-  df <- gen_data_filter_study()
-
+  
+  df <- base::subset(
+    get_query_tv()$"df", Study %in% c(input$tv_study_filtered)
+  )
+  
   if (input$tv_interpolate){
       df = get_interpolated_pdx_data(data = df)
       df$Volume <- df$Interpolated_Volume
@@ -498,7 +516,10 @@ dr_table <- reactive({
 
 output$tv_plot_EFS <- renderPlotly({
 
-  df <- gen_data_filter_study()
+  df <- base::subset(
+    get_query_tv()$"df", Study %in% c(input$tv_study_filtered)
+  )
+  
   study <- unlist(levels(factor(df$Study)))[1]
 
   one_A_N_DRAP <- df %>%
@@ -529,7 +550,10 @@ output$tv_plot_EFS <- renderPlotly({
 
 output$tv_plot_waterfall <- renderPlotly({
 
-  df <- gen_data_filter_study()
+  df <- base::subset(
+    get_query_tv()$"df", Study %in% c(input$tv_study_filtered)
+  )
+  
   study <- unlist(levels(factor(df$Study)))[1]
 
   if (waterfall_metric() == 'AUC.Filtered.Measures') {
@@ -563,7 +587,10 @@ output$tv_plot_waterfall <- renderPlotly({
 
 output$tv_plot_tc <- renderPlotly({
 
-  df <- gen_data_filter_study()
+  df <- base::subset(
+    get_query_tv()$"df", Study %in% c(input$tv_study_filtered)
+  )
+  
   study <- unlist(levels(factor(df$Study)))[1]
 
   one_A_N_DRAP <- df %>%
@@ -588,7 +615,9 @@ output$dt_tc_table <- DT::renderDataTable(
 
 tc_table <- reactive({
 
-  df <- gen_data_filter_study()
+  df <- base::subset(
+    get_query_tv()$"df", Study %in% c(input$tv_study_filtered)
+  )
 
   if (input$tv_TC_interpolate){
       df = get_interpolated_pdx_data(data = df)
@@ -784,37 +813,40 @@ response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANO
 
   ## NOTE: 'Volume' is used here, but dVt could potentially be used.
 
-  data <- gen_data_filter_study()
-  study <- unlist(levels(factor(data$Study)))[1]
+  df <- base::subset(
+    get_query_tv()$"df", Study %in% c(input$tv_study_filtered)
+  )
 
-  data <- data %>%
+  study <- unlist(levels(factor(df$Study)))[1]
+
+  df <- df %>%
     filter(Study == study) %>% droplevels()
 
-  if(inherits(data, "data.frame")){
-    data<-as.data.frame(data)
+  if(inherits(df, "data.frame")){
+    df<-as.data.frame(df)
   }
 
   if (input$main_anova_interpolate){
-    data <- get_interpolated_pdx_data(data = data)
-    data$Volume <- data$Interpolated_Volume
+    df <- get_interpolated_pdx_data(data = df)
+    df$Volume <- df$Interpolated_Volume
   }
 
   if (!is.null(last.measure.day)) {
-    end_day_index = match(last.measure.day,data$Times)
+    end_day_index = match(last.measure.day,df$Times)
     if (is.na(end_day_index)) {
-      end_day_index = which.min(abs(data$Times - last.measure.day))
+      end_day_index = which.min(abs(df$Times - last.measure.day))
     }
-    data <- subset(data, Times <= data$Times[end_day_index])
+    df <- subset(df, Times <= df$Times[end_day_index])
   }
 
-  data$Arms <- relevel(as.factor(data$Arms), 'Control')
+  df$Arms <- relevel(as.factor(df$Arms), 'Control')
 
-  Volume <- data[,'Volume']
+  Volume <- df[,'Volume']
 
-  data <- subset(data,Volume != 0)
+  df <- subset(df,Volume != 0)
 
   #get endpoint data
-  endpoint.data <- data[data$Times == max(data$Times),]
+  endpoint.data <- data[df$Times == max(df$Times),]
   endpoint.data <- endpoint.data[,c('Arms','Volume')]
   endpoint.data$Arms=factor(endpoint.data$Arms)
 
@@ -825,15 +857,15 @@ response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANO
     dra.res <- switch (method,
                         endpoint.ANOVA = summary(aov(Volume ~ Arms, data = endpoint.data)),
                         endpoint.KW    = kruskal.test(Volume ~ Arms, data = endpoint.data),
-                        mixed.ANOVA    = summary(aov(Volume ~ Arms + Error(ID/Times), data = data)),
-                        LMM            = summary(lme(Volume ~ Arms, random = ~1|ID/Times,data = data))[[20]]
+                        mixed.ANOVA    = summary(aov(Volume ~ Arms + Error(ID/Times), data = df)),
+                        LMM            = summary(lme(Volume ~ Arms, random = ~1|ID/Times, data = df))[[20]]
     )
 
     dra.res.full <- switch (method,
                         endpoint.ANOVA = aov(Volume ~ Arms, data = endpoint.data),
                         endpoint.KW    = kruskal.test(Volume ~ Arms, data = endpoint.data),
-                        mixed.ANOVA    = aov(Volume ~ Arms + Error(ID/Times), data = data),
-                        LMM            = lme(Volume ~ Arms, random = ~1|ID/Times,data = data)
+                        mixed.ANOVA    = aov(Volume ~ Arms + Error(ID/Times), data = df),
+                        LMM            = lme(Volume ~ Arms, random = ~1|ID/Times, data = df)
     )
 
     multiple_comp_test <- TukeyHSD(dra.res.full)
@@ -898,6 +930,6 @@ output$user_tv_download_default_btn <- downloadHandler(
   })
 
 # landing page buttons
-observeEvent(input$btn_nav_tv, updateNavlistPanel(session, "nav_bco", selected = title_tumor_volume))
 observeEvent(input$btn_nav_val, updateNavlistPanel(session, "nav_bco", selected = title_validate))
+observeEvent(input$btn_nav_tv, updateNavlistPanel(session, "nav_bco", selected = title_tumor_volume))
 observeEvent(input$btn_nav_help, updateNavlistPanel(session, "nav_bco", selected = title_help))

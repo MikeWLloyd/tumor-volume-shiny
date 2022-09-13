@@ -78,17 +78,19 @@ get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment'
 
       if(pattern == 'Study'){
         p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Arms)) +
-                    geom_line(position = position_dodge2(position.dodge),cex = 1.2) +
-                    geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
-                                  width = 1,
-                                  position = position_dodge2(position.dodge)) +
-                    geom_point(cex = 2,
-                              position = position_dodge2(position.dodge)
-                    )
+              geom_hline(yintercept = 0, size = 0.3) +
+              geom_line(position = position_dodge2(position.dodge),cex = 1.2) +
+              geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
+                            width = 1,
+                            position = position_dodge2(position.dodge)) +
+              geom_point(cex = 2,
+                        position = position_dodge2(position.dodge)
+              )
       }
       if(pattern == 'Treatment'){
 
         p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Study)) +
+              geom_hline(yintercept = 0, size = 0.3) +
               geom_line(position = position_dodge2(position.dodge),cex = 1.2) +
               geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
                             width = 1,
@@ -106,17 +108,27 @@ get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment'
 
       if(pattern == 'Study'){
         p <- ggplot(data, aes(x = Times, y = Volume, group = ID, color = Arms)) +
+          geom_hline(yintercept = 0, size = 0.3) +
           geom_line(size=0.8) +
           geom_point(cex=1.5,aes(colour = Arms))
       }
       if(pattern == 'Treatment'){
         p <- ggplot(data, aes(x = Times, y = Volume, group = ID, color = Study)) +
-          geom_line(size=0.8) +
-          geom_point(cex=1.5,aes(colour = Study))
+              geom_hline(yintercept = 0, size = 0.3) +
+              geom_line(size=0.8) +
+              geom_point(cex=1.5,aes(colour = Study))
       }
     }
 
-    p <- p + xlab('Time (days)') + ylab('Tumor Volume (mm3)')
+    p <- p + xlab('Time (days)')
+
+    if (input$tv_all_plotType == 'Semi-Log') {
+      p <- p + ylab('log[Tumor Volume (mm3)]')
+    } else if (input$tv_all_plotType == 'Percent Change') {
+      p <- p + ylab('Tumor Volume Change (%)')
+    } else {
+      p <- p + ylab('Tumor Volume (mm3)')
+    }
 
     p <- p + theme_bw() +
       theme(
@@ -126,10 +138,10 @@ get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment'
         plot.background  = element_rect(fill = "transparent")
       )   #backgroud
     p <- p + theme(
-      axis.title.x = element_text(face = "bold",size = 8),
-      axis.text.x  = element_text(vjust = 0,size = 7),
-      axis.title.y = element_text(face = "bold",size = 8),
-      axis.text.y  = element_text(hjust = 1,size = 7)
+      axis.title.x = element_text(face = "bold",size = 12),
+      axis.text.x  = element_text(vjust = 0,size = 12),
+      axis.title.y = element_text(face = "bold",size = 12),
+      axis.text.y  = element_text(hjust = 1,size = 12)
     )
 
     if(pattern == 'Study'){
@@ -148,6 +160,7 @@ get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment'
 
     p <- p + scale_color_manual(values=colorblind_pallet)
     pdf(NULL)
+    dev.off()
     p
   }
 }
@@ -214,12 +227,14 @@ get_plot_scaled <- function(data, orders = NULL, position.dodge, title = NULL, p
 
       if(pattern == 'Study'){
         p <- ggplot(data = adjusted.data, aes(x = Times, y = Moscow, group = ID, color = Arms)) +
+          geom_hline(yintercept = 0, size = 0.3) +
           geom_line(position = position_dodge(position.dodge),cex = 1.2) +
           geom_point(cex = 2, position = position_dodge(position.dodge)) +
           ylim(-100, 100) + labs(caption = caption_text)
       }
       if(pattern == 'Treatment'){
         p <- ggplot(data = adjusted.data, aes(x = Times, y = Moscow, group = ID, color = Study)) +
+          geom_hline(yintercept = 0, size = 0.3) +
           geom_line(position = position_dodge(position.dodge),cex = 1.2) +
           geom_point(cex = 2, position = position_dodge(position.dodge)) +
           ylim(-100, 100) + labs(caption = caption_text)
@@ -236,6 +251,7 @@ get_plot_scaled <- function(data, orders = NULL, position.dodge, title = NULL, p
 
       if(pattern == 'Study'){
         p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Arms)) +
+              geom_hline(yintercept = 0, size = 0.3) +
               geom_line(position = position_dodge(position.dodge),cex = 1.2) +
               geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
                             position = position_dodge(position.dodge)) +
@@ -245,6 +261,7 @@ get_plot_scaled <- function(data, orders = NULL, position.dodge, title = NULL, p
 
       if(pattern == 'Treatment'){
         p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Study)) +
+              geom_hline(yintercept = 0, size = 0.3) +
               geom_line(position = position_dodge(position.dodge),cex = 1.2) +
               geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
                             position = position_dodge(position.dodge)) +
@@ -296,6 +313,7 @@ get_plot_scaled <- function(data, orders = NULL, position.dodge, title = NULL, p
     if (plot_on) {
       plot(p)
     } else {
+      dev.off()
       p
     }
   }
@@ -406,6 +424,7 @@ get_plot_scaled_study <- function(data, orders = NULL, position.dodge, title = N
     if (plot_on) {
       plot(p)
     } else {
+      dev.off()
       return(p)
     }
   }
@@ -456,99 +475,6 @@ get_interpolated_pdx_data <- function(data){
   }
 }
 
-get_plot_interpolated <- function(data, orders = NULL, position.dodge, title = NULL, plot_on = TRUE, level = 'Arm', pattern = 'TAN', ...) {
-  if (is.null(data) | nrow(data) == 0) {
-
-    plot_ly()
-
-  }else{
-
-    if(inherits(data, "data.frame")){
-      data<-as.data.frame(data)
-    }
-
-    #check the order
-    if (!is.null(orders)){
-      arms <- unique(data$Arms)
-      judged.order <- is.element(orders,arms)
-
-      if ("FALSE" %in% judged.order)
-        stop("The input order is improper. Please ensure the input order is the order of 'Arms' among data.")
-
-      data$Arms <- factor(data$Arms,levels=orders) # set the order
-    }
-
-    Volume <-  data[ , 'Interpolated_Volume']
-    data <- subset(data,Interpolated_Volume >= 0)
-
-    # Order Control to the top
-    if ('Control'%in%unique(data$Arms)){
-      data$Arms <- relevel(factor(data$Arms), 'Control')
-    }
-
-    if( level == 'Animal'){
-      data$Interpolated_Volume <- round(data$Interpolated_Volume, 2)
-
-
-      p <- ggplot(data, aes(x = Times, y = Interpolated_Volume, group = ID,color = Arms)) +
-        geom_line(size=0.8)+
-        geom_point(cex=1.5,aes(colour = Arms))
-    }
-    if( level == 'Arm'){
-      s.data <- get_data_summary_study(data,measure.var = "Interpolated_Volume", group.vars = c("Arms", "Times"))
-      s.data$Interpolated_Volume <- round(s.data$Interpolated_Volume, 2)
-
-      p <- ggplot(data = s.data, aes(x = Times, y = Interpolated_Volume, color = Arms)) +
-        geom_line(position = position_dodge(position.dodge),cex = 1.2) +
-        geom_errorbar(aes(ymin = Interpolated_Volume - SE, ymax = Interpolated_Volume + SE),
-                      width = 1.2,
-                      position = position_dodge(position.dodge)) +
-        geom_point(cex = 2,position = position_dodge(position.dodge))
-    }
-
-    p <- p + xlab("Time (d)") + ylab('Tumor Volume mm^3')
-
-    p <- p + theme_bw() +
-      theme(
-        panel.background = element_rect(fill = "transparent"),
-        panel.grid.minor = element_blank(),
-        panel.grid.major = element_blank(),
-        plot.background  = element_rect(fill = "transparent")
-      )   #backgroud
-    p <- p + theme(
-      axis.title.x = element_text(face = "bold",size = 12),
-      axis.text.x  = element_text(vjust = 0,size = 12),
-      axis.title.y = element_text(face = "bold",size = 12),
-      axis.text.y  = element_text(hjust = 1,size = 12)
-    )
-
-    if( level == 'Animal'){
-      p <- p + theme(legend.position='none')
-      p <- p + facet_wrap( ~ Arms,dir = 'h') +
-        theme(strip.text = element_text(colour = "black", face = "bold", size = rel(1)),
-              strip.background = element_rect(fill = "#E6AB02", size = rel(1.05), linetype = 1)
-        )
-    }
-
-    p <- p + scale_color_manual(values=colorblind_pallet)
-
-    if (plot_on) {
-      if (! is.null(title)) {
-        plot(p + ggtitle(title))
-      } else {
-        plot(p)
-      }
-    } else {
-      if (! is.null(title)) {
-        p <- p + ggtitle(title)
-        return(p)
-      } else {
-        return(p)
-      }
-    }
-  }
-}
-
 # Other
 get_DRLevel <- function(data, neg.control, rm.neg.control=TRUE, last.measure.day = NULL){
   if(inherits(data, "data.frame")){
@@ -564,7 +490,7 @@ get_DRLevel <- function(data, neg.control, rm.neg.control=TRUE, last.measure.day
 
 }
 
-get_plot_volumeGC_alt <- function(data, level = c('Animal','Arm'), orders = NULL,
+study_volume_plot <- function(data, level = c('Animal','Arm'), orders = NULL,
                                   position.dodge, title = NULL, plot_on = TRUE, ...){
 
    if (is.null(data) | nrow(data) == 0) {
@@ -637,7 +563,7 @@ get_plot_volumeGC_alt <- function(data, level = c('Animal','Arm'), orders = NULL
         )
     }
 
-    p <- p + scale_color_manual(values=colorblind_pallet)
+    p <- p + scale_color_manual(values=colorblind_pallet) + geom_hline(yintercept = 0, size = 0.3)
 
     if (plot_on) {
       if (! is.null(title)) {
@@ -772,9 +698,7 @@ EFSplot <- function(data, PercChange_EventSize = 100, plot_on = TRUE) {
                   risk.table.title='',
                   break.time.by = 5
   )
-
   return(p)
-  
 }
 
 auc <- function(x, y, from = min(x, na.rm=TRUE), to = max(x, na.rm=TRUE), type=c("linear", "spline"), absolutearea=FALSE, subdivisions = 100, ...) {
@@ -955,6 +879,7 @@ WaterfallPlot_PDX <- function(data,
   if (plot_on) {
     plot(p)
   } else {
+    dev.off()
     return(p)
   }
 }
@@ -1159,6 +1084,7 @@ plotTC.ratio <- function(data,
   if (plot_on) {
     plot(p)
   } else {
+    dev.off()
     return(p)
   }
   
@@ -1223,6 +1149,7 @@ log2FoldPlot <- function(data,
   if (plot_on) {
     plot(p)
   } else {
+    dev.off()
     return(p)
   }
 }
@@ -1257,8 +1184,6 @@ WaterfallPlot_Hybrid <- function(data) {
                  legend.title = element_text( size = 12, face = "bold"),
                  legend.text = element_text( size = 12)) +
                  geom_vline(xintercept = seq(1.5, (length(levels(as.factor(data$Tumor))) + 1), by = 1), color = 'gray', linetype = 'dashed')
-  
-
   return(p)
 }
 
@@ -1303,6 +1228,7 @@ plotAvgGrowthBar <- function(data) {
       geom_vline(xintercept = seq(1.5, (length(levels(as.factor(data$Tumor))) + 1), by = 1), linetype = "dashed", color = 'gray50')
 
   }
+
   return(p)
 
 }
@@ -1357,6 +1283,5 @@ plotStackedORC <- function(data) {
   }
 
   p <- p + facet_wrap(~ Tumor,dir = 'h', scales = "free_x")
-
   return(p)
 }

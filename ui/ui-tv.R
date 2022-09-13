@@ -1,88 +1,69 @@
+parameter_tabs <- tabsetPanel(
+  id = "scale_options",
+  type = "hidden",
+  tabPanel("Scaled",
+    pickerInput("tv_all_scaleby", "Scale Plot By",
+                choices = c("Growth Factor", "Volume"),
+                selected = c("Growth Factor"),
+                options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                                        showContent = TRUE),multiple = FALSE),
+    numericInput("tv_all_endpoint_scale", "Endpoint Scaling", value = 4, min = 1, max = 15000)
+  ),
+  tabPanel("Volume",
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br()
+    # used to keep spacing the same, so the UI doesn't jump as noticeably. 
+  ),
+  tabPanel("Percent Change",
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br()
+  ),
+  tabPanel("Semi-Log",
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br()
+  )
+)
+# This is a dynamic tab set used when 'scaled' is selected in the main plot function. 
+# There are three parts to make dynamic UI work. 
+# 1. The above code that sets tabPanels by input provided to the 'function'
+# 2. calling 'parameter_tabs' in the main UI body below: 
+    # column(
+    #   width = 3,
+    #   parameter_tabs
+    # )
+# 3. Observing the plot type pick list on the server, and triggering updates to the UI when changes are made to the list.
+    # observeEvent(input$tv_all_plotType, {
+    #   updateTabsetPanel(inputId = "scale_options", selected = input$tv_all_plotType)
+    # }) 
+
+
+
 tabPanel(
   title = title_tumor_volume, icon = icon("fa-solid fa-chart-line"),
-
-
   
   shinydashboard::box(
     width=12,
-    title="Data and Query", status="primary",solidHeader = T,
+    title="Query and Data Summary", status="primary",solidHeader = T,
 
+    
     shinydashboard::box(
-      width=4,
-      title="Data Upload", status="primary",solidHeader = T,
-      column(width = 12,
-
-             fluidRow(
-               style = "margin-left: 2px; margin-right: 2px; margin-bottom: 10px;",
-
-               column(width=10,offset=1,
-                      fluidRow(actionButton("user_tv_upload_btn", "Upload Tumor Volume", class = "btn btn-block btn-primary", icon = icon("upload"))),
-                      # Note: connect this to a version of the validation function used on the validate page, but return only the current text if invalid, additional information will be provided on validation page.
-               )
-
-             ),
-
-             fluidRow(
-
-               column(width=5,
-                      fluidRow(actionButton("user_tv_load_default_btn", "Load Example", class = "btn btn-block", icon = icon("arrow-right")))
-               ),
-
-               column(width=5, offset=2,
-                      fluidRow(downloadButton("user_tv_download_default_btn", "Download Loaded Data", class = "btn btn-block", icon = icon("download")))
-               )
-
-             ),
-             br(),
-             div(
-               span(textOutput("tv_text_upload"), style="color:orange")
-             ),
-      )
-    ),
-
-        bsModal(
-            "upload_data_modal", "Upload Tumor Volume Data", "user_tv_upload_btn",
-
-            fluidRow(fileInput('user_tv_data', 'Select Your Data', accept=c('.csv','.xls','.xlsx'))),
-
-            p("Status of the Uploaded Data"),
-
-            hr(),
-
-            fluidRow(
-              column(
-                width = 10, offset = 1,
-                textAreaInput("tv_user_return_msg", label = "Upload Validation Message: ", resize = "none", width = "400px", height = "250px")
-              )
-            ),
-
-            hr(),
-
-            # fluidRow(
-            #   column(
-            #     width = 5, offset = 1,
-            #     actionButton("add_user_tv_btn", "Add My Data", class = "btn btn-block")
-            #   )
-            # ),
-
-            # br(),
-
-            fluidRow(
-              column(
-                width = 10, offset = 1,
-                div(
-                  span(textOutput("tv_text_continue"), style="color:green"),
-                  span(textOutput("tv_text_stop"), style="color:red"),
-                  span(textOutput("tv_text_guide"))
-                )
-              )
-            )
-
-          ),
-
-    shinydashboard::box(
-      width = 8,
-      title = "Data Query", status = "primary", solidHeader = TRUE,
+      width = 12,
+      title = "Data Selection and Filtering", status = "primary", solidHeader = TRUE,
 
       fluidRow(
         id = "input_group_tv", # for reset button
@@ -91,54 +72,41 @@ tabPanel(
           column(width = 12,
             fluidRow(
               column(
-                width = 4,
+                width = 3,
                 # wellPanel(
                   pickerInput("tv_contributor", "Contributor",
                               choices = get_tv_contributor(),
                               selected = get_tv_contributor()[1],
                               options = pickerOptions(actionsBox = TRUE, style = 'btn-light',
                                                       showContent = TRUE),multiple = T)
-                  # checkboxGroupInput(
-                  #   "tv_contributor", "Contributor",
-                  #   inline = TRUE,
-                  #   choices = get_tv_contributor(),
-                  #   selected = get_tv_contributor()[1]
-                  # )
-                # )
               ),
               column(
-                width = 4,
-                # wellPanel(
-                  pickerInput("tv_treatment", "Treatment",
+                width = 3,
+                  pickerInput("tv_treatment", "Treatment Arm",
                               choices = get_tv_treatment(),
-                              selected = get_tv_treatment()[1:3],
+                              selected = c('Control', get_tv_treatment()[1:3]),
                               options = pickerOptions(actionsBox = TRUE, style = 'btn-light',
                                                       showContent = TRUE),multiple = T)
-                # )
               ),
 
               column(
-                width = 4,
+                width = 3,
+                pickerInput("tv_study", "Study",
+                            choices = get_tv_study(),
+                            selected = get_tv_study()[1:length(get_tv_study())],
+                            options = pickerOptions(actionsBox = TRUE, style = 'btn-light',
+                                                    showContent = TRUE),multiple = T)
+              ),
+
+               column(
+                width = 3,
                 pickerInput("tv_disease_type", "Disease Type",
                             choices = get_tv_disease(),
                             selected = get_tv_disease()[1],
                             options = pickerOptions(actionsBox = TRUE, style = 'btn-light',
                                                     showContent = TRUE),multiple = T)
               )
-            ),
-            br(),
-            fluidRow(
-              style = "margin-left: 2px; margin-right: 2px; margin-bottom: 10px;",
-              column(
-                width = 6,
-                actionButton("tv_submit_query", "Submit Query", class = "btn btn-block btn-primary", icon = icon("paper-plane"))
-              ),
-              column(
-                width = 6,
-                actionButton("tv_reset_query", "Reset Query", class = "btn btn-block", icon = icon("undo"))
-              ),
-              # responsive button text for smaller screens https://stackoverflow.com/questions/19284153/
-              tags$style(type = "text/css", ".btn { white-space: normal; }")
+
             )
           )
         )
@@ -148,19 +116,6 @@ tabPanel(
     shinydashboard::box(
       width = 12,
       title = "Selected Volume Data - Summary", status="primary",solidHeader = TRUE,
-
-      # div(
-      #   fluidRow(
-      #     column(offset = 0, width = 3,
-      #       progressBar(
-      #         id = "pbar_tv", value = 100,
-      #         total = 100, display_pct = TRUE,
-      #         title = "Selected Number of Studies"
-      #       )
-      #     )
-      #   ) 
-      # ), 
-      # MWL NOTE: At present we do not have a way to select studies. This bar confused me the first few times I looked at it. The data presented is also redundant with 'card_tv_studies'. Removing for now. 
 
       fluidRow(
         column(offset = 0, width = 12,
@@ -184,137 +139,94 @@ tabPanel(
     width = 12,
     title = "",
     id = "main_tabset", height = "250px",
-    # tags$style(".nav-tabs {
-    # background-color: #142A44;
-    # }
 
-    # .nav-tabs-custom .nav-tabs li.active:hover a, .nav-tabs-custom .nav-tabs li.active a {
-    # background-color: transparent;
-    # border-color: transparent;
-    # }
-
-    # .nav-tabs-custom .nav-tabs li.active {
-    #     border-top-color: #273D54;
-    # }"),
     tabPanel("Cross Study Plots & Analysis",
-    
-      tabsetPanel(type = "tabs",
-                  tabPanel("Response Plot",
-                    br(),
-                    fluidRow(
-
-                      column(
-
-                        width = 12,
-
-                        div(
-
-                          fluidRow(
-
-                            column(
-
-                              width = 12,
-
-                              div(
-                                column(
-                                  width = 3,
+  
+    tabsetPanel(type = "tabs",
+                tabPanel("Response Plot",
+                  br(),
+                  fluidRow(
+                    column(
+                      width = 12,
+                      div(
+                        fluidRow(
+                          column(
+                            width = 12,
+                            div(
+                              column(
+                                width = 3,
+                                tabPanel("test",
                                   pickerInput("tv_all_plot_type", "Plot Facet Type",
                                               choices = c("Study Plot", "Treatment Plot"),
                                               selected = c("Study Plot"),
                                               options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
-                                                                      showContent = TRUE),multiple = FALSE)
-                                ),
-
-
-                                column(
-                                  width = 3,
-                                  pickerInput("tv_all_plot_style", "Plot Style",
-                                              choices = c("Study Average", "Individual Animal"),
-                                              selected = c("Study Average"),
-                                              options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
-                                                                      showContent = TRUE),multiple = FALSE)
-                                ),
-
-                                column(
-                                  width = 3,
-                                  div(id="tv_div_all_scale_picker",
-                                      pickerInput("tv_all_scaleby", "Scale Plot By",
-                                                  choices = c("Growth Factor", "Volume"),
-                                                  selected = c("Growth Factor"),
-                                                  options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
-                                                                          showContent = TRUE),multiple = FALSE))
-                                ),
-                                column(
-                                  width = 3,
-                                  div(id="tv_div_all_endpoint",
-                                      numericInput("tv_all_endpoint_scale", "Endpoint Scaling", value = 4, min = 1, max = 15000))
+                                                                      showContent = TRUE),multiple = FALSE),
+                                  checkboxInput("tv_all_interpolate", "Interpolate Data", FALSE)
                                 )
-
-                              )
-                            )),
-
-                          fluidRow(
-                            column(
-                              width = 12,
-                              column(
-                                width = 2,
-                                checkboxInput("tv_all_semi.log", "Semi Log Plot", FALSE)
                               ),
                               column(
-                                width = 2,
-                                checkboxInput("tv_all_interpolate", "Interpolation", FALSE)
+                                width = 3,
+                                pickerInput("tv_all_plot_style", "Plot Style",
+                                            choices = c("Study Average", "Individual Animal"),
+                                            selected = c("Study Average"),
+                                            options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                                                                    showContent = TRUE),multiple = FALSE)
                               ),
                               column(
-                                width = 2,
-                                offset = 3,
-                                checkboxInput("tv_all_scale", "Scaled Plot", FALSE)
+                                width = 3,
+                                # checkboxInput("tv_all_semi.log", "Semi Log Plot", FALSE)
+                                pickerInput("tv_all_plotType", "Plot Type",
+                                                  choices = c("Volume", "Scaled", "Percent Change", "Semi-Log"),
+                                                  selected = c("Volume"),
+                                                  options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                                                                          showContent = TRUE),multiple = FALSE)
+                              ),
+                              column(
+                                width = 3,
+                                parameter_tabs
                               )
                             )
-                          ),
+                          )),
 
-                          hr(),
+                        hr(),
 
-                          fluidRow(
-                            column(
-                              width = 10, offset = 1,
-                              div(
-                                textOutput("tv_all_text_scaled")
-                              )
-                            )
-                          ),
-
-                          fluidRow(
+                        fluidRow(
+                          column(
+                            width = 10, offset = 1,
                             div(
-                              withSpinner(
-                                plotlyOutput("plot_tumorvol", width = "100%", height = "750px", inline = F),
-                                proxy.height = "100px", color="#0273B7"
-                              )
+                              textOutput("tv_all_text_scaled")
+                            )
+                          )
+                        ),
+
+                        fluidRow(
+                          div(
+                            withSpinner(
+                              plotlyOutput("plot_tumorvol", width = "100%", height = "750px", inline = F),
+                              proxy.height = "100px", color="#0273B7"
                             )
                           )
                         )
-                      ))
+                      )
+                    ))
         ),
         tabPanel("Average Volume Plot",
                  br(),
                     fluidRow(
-
                       column(
-
                         width = 12,
-
                         div(
-
                           fluidRow(
                             column(
                                      width = 2,
-                                     numericInput("main_avgplot.day", "Avg Measure Study Day",
+                                     numericInput("main_avgplot.day", "Avg Measure Calc. Day",
                                                   value = 21,
                                                   min = 0, max = 500),
                             ),
                             column(
                                      offset = 0,
                                      width = 2,
-                                     checkboxInput("main_avgplot_interpolate", "Interpolate Data For Calculation", FALSE)
+                                     checkboxInput("main_avgplot_interpolate", "Interpolate Data\nFor Calculation", FALSE)
                             ),
                             column(
                               width = 12,
@@ -374,7 +286,7 @@ tabPanel(
                           fluidRow(
                             column(
                                      width = 2,
-                                     numericInput("main_TC.day", "T/C Date",
+                                     numericInput("main_TC.day", "Waterfall Calc. Day",
                                                   value = 21,
                                                   min = 0, max = 500),
                             ),
@@ -411,7 +323,7 @@ tabPanel(
                           fluidRow(
                             column(
                                      width = 2,
-                                     numericInput("main_TGI.day", "TGI Date",
+                                     numericInput("main_TGI.day", "TGI Calc. Day",
                                                   value = 21,
                                                   min = 0, max = 500),
                             ),
@@ -456,7 +368,7 @@ tabPanel(
                           fluidRow(
                             column(
                                      width = 2,
-                                     numericInput("main_orc.day", "RECIST Calculation Day",
+                                     numericInput("main_orc.day", "RECIST Calc. Day",
                                                   value = 21,
                                                   min = 0, max = 500),
                             ),
@@ -479,18 +391,15 @@ tabPanel(
                         )
                       )
                     )
-        ),
-        
+        ) 
       )
-    
-    
     
     ),
     tabPanel("Individual Study Plots & Analysis",
       fluidRow(
           column(
             width = 2,
-            pickerInput("tv_study_picker", "Study",
+            pickerInput("tv_study_filtered", "Study",
                         choices = get_tv_study(),
                         options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
                                                 showContent = TRUE),multiple = FALSE),
@@ -506,7 +415,7 @@ tabPanel(
                                  fluidRow(
                                    column(
                                      width = 2,
-                                     numericInput("tv_recist", "RECIST Day",
+                                     numericInput("tv_recist", "RECIST Calc. Day",
                                                   value = 21,
                                                   min = 0, max = 500),
                                    ),
@@ -534,9 +443,10 @@ tabPanel(
                              column(
                                width = 6, offset = 0,
                                withSpinner(
-                                 plotlyOutput("plot_tumorvol_study", width = "100%", inline=TRUE, height = '500px'),
+                                 plotlyOutput("plot_tumorvol_study", width = "100%", inline=F, height = '500px'),
                                  proxy.height = "100px", color="#0273B7"
                                )),
+
                              column(
                                width = 6,
                                HTML("<br>"),
@@ -564,7 +474,7 @@ tabPanel(
                                    ),
                                    column(
                                      width = 2,
-                                     numericInput("tv_AUC.day.waterfall", "AUC Day",
+                                     numericInput("tv_AUC.day.waterfall", "AUC Calc. Day",
                                                   value = 21,
                                                   min = 0, max = 500),
                                    ),
@@ -588,47 +498,6 @@ tabPanel(
                                ))
                            )
                   ),
-                  # tabPanel("Tumor Growth Inhibition",
-                  #          br(),
-                  #         fluidRow(
-                  #            column(
-                  #              width = 12,
-                  #              div(
-                  #                fluidRow(
-                  #                    column(
-                  #                    width = 2,
-                  #                    numericInput("tv_TC.day", "T/C Date",
-                  #                                 value = 21,
-                  #                                 min = 0, max = 500),
-                  #                  ),
-                  #                  column(
-                  #                    offset = 0,
-                  #                    width = 2,
-                  #                    checkboxInput("tv_TC_interpolate", "Interpolate Data For Calculation", FALSE)
-                  #                  )
-                  #                )
-                  #              )
-                  #            )),
-
-                  #          hr(),
-
-                  #          fluidRow(
-                  #            column(
-                  #              width = 6, offset = 0,
-                  #              withSpinner(
-                  #                plotlyOutput("tv_plot_tc", width = "100%", height = '500px'),
-                  #                proxy.height = "100px", color="#0273B7"
-                  #              )),
-                  #             column(
-                  #              width = 6,
-                  #              HTML("<br>"),
-                  #              withSpinner(
-                  #                DTOutput("dt_tc_table"),
-                  #                proxy.height = "100px", color="#0273B7"
-                  #              )
-                  #            )
-                  #          )
-                  # ),
                   tabPanel("Event Free Survival",
                            br(),
                           fluidRow(
@@ -666,7 +535,7 @@ tabPanel(
                                  fluidRow(
                                    column(
                                      width = 2,
-                                     numericInput("anova_Measure_Day", "ANOVA Calculation Day",
+                                     numericInput("anova_Measure_Day", "ANOVA Calc. Day",
                                                   value = 21,
                                                   min = 0, max = 99999),
                                    ),
@@ -698,10 +567,15 @@ tabPanel(
                   )
                   # anova_Measure_Day box for input
                   # main_anova_interpolate for interpolate.
-      
       )
     ),
-  
+    tabPanel("Body Weight Analysis",
+            fluidRow(
+              column(
+                width = 12,
+              )
+            )
+    ),
     tabPanel("Current Data Table",
             fluidRow(
               column(
@@ -719,3 +593,6 @@ tabPanel(
   ),
   fluidRow(column(width = 12))
 )
+
+
+
