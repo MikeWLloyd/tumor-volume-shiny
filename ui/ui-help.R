@@ -16,7 +16,7 @@ tabPanel(
 
       fluidRow(column(
         width = 10, offset = 1,
-        includeMarkdown("include/help.md")
+        includeMarkdown("documentation/help.md")
       )),
 
       br()
