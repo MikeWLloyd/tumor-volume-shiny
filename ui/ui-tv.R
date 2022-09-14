@@ -51,11 +51,19 @@ parameter_tabs <- tabsetPanel(
     #   updateTabsetPanel(inputId = "scale_options", selected = input$tv_all_plotType)
     # }) 
 
+css <- "
+.nav li a.disabled {
+background-color: #aaa !important;
+color: #333 !important;
+cursor: not-allowed !important;
+border-color: #aaa !important;
+}"
 
 
 tabPanel(
   title = title_tumor_volume, icon = icon("fa-solid fa-chart-line"),
-  
+  shinyjs::inlineCSS(css),
+
   shinydashboard::box(
     width=12,
     title="Query and Data Summary", status="primary",solidHeader = T,
@@ -106,7 +114,6 @@ tabPanel(
                             options = pickerOptions(actionsBox = TRUE, style = 'btn-light',
                                                     showContent = TRUE),multiple = T)
               )
-
             )
           )
         )
@@ -155,7 +162,7 @@ tabPanel(
                             div(
                               column(
                                 width = 3,
-                                tabPanel("test",
+                                tabPanel("tv_plot",
                                   pickerInput("tv_all_plot_type", "Plot Facet Type",
                                               choices = c("Study Plot", "Treatment Plot"),
                                               selected = c("Study Plot"),
@@ -174,7 +181,6 @@ tabPanel(
                               ),
                               column(
                                 width = 3,
-                                # checkboxInput("tv_all_semi.log", "Semi Log Plot", FALSE)
                                 pickerInput("tv_all_plotType", "Plot Type",
                                                   choices = c("Volume", "Scaled", "Percent Change", "Semi-Log"),
                                                   selected = c("Volume"),
@@ -186,7 +192,8 @@ tabPanel(
                                 parameter_tabs
                               )
                             )
-                          )),
+                          )
+                        ),
 
                         hr(),
 
@@ -569,27 +576,70 @@ tabPanel(
                   # main_anova_interpolate for interpolate.
       )
     ),
-    tabPanel("Body Weight Analysis",
-            fluidRow(
-              column(
-                width = 12,
+    tabPanel("Body Weight Analysis", value = 'weight_tab',
+      fluidRow(
+        column(
+          width = 12,
+          fluidRow(
+            column(
+              width = 12,
+              div(
+                column(
+                  width = 3,
+                    pickerInput("tv_weight_plot_type", "Plot Facet Type",
+                                choices = c("Study Plot", "Treatment Plot"),
+                                selected = c("Study Plot"),
+                                options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                                                        showContent = TRUE),multiple = FALSE)
+                ),
+                column(
+                  width = 3,
+                  pickerInput("tv_weight_plot_style", "Plot Style",
+                              choices = c("Study Average", "Individual Animal"),
+                              selected = c("Study Average"),
+                              options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                                                      showContent = TRUE),multiple = FALSE)
+                ),
+                column(
+                  width = 3,
+                  pickerInput("tv_weight_plotType", "Plot Type",
+                                    choices = c("Weight", "Percent Change"),
+                                    selected = c("Weight"),
+                                    options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                                                            showContent = TRUE),multiple = FALSE)
+                )
               )
             )
-    ),
-    tabPanel("Current Data Table",
-            fluidRow(
-              column(
-                width = 12,
-                # table with css spinner
-                HTML("<br>"),
-                withSpinner(
-                  DTOutput("tbl_tv_all"),
-                  proxy.height = "100px", color="#0273B7"
-                ),
-                hr()
-              )
           )
         )
+      ),
+      hr(),
+      fluidRow(
+        column(
+          width = 10, offset = 1,
+          div(
+            withSpinner(
+              plotlyOutput("plot_mouseweight", width = "100%", height = "750px", inline = F),
+              proxy.height = "100px", color="#0273B7"
+            )
+          )
+        )
+      )
+    ),
+    tabPanel("Current Data Table",
+      fluidRow(
+        column(
+          width = 12,
+          # table with css spinner
+          HTML("<br>"),
+          withSpinner(
+            DTOutput("tbl_tv_all"),
+            proxy.height = "100px", color="#0273B7"
+          ),
+          hr()
+        )
+      )
+    )
   ),
   fluidRow(column(width = 12))
 )

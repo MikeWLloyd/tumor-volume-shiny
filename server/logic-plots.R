@@ -430,6 +430,112 @@ get_plot_scaled_study <- function(data, orders = NULL, position.dodge, title = N
   }
 }
 
+
+get_weight_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment', 'Study'), orders = NULL, position.dodge, ...){
+  if (is.null(data) | nrow(data) == 0) {
+    plot_ly()
+  }else{
+  
+    if(class(data) != 'data.frame'){
+      data<-as.data.frame(data)
+    }
+
+    data$Arms <- relevel(factor(data$Arms), 'Control')
+
+    if( level == 'Arm'){
+      s.data <- get_data_summary(data, plot.type="normal", measure.var = "Body_Weight",
+                            group.vars = c('Study', "Times", "Arms"))
+
+      s.data$Body_Weight <- round(s.data$Body_Weight, 2)
+
+      if(pattern == 'Study'){
+        p <- ggplot(data = s.data, aes(x = Times, y = Body_Weight, color = Arms)) +
+              geom_hline(yintercept = 0, size = 0.3) +
+              geom_line(position = position_dodge2(position.dodge),cex = 1.2) +
+              geom_errorbar(aes(ymin = Body_Weight - SE, ymax = Body_Weight + SE),
+                            width = 1,
+                            position = position_dodge2(position.dodge)) +
+              geom_point(cex = 2,
+                        position = position_dodge2(position.dodge)
+              )
+      }
+      if(pattern == 'Treatment'){
+
+        p <- ggplot(data = s.data, aes(x = Times, y = Body_Weight, color = Study)) +
+              geom_hline(yintercept = 0, size = 0.3) +
+              geom_line(position = position_dodge2(position.dodge),cex = 1.2) +
+              geom_errorbar(aes(ymin = Body_Weight - SE, ymax = Body_Weight + SE),
+                            width = 1,
+                            position = position_dodge2(position.dodge)) +
+              geom_point(cex = 2,
+                        position = position_dodge2(position.dodge)
+              )
+      }
+
+
+    }
+
+    if( level == 'Animal') {
+      data$Body_Weight <- round(data$Body_Weight, 2)
+
+      if(pattern == 'Study'){
+        p <- ggplot(data, aes(x = Times, y = Body_Weight, group = ID, color = Arms)) +
+          geom_hline(yintercept = 0, size = 0.3) +
+          geom_line(size=0.8) +
+          geom_point(cex=1.5,aes(colour = Arms))
+      }
+      if(pattern == 'Treatment'){
+        p <- ggplot(data, aes(x = Times, y = Body_Weight, group = ID, color = Study)) +
+              geom_hline(yintercept = 0, size = 0.3) +
+              geom_line(size=0.8) +
+              geom_point(cex=1.5,aes(colour = Study))
+      }
+    }
+
+    p <- p + xlab('Time (days)')
+
+    if (input$tv_weight_plotType == 'Percent Change') {
+      p <- p + ylab('Body Weight Change (%)')
+    } else {
+      p <- p + ylab('Body Weight')
+    }
+
+    p <- p + theme_bw() +
+      theme(
+        panel.background = element_rect(fill = "transparent"),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.background  = element_rect(fill = "transparent")
+      )   #backgroud
+    p <- p + theme(
+      axis.title.x = element_text(face = "bold",size = 12),
+      axis.text.x  = element_text(vjust = 0,size = 12),
+      axis.title.y = element_text(face = "bold",size = 12),
+      axis.text.y  = element_text(hjust = 1,size = 12)
+    )
+
+    if(pattern == 'Study'){
+      p <- p + facet_wrap(~ Study, dir = 'h')+ labs(color = "Treatments") +
+        theme(strip.text = element_text(colour = "black", face = "bold", size = rel(1)),
+              strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)
+        )
+    }
+
+    if(pattern == 'Treatment'){
+      p <- p + facet_wrap(~ Arms, dir = 'h')+ labs(color = "Study") +
+        theme(strip.text = element_text(colour = "black", face = "bold", size = rel(1)),
+              strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)
+        )
+    }
+
+    p <- p + scale_color_manual(values=colorblind_pallet)
+    pdf(NULL)
+    dev.off()
+    p
+  }
+}
+
+
 # Interpolated - Moscow
 get_interpolated_pdx_data <- function(data){
 

@@ -390,7 +390,7 @@ output$plot_tumorvol <- renderPlotly({
       # Reset Info Text of the Scaled Plot
       output$tv_all_text_scaled <- renderText({""})
 
-      get_tv_plot(data = s.data, level = level_type, pattern = pattern_type, position.dodge = 0.99) #MWL: THIS IS FIXED!
+      get_tv_plot(data = s.data, level = level_type, pattern = pattern_type, position.dodge = 0.99)
     }
   }
 })
@@ -532,7 +532,6 @@ output$tv_plot_EFS <- renderPlotly({
   for(i in 1:length(s$x$data)) {
     if (i <= length(levels(as.factor(p1$data.survtable$Arms)))) {
       s$x$data[[i]]$showlegend <- TRUE
-      #s$x$data[[i]]$name <- levels(relevel(as.factor(p1$data.survtable$Arms), 'Control')) [[i]]
     } else {
       s$x$data[[i]]$showlegend <- FALSE
     }
@@ -913,13 +912,40 @@ output$dt_tukey_table <- DT::renderDataTable(
   response_analysis(method = 'endpoint.ANOVA', last.measure.day = anova_measure_day(), multi_test_anova = TRUE)
 )
 
-# output$generic_plot_start <- renderPlotly({
+output$plot_mouseweight <- renderPlotly({
+  # Data
+  s.data <- get_query_tv()$"df"
 
-#   temp <- data.frame(X = c(1,2,3,4), Y = c(2,3,4,5))
-#   p <- ggplot(temp, aes(x=X, y=Y)) + geom_point(size=3)
-#   return(p)
+  if (is.null(s.data) | (nrow(s.data) == 0)) {
+    plot_ly()
+  } else {
 
-# })
+  #   # Get Level Type Input by User
+    if (input$tv_weight_plot_type == "Treatment Plot") {
+      pattern_type <- "Treatment"
+    } else if (input$tv_weight_plot_type == "Study Plot") {
+      pattern_type <- "Study"
+    }
+
+    if (input$tv_weight_plot_style == "Study Average") {
+      level_type <- "Arm"
+    } else if (input$tv_weight_plot_style == "Individual Animal") {
+      level_type <- "Animal"
+    }
+    
+    if (input$tv_weight_plotType == 'Percent Change'){
+        s.data <- s.data %>%
+          dplyr::arrange(Study, Tumor, Arms, ID, Times) %>%
+          dplyr::group_by(Study, Tumor, Arms, ID) %>%
+          dplyr::mutate(dWeight = (((Body_Weight - Body_Weight[1]) / Body_Weight[1] ) * 100))
+
+        s.data$Body_Weight <- s.data$dWeight
+    }
+  #   # Call plot
+    get_weight_plot(data = s.data, level = level_type, pattern = pattern_type, position.dodge = 0.99)
+    
+  }
+})
 
 output$user_tv_download_default_btn <- downloadHandler(
   filename = function() {
@@ -928,6 +954,17 @@ output$user_tv_download_default_btn <- downloadHandler(
   content = function(file) {
     write.csv(get_data(), file)
   })
+
+
+# output$generic_plot_start <- renderPlotly({
+
+#   temp <- data.frame(X = c(1,2,3,4), Y = c(2,3,4,5))
+#   p <- ggplot(temp, aes(x=X, y=Y)) + geom_point(size=3)
+#   return(p)
+
+# })
+
+
 
 # landing page buttons
 observeEvent(input$btn_nav_val, updateNavlistPanel(session, "nav_bco", selected = title_validate))

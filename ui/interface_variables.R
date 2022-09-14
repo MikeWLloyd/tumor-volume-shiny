@@ -1,9 +1,6 @@
 # Need access to include_ui_login_page variable (Hardcoded in first pass)
 include_ui_login_page = FALSE
 
-# Interface text
-# ui_home_desc_1 = "The Tumor Volume Suite provides environment for preparing tumor volume plots with your input volume data based on the given template."
-
 # Tab titles
 title_home = "Home"
 title_validate = "Data Upload and Validation"
