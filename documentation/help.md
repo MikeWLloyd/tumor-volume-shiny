@@ -60,6 +60,11 @@ The following columns with the **exact names** and **data types** are expected i
     
         A descriptor of the tumor type (e.g., Invasive breast carcinoma, Unknown, NA). 
         NOTE: This is a free text field, and is only used in the data filter query.
+    
+    9. 'Body_Weight': 
+
+        The measured body weights of the animals (e.g., 14.2, 14, 15.1). 
+        NOTE: This field is optional, if not provided the 'Body Weight Analysis' tab will be disabled.  
 
 
 ### Upload Validation Message: 
@@ -149,7 +154,7 @@ Below the data query and summary are three sub-tabs that allow users to access d
 
 ### 1. Cross Study Plots and Analysis
 
-There are six tabs that provide access to different visualizations and analysis metrics for cross study comparisons. 
+The user selects from six tabs that provide access to different visualizations and analysis metrics for cross study comparisons. 
 
 **NOTE:** Data filtering via 'Data Selection and Filtering' dropdowns can be used to select or deselect studies as needed.
 
@@ -263,7 +268,7 @@ This plot shows cross study mean log2 fold change [log2(Volume<sub>t</sub> / Vol
 <img src="images/15.tv_hybridWaterfall_plot.png" alt="" width="400"/>
 </p> 
 
-This plot shows cross study hybrid waterfall plot. Where model by treatment arm shows progression, T / C ratio +/- SE  is displayed in the plot. T/C is defined within study, tumor, and treatment arm roughly as:  
+This plot shows cross study hybrid waterfall plot. Where model by treatment arm shows progression, T / C ratio +/- SE  is displayed in the plot. T/C is defined within study, tumor, and treatment arm defined roughly as:  
 
 <p align="center">
 <img src="images/a.eq3.gif" alt="" width="175"/>
@@ -271,7 +276,8 @@ This plot shows cross study hybrid waterfall plot. Where model by treatment arm 
 
 For the specific formulation, see the 'Tumor Growth Inhibition' section that follows. 
 
-Where model by treatment arm shows regression, percent change in tumor volume (as defined above) +/- SE is shown. The calculation of these metrics is taken at the user defined time point (default "Waterfall Calc. Day" is 21). Data underlying this plot can be interpolated with the checkbox.  
+Where model by treatment arm shows regression, percent change in tumor volume (as defined above) +/- SE is shown. The calculation of these metrics is taken at the user defined time point (default "Waterfall Calc. Day" is 21). Data underlying this plot can be interpolated with the checkbox.
+  
 
 ---
 
@@ -281,9 +287,10 @@ Where model by treatment arm shows regression, percent change in tumor volume (a
 <img src="images/16.tv_TGI_plot.png" alt="" width="400"/>
 </p> 
 
-This plot and table shows cross study tumor growth inhibition defined as the T/C ratio. 
+This plot and table shows cross study tumor growth inhibition defined as the T/C ratio at the user defined time point (default "TGI Calc. Day" is 21). 
 
-To measure antitumor activity of the treatment group compared to the control group, we considered the tumor growth treatment-to-control ratio (gamma<sub>t</sub>) estimated by one way ANOVA focused on time *t* as described in Supplemental Materials 1 in (Evrard et al. 2020). 
+To measure antitumor activity of the treatment group compared to the control group, we considered the tumor growth treatment-to-control ratio (gamma<sub>t</sub>) estimated by one way ANOVA focused on time *t* as described in Supplemental Materials 1 in (Evrard et al. 2020). Data underlying this plot can be interpolated with the checkbox.  
+
  
 Briefly, after log transforming the change in tumor volume (as defined above), a linear model is fit:
 
@@ -299,9 +306,11 @@ If we define TGI as the ratio of mean tumor to mean control as in the equation s
 <img src="images/a.eq5.gif" alt="" width="175"/>
 </p>
 
-Where TGI < 1 indicates the degree of growth inhibition of the treatment relative to control. To test for the significance of anti-tumor activity of the treatment group at time *t*, we test the null hypothesis of no treatment effect by comparing
+Where TGI < 1 indicates the degree of growth inhibition of the treatment relative to control. To test for the significance of anti-tumor activity of the treatment group at time *t*, we test the null hypothesis of no treatment effect by comparing:
 
-H_0:β=0 (γ=1) vs. H_1: β<0 (γ<1).
+<p align="center">
+<img src="images/a.eq6.gif" alt="" width="175"/>
+</p>
 
     Evrard YA, Srivastava A, Randjelovic J, Doroshow JH, Dean DA 2nd, Morris JS, Chuang JH; NCI PDXNet Consortium. Systematic Establishment of Robustness and Standards in Patient-Derived Xenograft Experiments and Analysis. Cancer Res. 2020 Jun 1;80(11):2286-2297. doi: 10.1158/0008-5472.CAN-19-3101. Epub 2020 Mar 9. PMID: 32152150; PMCID: PMC7272270.
 
@@ -310,6 +319,20 @@ H_0:β=0 (γ=1) vs. H_1: β<0 (γ<1).
 ---
 
 #### 1f. Stacked Objective Response Plot
+
+<p align="center">
+<img src="images/17.tv_ORC_stacked_plot.png" alt="" width="400"/>
+</p> 
+
+
+This plot summarizes individual animal objective response criteria at the user defined time point (default "RECIST Calc. Day" is 21). Data underlying this plot can be interpolated with the checkbox.  
+
+The classification used mimics RECIST criteria commonly used in clinical trials for solid tumors to classify each patient as complete response (CR), partial response (PR), stable disease (SD), or progressive disease (PD). At a user defined time *t*, each animal was classified into one of these four categories based on their percent tumor volume change from baseline based on the following cut points: 
+
+1. CR : ∆TV<sub>t</sub> <= -95%
+2. PR : -95% < ∆TV<sub>t</sub> <= -30%
+3. SD : -30% < ∆TV<sub>t</sub> <= 20%
+4. PD : All other cases
 
 ---
 
@@ -323,9 +346,49 @@ H_0:β=0 (γ=1) vs. H_1: β<0 (γ<1).
 
 ### 2. Individual Study Plots & Analysis
 
-There is a study selection dropdown, and four tabs that provide access to different visualizations and analysis metrics for analysis of the selected individual study. 
+Users select the 'Study' of interest from the study selection dropdown. Four sub-tabs provide access to different visualizations and analysis metrics for analysis of the selected study. 
 
 <p align="center">
-<img src="images/999.tv_individual_study_options.png" alt="" width="700"/>
+<img src="images/18.tv_individual_study_options.png" alt="" width="700"/>
 </p>
+
+#### 2a. Objective Response (RECIST)
+
+<p align="center">
+<img src="images/19.tv_RECIST_plot_table.png" alt="" width="400"/>
+</p> 
+
+This plot and table summarize cohort level objective response criteria at the user defined time point (default "RECIST Calc. Day" is 21). Data underlying this plot can be interpolated with the checkbox.  
+
+The classification used mimics RECIST criteria commonly used in clinical trials for solid tumors to classify each patient as complete response (CR), partial response (PR), stable disease (SD), or progressive disease (PD). This classification differs from the above, in that a RECIST classification is applied to each treatment arm in the following way. 
+
+1. ∆TV for each animal is calculated at time *t*.
+2. Within each treatment arm, the minimum ∆TV is found as ∆TV<sub>m</sub>.
+3. Within each treatment arm, the mean ∆TV is computed across replicates as ∆TV<sub>a</sub>.
+3. RECIST category is then determined for each treatment arm as follows:  
+    1. CR : ∆TV<sub>m</sub> <= -95%, and  ∆TV<sub>a</sub> <= -40%
+    2. PR : ∆TV<sub>m</sub> <= -50%, and  ∆TV<sub>a</sub> <= -20%
+    3. SD : ∆TV<sub>m</sub> <=  35%, and  ∆TV<sub>a</sub> <=  30%
+    4. PD : All other cases
+
+
+#### 2b. Waterfall Plot
+
+<p align="center">
+<img src="images/20.tv_waterfall_plot.png" alt="" width="400"/>
+</p> 
+
+Waterfall plots can be shown for individual animals using one of three different metrics selected in the 'Waterfall Metric' dropdown. 
+
+For this measure, we computed the area under the tumor growth curve from baseline up to time t, normalized by dividing by t. With this normalization factor, the interpretation of this measure is the average percent change in tumor size from baseline to time. If there was no tumor measurement at time t but measurements at flanking measurements at time t_0 and t_1 such that t_0<t<t_(1 ), then we used linear interpolation to estimate the tumor volume at t.
+
+
+#### 2c. Event Free Surivial
+
+#### 2d. ANOVA
+
+
+
+### 3. Body Weight Analysis
+
 
