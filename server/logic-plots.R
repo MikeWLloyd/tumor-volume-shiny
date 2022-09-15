@@ -159,7 +159,6 @@ get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment'
     }
 
     p <- p + scale_color_manual(values=colorblind_pallet)
-    pdf(NULL)
     dev.off()
     p
   }
@@ -529,7 +528,6 @@ get_weight_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatm
     }
 
     p <- p + scale_color_manual(values=colorblind_pallet)
-    pdf(NULL)
     dev.off()
     p
   }
@@ -729,11 +727,11 @@ get_response_level <- function(data, last.measure.day){
     best.response <- min(rc.change)
     avg.response <- mean(rc.change)
 
-    if (best.response < -95 & avg.response < -40) {
+    if (best.response <= -95 & avg.response <= -40) {
       response.level <- "CR"
-    } else if (best.response < -50 & avg.response < -20) {
+    } else if (best.response <= -50 & avg.response <= -20) {
       response.level <- "PR"
-    } else if (best.response < 30 & avg.response < 35) {
+    } else if (best.response <= 30 & avg.response <= 35) {
       response.level <- "SD"
     } else {
       response.level <- "PD"
@@ -743,9 +741,10 @@ get_response_level <- function(data, last.measure.day){
     #
     # Funda suggested the following for individual mice:  
     # 
-    # dplyr::mutate(ORC = case_when(dVt <= -30 ~ 'PR', 
-    #                           dVt > -30 & dVt < 20 ~ 'SD',
-    #                           dVt > 20 ~ 'PD')) %>%  
+    # case_when(dVt <= -95 ~ 'CR', 
+    #   dVt > -95 & dVt <= -30 ~ 'PR', 
+    #   dVt > -30 & dVt <= 20 ~ 'SD',
+    #   dVt > 20 ~ 'PD'))
     #
     # # MWL Question: should the RECIST individual animal waterfall plots be shown? 
     # # MWL Question: how is RECIST for individual animals translated into a model specific value? 
@@ -909,8 +908,8 @@ IndividualMouseReponse <- function(data, last.measure.day = NULL) {
         dplyr::full_join(data.id.i, by = c('ID', 'Times')) %>%
         dplyr::filter(Times == last.avail.day) %>%
         dplyr::mutate(ORC = case_when(dVt <= -95 ~ 'CR', 
-                                      dVt <= -30 ~ 'PR', 
-                                      dVt > -30 & dVt < 20 ~ 'SD',
+                                      dVt > -95 & dVt <= -30 ~ 'PR', 
+                                      dVt > -30 & dVt <= 20 ~ 'SD',
                                       dVt > 20 ~ 'PD')) %>% 
         dplyr::select(c('ID', 'Times',  'Arms', 'Tumor', 'Volume', 'dVt', 'log2.Fold.Change', 'AUC.Filtered.Measures', 'AUC.All.Measures', 'ORC'))
 
@@ -1374,14 +1373,14 @@ plotStackedORC <- function(data) {
   )
   
   if (length(levels(as.factor(data$Arms))) > 2) {
-      p <- p + theme(axis.text.x  = element_text(hjust = 1,vjust = 1,size = 12,angle = 45),
+      p <- p + theme(axis.text.x  = element_text(hjust = 1,vjust = 1,size = 10, angle = 0),
                  legend.background = element_rect(fill = 'white', colour = 'black'),
                  legend.title = element_text( size = 12, face = "bold"),
                  legend.text = element_text( size = 12)) +
     geom_vline(xintercept = seq(1.5, (length(levels(as.factor(data$Arms))) + 1), by = 1), linetype = "dashed", color = 'gray50') +
     geom_hline(yintercept = 0)
   } else {
-    p <- p + theme(axis.text.x  = element_text(hjust = 1,vjust = 1,size = 12,angle = 45),
+    p <- p + theme(axis.text.x  = element_text(hjust = 1,vjust = 1,size = 10, angle = 0),
                  legend.background = element_rect(fill = 'white', colour = 'black'),
                  legend.title = element_text( size = 12, face = "bold"),
                  legend.text = element_text( size = 12)) +

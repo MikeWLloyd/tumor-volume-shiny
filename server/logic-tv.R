@@ -318,6 +318,9 @@ observeEvent(input$tv_all_plotType, {
   updateTabsetPanel(inputId = "scale_options", selected = input$tv_all_plotType)
 }) 
 
+observeEvent(input$waterfall_metric, {
+  updateTabsetPanel(inputId = "waterfall_options", selected = input$waterfall_metric)
+}) 
 
 output$plot_tumorvol <- renderPlotly({
   # Data
