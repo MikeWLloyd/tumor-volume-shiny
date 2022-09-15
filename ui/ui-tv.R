@@ -77,20 +77,16 @@ parameter_tabs_waterfall <- tabsetPanel(
     br()
   )
 )
-#### DOUBLE CHECK THE INDIVIDUAL WATERFALL CODE.
-
-#### FIX THE VALIDATION, SO THAT IF BODY_WEIGHTS IS PROVIDED BUT THE ENTIRE COLUMN IS EMPTY THE TAB IS ALSO TURNED OFF. 
-
-
+# Above is for optional display of AUC day in individual waterfall plots. 
 
 css <- "
 .nav li a.disabled {
-background-color: #aaa !important;
+background-color: #ffffff !important;
 color: #333 !important;
 cursor: not-allowed !important;
-border-color: #aaa !important;
 }"
 ## This css is used to disable the 'Body Weight Analysis' tab, when no body weight data is provided. 
+# border-color: #aaa !important;
 
 tabPanel(
   title = title_tumor_volume, icon = icon("fa-solid fa-chart-line"),

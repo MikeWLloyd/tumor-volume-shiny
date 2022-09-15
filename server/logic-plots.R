@@ -159,7 +159,6 @@ get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment'
     }
 
     p <- p + scale_color_manual(values=colorblind_pallet)
-    dev.off()
     p
   }
 }
@@ -312,7 +311,6 @@ get_plot_scaled <- function(data, orders = NULL, position.dodge, title = NULL, p
     if (plot_on) {
       plot(p)
     } else {
-      dev.off()
       p
     }
   }
@@ -423,7 +421,6 @@ get_plot_scaled_study <- function(data, orders = NULL, position.dodge, title = N
     if (plot_on) {
       plot(p)
     } else {
-      dev.off()
       return(p)
     }
   }
@@ -528,7 +525,6 @@ get_weight_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatm
     }
 
     p <- p + scale_color_manual(values=colorblind_pallet)
-    dev.off()
     p
   }
 }
@@ -984,7 +980,6 @@ WaterfallPlot_PDX <- function(data,
   if (plot_on) {
     plot(p)
   } else {
-    dev.off()
     return(p)
   }
 }
@@ -1189,7 +1184,6 @@ plotTC.ratio <- function(data,
   if (plot_on) {
     plot(p)
   } else {
-    dev.off()
     return(p)
   }
   
@@ -1254,7 +1248,6 @@ log2FoldPlot <- function(data,
   if (plot_on) {
     plot(p)
   } else {
-    dev.off()
     return(p)
   }
 }

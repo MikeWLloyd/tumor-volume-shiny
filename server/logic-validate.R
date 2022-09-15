@@ -43,15 +43,24 @@ observeEvent(input$user_tv_data, {
   if(nrow(test_results %>% dplyr::filter(error == 'TRUE' & name != 'V11') > 0)) {
     for(error in errors(out)) {
       error <- gsub('object', 'Column', error)
-      error_check_string <- paste(error_check_string,' ERROR: ', error)
-      error_check_string <- paste(error_check_string, '', sep = '\n')
+      print(error)
+      if (error == "Column 'Body_Weight' not found") {
+        next
+      } else {
+        error_check_string <- paste(error_check_string,' ERROR: ', error)
+        error_check_string <- paste(error_check_string, '', sep = '\n')
+      }
     }
   } else {
     error_check_string <- paste(error_check_string, ' NONE\n')
     check1 <-1
   }
 
-  failures <- as.data.frame(test_results %>% dplyr::filter(fails == 1 & name != 'V09' | fails == 1 & name != 'V10'))
+  failures <- as.data.frame(test_results %>% 
+                              dplyr::filter(fails == 1) %>%
+                              dplyr::filter(name != 'V09') %>%
+                              dplyr::filter(name != 'V10') %>%
+                              dplyr::filter(name != 'V11'))
 
   if(nrow(failures > 0)) {
     error_check_string <- paste(error_check_string, 'DATA TYPE ERRORS:\n')
@@ -80,9 +89,14 @@ observeEvent(input$user_tv_data, {
   } 
   
   if(nrow(test_results %>% dplyr::filter(error == 'TRUE' & name == 'V11') > 0)) {
-    error_check_string <- paste(error_check_string, '\nIMPORT WARNING: \n  Optional Column "Body_Weight" is not present. Body weight plots are disabled.\n')
+    error_check_string <- paste(error_check_string, '\nIMPORT WARNING: \n  Optional Column "Body_Weight" is not present.\n  Body weight plots are disabled.\n')
     shinyjs::disable(selector = '.nav-tabs a[data-value="weight_tab"')
-   } 
+  } 
+
+  if(nrow(test_results %>% dplyr::filter(fails == 1 & name == 'V11') > 0)) {
+    error_check_string <- paste(error_check_string, '\nIMPORT WARNING: \n  Optional Column "Body_Weight" is present but has no data or data are badly formatted.\n  Body weight plots are disabled.\n')
+    shinyjs::disable(selector = '.nav-tabs a[data-value="weight_tab"')
+  } 
 
 
   if (check1 == 1 && check2 == 1 && check3 == 1) {
