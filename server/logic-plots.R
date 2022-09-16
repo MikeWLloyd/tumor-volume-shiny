@@ -1383,3 +1383,108 @@ plotStackedORC <- function(data) {
   p <- p + facet_wrap(~ Tumor,dir = 'h', scales = "free_x")
   return(p)
 }
+
+
+response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANOVA','LMM'), last.measure.day = NULL, multi_test_anova = FALSE) {
+
+  ## NOTE: 'Volume' is used here, but dVt could potentially be used.
+
+  df <- base::subset(
+    get_query_tv()$"df", Study %in% c(input$tv_study_filtered)
+  )
+
+  study <- unlist(levels(factor(df$Study)))[1]
+
+  df <- df %>%
+    filter(Study == study) %>% droplevels()
+
+  if(inherits(df, "data.frame")){
+    df<-as.data.frame(df)
+  }
+
+  if (input$main_anova_interpolate){
+    df <- get_interpolated_pdx_data(data = df)
+    df$Volume <- df$Interpolated_Volume
+  }
+
+  if (!is.null(last.measure.day)) {
+    end_day_index = match(last.measure.day,df$Times)
+    if (is.na(end_day_index)) {
+      end_day_index = which.min(abs(df$Times - last.measure.day))
+    }
+    df <- subset(df, Times <= df$Times[end_day_index])
+  }
+
+  df$Arms <- relevel(as.factor(df$Arms), 'Control')
+
+  Volume <- df[,'Volume']
+
+  df <- subset(df,Volume != 0)
+
+  #get endpoint data
+  endpoint.data <- df[df$Times == max(df$Times),]
+  endpoint.data <- endpoint.data[,c('Arms','Volume')]
+  endpoint.data$Arms=factor(endpoint.data$Arms)
+
+  if(length(unique(endpoint.data$Arms)) == 1 & !multi_test_anova) {
+    showNotification('There is only one treatment arm at the select time point. Select a different time point, or add more arms','',type = "error")
+    return()
+  } else if(length(unique(endpoint.data$Arms)) == 1 & multi_test_anova) {
+    #howNotification('There is only one treatment arm at the select time point. Select a different time point, or add more arms','',type = "error")
+    return()
+  }
+
+  #get mean growth rate
+  ID <- unique(as.character(data$ID))
+
+
+    dra.res <- switch (method,
+                        endpoint.ANOVA = summary(aov(Volume ~ Arms, data = endpoint.data)),
+                        endpoint.KW    = kruskal.test(Volume ~ Arms, data = endpoint.data),
+                        mixed.ANOVA    = summary(aov(Volume ~ Arms + Error(ID/Times), data = df)),
+                        LMM            = summary(lme(Volume ~ Arms, random = ~1|ID/Times, data = df))[[20]]
+    )
+
+    dra.res.full <- switch (method,
+                        endpoint.ANOVA = aov(Volume ~ Arms, data = endpoint.data),
+                        endpoint.KW    = kruskal.test(Volume ~ Arms, data = endpoint.data),
+                        mixed.ANOVA    = aov(Volume ~ Arms + Error(ID/Times), data = df),
+                        LMM            = lme(Volume ~ Arms, random = ~1|ID/Times, data = df)
+    )
+
+    multiple_comp_test <- TukeyHSD(dra.res.full)
+  if (!multi_test_anova) {
+    tab.df <- DT::datatable(dra.res[[1]],
+              style = "bootstrap",
+              escape = FALSE,
+              filter = 'none',
+              rownames= TRUE,
+              class = "cell-border stripe",
+              extensions = "Buttons",
+              options = list(
+                dom = "Blrti", info = FALSE, scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, pageLength = 20, paging = F,
+                buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download")))) %>%
+              formatSignif(c('Sum Sq', 'Mean Sq', 'F value', 'Pr(>F)'), 4)
+    return(tab.df)
+  } else {
+
+    mct <- as.data.frame(multiple_comp_test[['Arms']])
+    mct$'diff' <- round(mct$'diff', digits=2)
+    mct$'lwr' <- round(mct$'lwr', digits=2)
+    mct$'upr' <- round(mct$'upr', digits=2)
+    mct$'p adj' <- round(mct$'p adj', digits=4)
+
+
+    tab.df <- DT::datatable(mct,
+              style = "bootstrap",
+              escape = FALSE,
+              filter = list(position = "top", clear = T),
+              rownames= TRUE,
+              class = "cell-border stripe",
+              extensions = "Buttons",
+              options = list(
+                dom = "Blrtip", scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, lengthMenu = list(c(5, 20, 50, -1), c('5', '20', '50', 'All')), pageLength = 20, paging = T,
+                buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download"))))
+    return(tab.df)
+  }
+}

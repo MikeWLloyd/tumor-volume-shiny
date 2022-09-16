@@ -55,7 +55,7 @@ parameter_tabs_waterfall <- tabsetPanel(
   id = "waterfall_options",
   type = "hidden",
   tabPanel("AUC.Filtered.Measures",
-    numericInput("tv_AUC.day.waterfall", "AUC Calc. Day", value = 21, min = 0, max = 500)
+    numericInput("tv_AUC.day.waterfall", "Final Day for AUC Calc.", value = 21, min = 0, max = 500)
   ),
   tabPanel("dVt",
     br(),
@@ -87,11 +87,34 @@ cursor: not-allowed !important;
 }"
 ## This css is used to disable the 'Body Weight Analysis' tab, when no body weight data is provided. 
 # border-color: #aaa !important;
+# https://stackoverflow.com/a/64324799/18557826
+
+js <- HTML('
+$(document).on("shiny:busy", function() {
+ var inputs = document.getElementsByTagName("a");
+ console.log(inputs);
+ for (var i = 0; i < inputs.length; i++) {
+ inputs[i].disabled = true;
+ }
+});
+
+$(document).on("shiny:idle", function() {
+ var inputs = document.getElementsByTagName("a");
+ console.log(inputs);
+ for (var i = 0; i < inputs.length; i++) {
+ inputs[i].disabled = false;
+ }
+});'
+)
+## Deactivate all Buttons as long as shiny is busy. 
+## There was an issue where if a user clicked through tabs before one plot finished loading, the size of plots could shrink.
+## This JS code avoids this by disabling buttons while the app is 'busy' 
+# https://stackoverflow.com/a/52978427/18557826
 
 tabPanel(
   title = title_tumor_volume, icon = icon("fa-solid fa-chart-line"),
   shinyjs::inlineCSS(css),
-
+  tags$head(tags$script(js)),
   shinydashboard::box(
     width=12,
     title="Query and Data Summary", status="primary",solidHeader = T,
@@ -230,7 +253,7 @@ tabPanel(
                   fluidRow(
                     div(
                       withSpinner(
-                        plotlyOutput("plot_tumorvol", width = "100%", height = "750px", inline = F),
+                        plotlyOutput("plot_tumorvol", width = "100%", height = "750px", inline = T),
                         proxy.height = "100px", color="#0273B7"
                       )
                     )
@@ -262,7 +285,7 @@ tabPanel(
                   width = 12,
                   div(
                     withSpinner(
-                      plotlyOutput("avg_growth_plot", width = "100%", height = "750px", inline = F),
+                      plotlyOutput("avg_growth_plot", width = "100%", height = "750px", inline = T),
                       proxy.height = "100px", color="#0273B7"
                     )
                   )
@@ -289,7 +312,7 @@ tabPanel(
                   width = 12,
                   div(
                     withSpinner(
-                      plotlyOutput("log2_foldchange", width = "100%", height = "750px", inline = F),
+                      plotlyOutput("log2_foldchange", width = "100%", height = "750px", inline = T),
                       proxy.height = "100px", color="#0273B7"
                     )
                   )
@@ -322,7 +345,7 @@ tabPanel(
                   width = 12,
                   div(
                     withSpinner(
-                      plotlyOutput("hybrid_waterfall", width = "100%", height = "750px", inline = F),
+                      plotlyOutput("hybrid_waterfall", width = "100%", height = "750px", inline = T),
                       proxy.height = "100px", color="#0273B7"
                     )
                   )
@@ -575,7 +598,7 @@ tabPanel(
             )
           )
         ),
-
+        
         hr(),
 
         fluidRow(

@@ -11,7 +11,6 @@ tabPanel(
                  fluidRow(fileInput('user_tv_data', 'Upload Your Tumor Volume',
                                     accept=c('.csv','.xls','.xlsx')))
           ),
-          #p("Status of the Uploaded Data"),
           hr(),
           fluidRow(
             column(

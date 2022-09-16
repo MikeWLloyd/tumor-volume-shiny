@@ -43,7 +43,6 @@ observeEvent(input$user_tv_data, {
   if(nrow(test_results %>% dplyr::filter(error == 'TRUE' & name != 'V11') > 0)) {
     for(error in errors(out)) {
       error <- gsub('object', 'Column', error)
-      print(error)
       if (error == "Column 'Body_Weight' not found") {
         next
       } else {
