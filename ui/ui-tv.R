@@ -554,7 +554,7 @@ tabPanel(
               fluidRow(
                 column(
                   width = 2,
-                  numericInput("tv_PercChange_EventSize", "Event Size", ### NOTE THIS MAY CHANGE TO REFLECT MORE THAN % INCREASE
+                  numericInput("tv_PercChange_EventSize", "Event Size: Percent Change in Volume (%)",
                               value = 100,
                               min = 0, max = 99999),
                 )
@@ -685,7 +685,12 @@ tabPanel(
       )
     )
   ),
-  fluidRow(column(width = 12))
+  fluidRow(
+    column(width = 12)
+  ),
+  tags$script(src = "page_tracker.js")
+  #https://shiny.rstudio.com/articles/packaging-javascript.html
+  #https://stackoverflow.com/posts/61758293/revisions
 )
 
 
