@@ -159,8 +159,6 @@ get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment'
     }
 
     p <- p + scale_color_manual(values=colorblind_pallet)
-    pdf(NULL)
-    dev.off()
     p
   }
 }
@@ -313,7 +311,6 @@ get_plot_scaled <- function(data, orders = NULL, position.dodge, title = NULL, p
     if (plot_on) {
       plot(p)
     } else {
-      dev.off()
       p
     }
   }
@@ -424,11 +421,114 @@ get_plot_scaled_study <- function(data, orders = NULL, position.dodge, title = N
     if (plot_on) {
       plot(p)
     } else {
-      dev.off()
       return(p)
     }
   }
 }
+
+
+get_weight_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment', 'Study'), orders = NULL, position.dodge, ...){
+  if (is.null(data) | nrow(data) == 0) {
+    plot_ly()
+  }else{
+  
+    if(class(data) != 'data.frame'){
+      data<-as.data.frame(data)
+    }
+
+    data$Arms <- relevel(factor(data$Arms), 'Control')
+
+    if( level == 'Arm'){
+      s.data <- get_data_summary(data, plot.type="normal", measure.var = "Body_Weight",
+                            group.vars = c('Study', "Times", "Arms"))
+
+      s.data$Body_Weight <- round(s.data$Body_Weight, 2)
+
+      if(pattern == 'Study'){
+        p <- ggplot(data = s.data, aes(x = Times, y = Body_Weight, color = Arms)) +
+              geom_hline(yintercept = 0, size = 0.3) +
+              geom_line(position = position_dodge2(position.dodge),cex = 1.2) +
+              geom_errorbar(aes(ymin = Body_Weight - SE, ymax = Body_Weight + SE),
+                            width = 1,
+                            position = position_dodge2(position.dodge)) +
+              geom_point(cex = 2,
+                        position = position_dodge2(position.dodge)
+              )
+      }
+      if(pattern == 'Treatment'){
+
+        p <- ggplot(data = s.data, aes(x = Times, y = Body_Weight, color = Study)) +
+              geom_hline(yintercept = 0, size = 0.3) +
+              geom_line(position = position_dodge2(position.dodge),cex = 1.2) +
+              geom_errorbar(aes(ymin = Body_Weight - SE, ymax = Body_Weight + SE),
+                            width = 1,
+                            position = position_dodge2(position.dodge)) +
+              geom_point(cex = 2,
+                        position = position_dodge2(position.dodge)
+              )
+      }
+
+
+    }
+
+    if( level == 'Animal') {
+      data$Body_Weight <- round(data$Body_Weight, 2)
+
+      if(pattern == 'Study'){
+        p <- ggplot(data, aes(x = Times, y = Body_Weight, group = ID, color = Arms)) +
+          geom_hline(yintercept = 0, size = 0.3) +
+          geom_line(size=0.8) +
+          geom_point(cex=1.5,aes(colour = Arms))
+      }
+      if(pattern == 'Treatment'){
+        p <- ggplot(data, aes(x = Times, y = Body_Weight, group = ID, color = Study)) +
+              geom_hline(yintercept = 0, size = 0.3) +
+              geom_line(size=0.8) +
+              geom_point(cex=1.5,aes(colour = Study))
+      }
+    }
+
+    p <- p + xlab('Time (days)')
+
+    if (input$tv_weight_plotType == 'Percent Change') {
+      p <- p + ylab('Body Weight Change (%)')
+    } else {
+      p <- p + ylab('Body Weight')
+    }
+
+    p <- p + theme_bw() +
+      theme(
+        panel.background = element_rect(fill = "transparent"),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.background  = element_rect(fill = "transparent")
+      )   #backgroud
+    p <- p + theme(
+      axis.title.x = element_text(face = "bold",size = 12),
+      axis.text.x  = element_text(vjust = 0,size = 12),
+      axis.title.y = element_text(face = "bold",size = 12),
+      axis.text.y  = element_text(hjust = 1,size = 12)
+    )
+
+    if(pattern == 'Study'){
+      p <- p + facet_wrap(~ Study, dir = 'h')+ labs(color = "Treatments") +
+        theme(strip.text = element_text(colour = "black", face = "bold", size = rel(1)),
+              strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)
+        )
+    }
+
+    if(pattern == 'Treatment'){
+      p <- p + facet_wrap(~ Arms, dir = 'h')+ labs(color = "Study") +
+        theme(strip.text = element_text(colour = "black", face = "bold", size = rel(1)),
+              strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)
+        )
+    }
+
+    p <- p + scale_color_manual(values=colorblind_pallet)
+    p
+  }
+}
+
 
 # Interpolated - Moscow
 get_interpolated_pdx_data <- function(data){
@@ -623,11 +723,11 @@ get_response_level <- function(data, last.measure.day){
     best.response <- min(rc.change)
     avg.response <- mean(rc.change)
 
-    if (best.response < -95 & avg.response < -40) {
+    if (best.response <= -95 & avg.response <= -40) {
       response.level <- "CR"
-    } else if (best.response < -50 & avg.response < -20) {
+    } else if (best.response <= -50 & avg.response <= -20) {
       response.level <- "PR"
-    } else if (best.response < 30 & avg.response < 35) {
+    } else if (best.response <= 30 & avg.response <= 35) {
       response.level <- "SD"
     } else {
       response.level <- "PD"
@@ -637,9 +737,10 @@ get_response_level <- function(data, last.measure.day){
     #
     # Funda suggested the following for individual mice:  
     # 
-    # dplyr::mutate(ORC = case_when(dVt <= -30 ~ 'PR', 
-    #                           dVt > -30 & dVt < 20 ~ 'SD',
-    #                           dVt > 20 ~ 'PD')) %>%  
+    # case_when(dVt <= -95 ~ 'CR', 
+    #   dVt > -95 & dVt <= -30 ~ 'PR', 
+    #   dVt > -30 & dVt <= 20 ~ 'SD',
+    #   dVt > 20 ~ 'PD'))
     #
     # # MWL Question: should the RECIST individual animal waterfall plots be shown? 
     # # MWL Question: how is RECIST for individual animals translated into a model specific value? 
@@ -803,8 +904,8 @@ IndividualMouseReponse <- function(data, last.measure.day = NULL) {
         dplyr::full_join(data.id.i, by = c('ID', 'Times')) %>%
         dplyr::filter(Times == last.avail.day) %>%
         dplyr::mutate(ORC = case_when(dVt <= -95 ~ 'CR', 
-                                      dVt <= -30 ~ 'PR', 
-                                      dVt > -30 & dVt < 20 ~ 'SD',
+                                      dVt > -95 & dVt <= -30 ~ 'PR', 
+                                      dVt > -30 & dVt <= 20 ~ 'SD',
                                       dVt > 20 ~ 'PD')) %>% 
         dplyr::select(c('ID', 'Times',  'Arms', 'Tumor', 'Volume', 'dVt', 'log2.Fold.Change', 'AUC.Filtered.Measures', 'AUC.All.Measures', 'ORC'))
 
@@ -879,7 +980,6 @@ WaterfallPlot_PDX <- function(data,
   if (plot_on) {
     plot(p)
   } else {
-    dev.off()
     return(p)
   }
 }
@@ -1084,7 +1184,6 @@ plotTC.ratio <- function(data,
   if (plot_on) {
     plot(p)
   } else {
-    dev.off()
     return(p)
   }
   
@@ -1149,7 +1248,6 @@ log2FoldPlot <- function(data,
   if (plot_on) {
     plot(p)
   } else {
-    dev.off()
     return(p)
   }
 }
@@ -1268,14 +1366,14 @@ plotStackedORC <- function(data) {
   )
   
   if (length(levels(as.factor(data$Arms))) > 2) {
-      p <- p + theme(axis.text.x  = element_text(hjust = 1,vjust = 1,size = 12,angle = 45),
+      p <- p + theme(axis.text.x  = element_text(hjust = 1,vjust = 1,size = 10, angle = 0),
                  legend.background = element_rect(fill = 'white', colour = 'black'),
                  legend.title = element_text( size = 12, face = "bold"),
                  legend.text = element_text( size = 12)) +
     geom_vline(xintercept = seq(1.5, (length(levels(as.factor(data$Arms))) + 1), by = 1), linetype = "dashed", color = 'gray50') +
     geom_hline(yintercept = 0)
   } else {
-    p <- p + theme(axis.text.x  = element_text(hjust = 1,vjust = 1,size = 12,angle = 45),
+    p <- p + theme(axis.text.x  = element_text(hjust = 1,vjust = 1,size = 10, angle = 0),
                  legend.background = element_rect(fill = 'white', colour = 'black'),
                  legend.title = element_text( size = 12, face = "bold"),
                  legend.text = element_text( size = 12)) +
@@ -1284,4 +1382,109 @@ plotStackedORC <- function(data) {
 
   p <- p + facet_wrap(~ Tumor,dir = 'h', scales = "free_x")
   return(p)
+}
+
+
+response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANOVA','LMM'), last.measure.day = NULL, multi_test_anova = FALSE) {
+
+  ## NOTE: 'Volume' is used here, but dVt could potentially be used.
+
+  df <- base::subset(
+    get_query_tv()$"df", Study %in% c(input$tv_study_filtered)
+  )
+
+  study <- unlist(levels(factor(df$Study)))[1]
+
+  df <- df %>%
+    filter(Study == study) %>% droplevels()
+
+  if(inherits(df, "data.frame")){
+    df<-as.data.frame(df)
+  }
+
+  if (input$main_anova_interpolate){
+    df <- get_interpolated_pdx_data(data = df)
+    df$Volume <- df$Interpolated_Volume
+  }
+
+  if (!is.null(last.measure.day)) {
+    end_day_index = match(last.measure.day,df$Times)
+    if (is.na(end_day_index)) {
+      end_day_index = which.min(abs(df$Times - last.measure.day))
+    }
+    df <- subset(df, Times <= df$Times[end_day_index])
+  }
+
+  df$Arms <- relevel(as.factor(df$Arms), 'Control')
+
+  Volume <- df[,'Volume']
+
+  df <- subset(df,Volume != 0)
+
+  #get endpoint data
+  endpoint.data <- df[df$Times == max(df$Times),]
+  endpoint.data <- endpoint.data[,c('Arms','Volume')]
+  endpoint.data$Arms=factor(endpoint.data$Arms)
+
+  if(length(unique(endpoint.data$Arms)) == 1 & !multi_test_anova) {
+    showNotification('There is only one treatment arm at the select time point. Select a different time point, or add more arms','',type = "error")
+    return()
+  } else if(length(unique(endpoint.data$Arms)) == 1 & multi_test_anova) {
+    #howNotification('There is only one treatment arm at the select time point. Select a different time point, or add more arms','',type = "error")
+    return()
+  }
+
+  #get mean growth rate
+  ID <- unique(as.character(data$ID))
+
+
+    dra.res <- switch (method,
+                        endpoint.ANOVA = summary(aov(Volume ~ Arms, data = endpoint.data)),
+                        endpoint.KW    = kruskal.test(Volume ~ Arms, data = endpoint.data),
+                        mixed.ANOVA    = summary(aov(Volume ~ Arms + Error(ID/Times), data = df)),
+                        LMM            = summary(lme(Volume ~ Arms, random = ~1|ID/Times, data = df))[[20]]
+    )
+
+    dra.res.full <- switch (method,
+                        endpoint.ANOVA = aov(Volume ~ Arms, data = endpoint.data),
+                        endpoint.KW    = kruskal.test(Volume ~ Arms, data = endpoint.data),
+                        mixed.ANOVA    = aov(Volume ~ Arms + Error(ID/Times), data = df),
+                        LMM            = lme(Volume ~ Arms, random = ~1|ID/Times, data = df)
+    )
+
+    multiple_comp_test <- TukeyHSD(dra.res.full)
+  if (!multi_test_anova) {
+    tab.df <- DT::datatable(dra.res[[1]],
+              style = "bootstrap",
+              escape = FALSE,
+              filter = 'none',
+              rownames= TRUE,
+              class = "cell-border stripe",
+              extensions = "Buttons",
+              options = list(
+                dom = "Blrti", info = FALSE, scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, pageLength = 20, paging = F,
+                buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download")))) %>%
+              formatSignif(c('Sum Sq', 'Mean Sq', 'F value', 'Pr(>F)'), 4)
+    return(tab.df)
+  } else {
+
+    mct <- as.data.frame(multiple_comp_test[['Arms']])
+    mct$'diff' <- round(mct$'diff', digits=2)
+    mct$'lwr' <- round(mct$'lwr', digits=2)
+    mct$'upr' <- round(mct$'upr', digits=2)
+    mct$'p adj' <- round(mct$'p adj', digits=4)
+
+
+    tab.df <- DT::datatable(mct,
+              style = "bootstrap",
+              escape = FALSE,
+              filter = list(position = "top", clear = T),
+              rownames= TRUE,
+              class = "cell-border stripe",
+              extensions = "Buttons",
+              options = list(
+                dom = "Blrtip", scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, lengthMenu = list(c(5, 20, 50, -1), c('5', '20', '50', 'All')), pageLength = 20, paging = T,
+                buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download"))))
+    return(tab.df)
+  }
 }

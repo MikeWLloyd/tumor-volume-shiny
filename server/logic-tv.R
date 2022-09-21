@@ -318,6 +318,9 @@ observeEvent(input$tv_all_plotType, {
   updateTabsetPanel(inputId = "scale_options", selected = input$tv_all_plotType)
 }) 
 
+observeEvent(input$waterfall_metric, {
+  updateTabsetPanel(inputId = "waterfall_options", selected = input$waterfall_metric)
+}) 
 
 output$plot_tumorvol <- renderPlotly({
   # Data
@@ -390,7 +393,7 @@ output$plot_tumorvol <- renderPlotly({
       # Reset Info Text of the Scaled Plot
       output$tv_all_text_scaled <- renderText({""})
 
-      get_tv_plot(data = s.data, level = level_type, pattern = pattern_type, position.dodge = 0.99) #MWL: THIS IS FIXED!
+      get_tv_plot(data = s.data, level = level_type, pattern = pattern_type, position.dodge = 0.99)
     }
   }
 })
@@ -532,7 +535,6 @@ output$tv_plot_EFS <- renderPlotly({
   for(i in 1:length(s$x$data)) {
     if (i <= length(levels(as.factor(p1$data.survtable$Arms)))) {
       s$x$data[[i]]$showlegend <- TRUE
-      #s$x$data[[i]]$name <- levels(relevel(as.factor(p1$data.survtable$Arms), 'Control')) [[i]]
     } else {
       s$x$data[[i]]$showlegend <- FALSE
     }
@@ -658,8 +660,6 @@ output$main_tc_table <- DT::renderDataTable(
   main_tc_table()
 )
 
-
-
 output$main_tgi <- renderPlotly({
 
   df <- get_query_tv()$"df"
@@ -730,8 +730,6 @@ output$log2_foldchange <- renderPlotly({
 
 })
 
-
-
 output$avg_growth_plot <- renderPlotly({
 
   s.data <- get_query_tv()$"df"
@@ -752,7 +750,6 @@ output$avg_growth_plot <- renderPlotly({
   }
 
 })
-
 
 output$hybrid_waterfall <- renderPlotly({
 
@@ -785,8 +782,6 @@ output$hybrid_waterfall <- renderPlotly({
 
 })
 
-
-
 output$main_orc_plot <- renderPlotly({
 
   s.data <- get_query_tv()$"df"
@@ -808,103 +803,6 @@ output$main_orc_plot <- renderPlotly({
 
 })
 
-
-response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANOVA','LMM'), last.measure.day = NULL, multi_test_anova = FALSE) {
-
-  ## NOTE: 'Volume' is used here, but dVt could potentially be used.
-
-  df <- base::subset(
-    get_query_tv()$"df", Study %in% c(input$tv_study_filtered)
-  )
-
-  study <- unlist(levels(factor(df$Study)))[1]
-
-  df <- df %>%
-    filter(Study == study) %>% droplevels()
-
-  if(inherits(df, "data.frame")){
-    df<-as.data.frame(df)
-  }
-
-  if (input$main_anova_interpolate){
-    df <- get_interpolated_pdx_data(data = df)
-    df$Volume <- df$Interpolated_Volume
-  }
-
-  if (!is.null(last.measure.day)) {
-    end_day_index = match(last.measure.day,df$Times)
-    if (is.na(end_day_index)) {
-      end_day_index = which.min(abs(df$Times - last.measure.day))
-    }
-    df <- subset(df, Times <= df$Times[end_day_index])
-  }
-
-  df$Arms <- relevel(as.factor(df$Arms), 'Control')
-
-  Volume <- df[,'Volume']
-
-  df <- subset(df,Volume != 0)
-
-  #get endpoint data
-  endpoint.data <- data[df$Times == max(df$Times),]
-  endpoint.data <- endpoint.data[,c('Arms','Volume')]
-  endpoint.data$Arms=factor(endpoint.data$Arms)
-
-  #get mean growth rate
-  ID <- unique(as.character(data$ID))
-
-
-    dra.res <- switch (method,
-                        endpoint.ANOVA = summary(aov(Volume ~ Arms, data = endpoint.data)),
-                        endpoint.KW    = kruskal.test(Volume ~ Arms, data = endpoint.data),
-                        mixed.ANOVA    = summary(aov(Volume ~ Arms + Error(ID/Times), data = df)),
-                        LMM            = summary(lme(Volume ~ Arms, random = ~1|ID/Times, data = df))[[20]]
-    )
-
-    dra.res.full <- switch (method,
-                        endpoint.ANOVA = aov(Volume ~ Arms, data = endpoint.data),
-                        endpoint.KW    = kruskal.test(Volume ~ Arms, data = endpoint.data),
-                        mixed.ANOVA    = aov(Volume ~ Arms + Error(ID/Times), data = df),
-                        LMM            = lme(Volume ~ Arms, random = ~1|ID/Times, data = df)
-    )
-
-    multiple_comp_test <- TukeyHSD(dra.res.full)
-  if (!multi_test_anova) {
-    tab.df <- DT::datatable(dra.res[[1]],
-              style = "bootstrap",
-              escape = FALSE,
-              filter = 'none',
-              rownames= TRUE,
-              class = "cell-border stripe",
-              extensions = "Buttons",
-              options = list(
-                dom = "Blrti", info = FALSE, scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, pageLength = 20, paging = F,
-                buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download")))) %>%
-              formatSignif(c('Sum Sq', 'Mean Sq', 'F value', 'Pr(>F)'), 4)
-    return(tab.df)
-  } else {
-
-    mct <- as.data.frame(multiple_comp_test[['Arms']])
-    mct$'diff' <- round(mct$'diff', digits=2)
-    mct$'lwr' <- round(mct$'lwr', digits=2)
-    mct$'upr' <- round(mct$'upr', digits=2)
-    mct$'p adj' <- round(mct$'p adj', digits=4)
-
-
-    tab.df <- DT::datatable(mct,
-              style = "bootstrap",
-              escape = FALSE,
-              filter = list(position = "top", clear = T),
-              rownames= TRUE,
-              class = "cell-border stripe",
-              extensions = "Buttons",
-              options = list(
-                dom = "Blrtip", scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, lengthMenu = list(c(5, 20, 50, -1), c('5', '20', '50', 'All')), pageLength = 20, paging = T,
-                buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download"))))
-    return(tab.df)
-  }
-}
-
 output$dt_anova_table <- DT::renderDataTable(
   response_analysis(method = 'endpoint.ANOVA', last.measure.day = anova_measure_day(), multi_test_anova = FALSE)
 )
@@ -912,6 +810,53 @@ output$dt_anova_table <- DT::renderDataTable(
 output$dt_tukey_table <- DT::renderDataTable(
   response_analysis(method = 'endpoint.ANOVA', last.measure.day = anova_measure_day(), multi_test_anova = TRUE)
 )
+
+
+
+
+output$plot_mouseweight <- renderPlotly({
+  # Data
+  s.data <- get_query_tv()$"df"
+
+  if (is.null(s.data) | (nrow(s.data) == 0)) {
+    plot_ly()
+  } else {
+
+  #   # Get Level Type Input by User
+    if (input$tv_weight_plot_type == "Treatment Plot") {
+      pattern_type <- "Treatment"
+    } else if (input$tv_weight_plot_type == "Study Plot") {
+      pattern_type <- "Study"
+    }
+
+    if (input$tv_weight_plot_style == "Study Average") {
+      level_type <- "Arm"
+    } else if (input$tv_weight_plot_style == "Individual Animal") {
+      level_type <- "Animal"
+    }
+    
+    if (input$tv_weight_plotType == 'Percent Change'){
+        s.data <- s.data %>%
+          dplyr::arrange(Study, Tumor, Arms, ID, Times) %>%
+          dplyr::group_by(Study, Tumor, Arms, ID) %>%
+          dplyr::mutate(dWeight = (((Body_Weight - Body_Weight[1]) / Body_Weight[1] ) * 100))
+
+        s.data$Body_Weight <- s.data$dWeight
+    }
+  #   # Call plot
+    get_weight_plot(data = s.data, level = level_type, pattern = pattern_type, position.dodge = 0.99)
+    
+  }
+})
+
+output$user_tv_download_default_btn <- downloadHandler(
+  filename = function() {
+    paste("tv_suite-sample-input.csv", sep="")
+  },
+  content = function(file) {
+    write.csv(get_data(), file)
+  })
+
 
 # output$generic_plot_start <- renderPlotly({
 
@@ -921,13 +866,7 @@ output$dt_tukey_table <- DT::renderDataTable(
 
 # })
 
-output$user_tv_download_default_btn <- downloadHandler(
-  filename = function() {
-    paste("tv_suite-sample-input.csv", sep="")
-  },
-  content = function(file) {
-    write.csv(get_data(), file)
-  })
+
 
 # landing page buttons
 observeEvent(input$btn_nav_val, updateNavlistPanel(session, "nav_bco", selected = title_validate))
