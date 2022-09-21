@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y curl libssl-dev libcurl4-gnutls-dev lib
     apt-get install -y gcsfuse \
     && apt-get clean
 
-RUN R -e 'install.packages(c("shiny","plotly","dygraphs","shinywidgets","BiocManager","plyr","dplyr","zoo","ggpubr","grid","gridExtra","gtable","shinydashboard","reactable","bcrypt","shinyBS","shinyjs","shinyFeedback","shinycssloaders","shinyAce","jsonlite","magrittr","knitr","DT","readxl","survival","survminer","multcomp","validate"))'
+RUN R -e 'install.packages(c("shiny","plotly","dygraphs","shinywidgets","BiocManager","plyr","dplyr","zoo","ggpubr","grid","gridExtra","gtable","shinydashboard","reactable","bcrypt","shinyBS","shinyjs","shinyFeedback","shinycssloaders","shinyAce","jsonlite","magrittr","knitr","DT","readxl","survival","survminer","multcomp","validate","purrr","stringr"))'
 
 RUN R -e "BiocManager::install(c('httr', 'yaml', 'sevenbridges'))"
 

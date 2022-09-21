@@ -34,12 +34,12 @@ tabPanel(
       align = "center",
        actionButton(
         "btn_nav_val", "Data Upload and Validation",
-        icon("arrow-circle-o-right"),
+        icon("arrow-alt-circle-right"),
         class = "btn btn-lg", style = "margin-left: 25px; background-color: rgb(14, 104, 96); border-color: rgb(14, 104, 96);"
       ),
       actionButton(
         "btn_nav_tv", "Tumor Volume Analysis",
-        icon("arrow-circle-o-right"),
+        icon("arrow-alt-circle-right"),
         class = "btn btn-lg", style = "margin-left: 25px; background-color: rgb(14, 104, 96); border-color: rgb(14, 104, 96);"
       )
     ),

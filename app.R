@@ -27,6 +27,8 @@ library("survminer")
 library("validate")
 library("multcomp")
 library("validate")
+library("purrr")
+library("stringr")
 
 # Add variable to control whether login page will be allowed
 source(file.path("ui", "interface_variables.R"), local = TRUE)

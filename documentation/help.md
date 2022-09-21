@@ -46,6 +46,7 @@ The following columns with the **exact names** and **data types** are expected i
     5. 'Study':  
     
         Study ID corresponding to that particular sample (e.g., Study_1, Study_2).  
+        NOTE: Study IDs MUST be unique across centers / samples. 
 
     6. 'ID':  
     
