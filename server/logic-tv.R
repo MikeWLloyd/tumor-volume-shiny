@@ -7,8 +7,8 @@
 data <- try(as.data.frame(readRDS("include/tv-test.rds")), silent = T)
 rownames(data) <- NULL
 
-data <- try(as.data.frame(read.csv("include/unit_test.csv", header = TRUE)), silent = T)
-rownames(data) <- NULL
+# data <- try(as.data.frame(read.csv("include/unit_test.csv", header = TRUE)), silent = T)
+# rownames(data) <- NULL
 
 # GET methods
   get_tv_contributor <- function() {
