@@ -20,36 +20,58 @@ rownames(data) <- NULL
   }
 
   get_tv_treatment <- function() {
-    if (length(unique(data$Arms)) < 2) {
-      unique(data$Arms)
+    
+    filtered.df <- base::subset(
+      data, Contributor %in% unique(sort(data$Contributor))[1]
+    ) # filter list by what contributor is first picked.
+    
+    if (length(unique(filtered.df$Arms)) < 2) {
+      unique(filtered.df$Arms)
     } else {
-      agents <- factor(unique(data$Arms))
+      agents <- factor(unique(filtered.df$Arms))
       agents <- relevel(agents, 'Control')
       levels(agents)
     }
   }
 
   get_tv_disease <- function() {
-    if (length(unique(data$Disease_Type)) < 2) {
-      list(unique(data$Disease_Type))
+
+    filtered.df <- base::subset(
+      data, Contributor %in% unique(sort(data$Contributor))[1]
+    ) # filter list by what contributor is first picked.
+    
+
+    if (length(unique(filtered.df$Disease_Type)) < 2) {
+      list(unique(filtered.df$Disease_Type))
     } else {
-      sort(unique(data$Disease_Type), na.last = T)
+      sort(unique(filtered.df$Disease_Type), na.last = T)
     }
   }
 
   get_tv_study <- function() {
-    if (length(unique(data$Study)) < 2) {
-      unique(sort(data$Study))
+
+    filtered.df <- base::subset(
+      data, Contributor %in% unique(sort(data$Contributor))[1]
+    ) # filter list by what contributor is first picked.
+    
+
+    if (length(unique(filtered.df$Study)) < 2) {
+      unique(sort(filtered.df$Study))
     } else {
-      unique(sort(data$Study, na.last = T))
+      unique(sort(filtered.df$Study, na.last = T))
     }
   }
 
   get_tv_tumor <- function() {
-    if (length(unique(data$Tumor)) < 2) {
-      unique(sort(data$Tumor))
+
+    filtered.df <- base::subset(
+      data, Contributor %in% unique(sort(data$Contributor))[1]
+    ) # filter list by what contributor is first picked.
+    
+    if (length(unique(filtered.df$Tumor)) < 2) {
+      unique(sort(filtered.df$Tumor))
     } else {
-      unique(sort(data$Tumor, na.last = T))
+      unique(sort(filtered.df$Tumor, na.last = T))
     }
   }
 
@@ -152,10 +174,6 @@ rownames(data) <- NULL
   # The first is to check what data to load to the app, the second is to allow for checks to be done on selected items
   # Without checking if any data is loaded, the app will display invalid messages to the splash page on instantiation of the app. 
 
-  ## If 'user_tv_data' is tripped: aka a file is passed, set to 'uploaded'
-  observeEvent(input$user_tv_data, {
-    values$upload_state <- 'uploaded'
-  })
 
   ## holdover code from prior 'reset' button
   # observeEvent(input$user_tv_load_default_btn, {
@@ -172,45 +190,61 @@ rownames(data) <- NULL
       curr_data <- data
 
       if (values$upload_state == 'uploaded') {
+        
+        check_state$loaded_data = FALSE
+
         input_file_user <- input$user_tv_data
+
         if (is.null(input_file_user) | flag_user_data$flag != 1) {
+            # catch when a file is uploaded, but the file is improperly formatted. 
+
             curr_data <- data
             
             shinyjs::enable(selector = '.nav-tabs a[data-value="weight_tab"')
 
         } else{
+            # else there is a data file and it passed validation, and we should load it in.  
+
             curr_data <- read.csv(input_file_user$datapath, header = TRUE)
             # files <- list.files(outputDir, full.names = TRUE)
             # data <- lapply(files, read.csv, stringsAsFactors = FALSE) 
             # Concatenate all data together into one data.frame. Example commented code is untested.
         }
 
-        n_unique_arms <- length(unique(curr_data$Arms))
-
-        agents <- factor(unique(curr_data$Arms))
-        agents <- levels(relevel(agents, 'Control'))
-
-        n_studies <- length(unique(sort(curr_data$Study)))
-
+        ## With the new data, update all pick lists. 
         updatePickerInput(session, "tv_contributor",
                           choices = unique(sort(curr_data$Contributor)),
                           selected = unique(sort(curr_data$Contributor))[1])
 
+        ## Make the remaining pick lists relative to the selected 'contributor'
+        filtered.df <- base::subset(
+          curr_data, Contributor %in% unique(sort(curr_data$Contributor))[1]
+        )
+
+        n_unique_arms <- length(unique(filtered.df$Arms))
+
+        agents <- factor(unique(filtered.df$Arms))
+        agents <- levels(relevel(agents, 'Control'))
+
+        n_studies <- length(unique(sort(filtered.df$Study)))
+
         updatePickerInput(session, "tv_treatment",
                       choices = agents,
-                      selected = c('Control', unique(curr_data$Arms)[1:min(3,n_unique_arms)]))
-        # Note: the pick lists are updated in two places. here, and in the above 'get_tv_treatment' function. 
+                      selected = c('Control', unique(filtered.df$Arms)[1:min(3,n_unique_arms)]))
 
         updatePickerInput(session, "tv_disease_type",
-                      choices = unique(sort(curr_data$Disease_Type)),
-                      selected = unique(sort(curr_data$Disease_Type))[1])
+                      choices = unique(sort(filtered.df$Disease_Type)),
+                      selected = unique(sort(filtered.df$Disease_Type))[1])
 
         updatePickerInput(session, "tv_study",
-                      choices = unique(sort(curr_data$Study)),
-                      selected = unique(sort(curr_data$Study))[1:n_studies])
+                      choices = unique(sort(filtered.df$Study)),
+                      selected = unique(sort(filtered.df$Study))[1:n_studies])
 
         updatePickerInput(session, inputId = "tv_study_filtered",
-                      choices = unique(sort(curr_data$Study)))
+                      choices = unique(sort(filtered.df$Study)))
+
+         # Note: the pick lists are updated in two places. here, and in the above 'get_tv_NAME' functions.
+         #       they are first populated to prevent errors when the app is first loaded and when the example data first loads in.
 
       } else if (values$upload_state == 'reset') {
         curr_data <- data
@@ -233,79 +267,140 @@ rownames(data) <- NULL
 
       updatePickerInput(session, inputId = "tv_tumor_filtered",
                         choices = tumor_list$Tumor)
-                            
+      ## Update the Tumor list used in ANOVA. Done here regardless of the data loaded.
+
       check_state$loaded_data = TRUE
+      # set check_state to true, showing we have data and observeevents below should update pick lists based on logic checks. 
 
       return(curr_data)
   })
 
-  # Main data query and filter reactive function.  
+  # Main data query and filter reactive function.   button
   get_query_tv <- reactive( {
-    withProgress(
-      message = "Querying Tumor Volume data:",
-      value = 0, {
-        for (i in 1:10) {
-          incProgress(0.025, detail = "[Status] Sending your query to server...")
-          Sys.sleep(0.03)
+
+    # if(input$query_button == 0) {
+    #   return(0)
+    # } 
+    # The above would supress a first load of the data, until 'query_button' was clicked for the first time. 
+    # If on load we no longer want the data loaded, uncomment this code. 
+
+    input$query_button
+    # make the code dependent on the input button
+
+    isolate({
+      # This statement isolates the code that follows from 'seeing' updates to the pick lists. Until the 'button' is clicked. 
+      # It breaks the dependency of the other inputs until input$button triggers. 
+
+      withProgress(
+        message = "Querying Tumor Volume data:",
+        value = 0, {
+          for (i in 1:10) {
+            incProgress(0.025, detail = "[Status] Sending your query to server...")
+            Sys.sleep(0.03)
+          }
+
+          for (i in 1:10) {
+            incProgress(0.025, detail = "[Status] Executing query, please wait...")
+            Sys.sleep(0.03)
+          }
+          curr_data <- get_data()
+          # note that 'get_data' is held by shiny as a set variable until the reactive value inputs$user_tv_data is changed. 
+          # once a data file is loaded, this is a constant. 
+
+          df_query <- query_tv(curr_data,
+                              input$tv_contributor,
+                              input$tv_treatment,
+                              input$tv_study,
+                              input$tv_disease_type)
+
+          updateProgressBar(
+            session = session,
+            id = "pbar_tv",
+            value = length(unique((df_query$df)$Study)),
+            total = length(unique(curr_data$Study))
+          )
+
+          for (i in 1:10) {
+            incProgress(0.025, detail = "[Status] Finishing up...")
+            Sys.sleep(0.02)
+          }
+
+          incProgress(0.15, detail = "[Status] Rendering data...")
         }
+      )
 
-        for (i in 1:10) {
-          incProgress(0.025, detail = "[Status] Executing query, please wait...")
-          Sys.sleep(0.03)
-        }
-        curr_data <- get_data()
-        # note that 'get_data' is held by shiny as a set variable until the reactive value inputs$user_tv_data is changed. 
-        # once a data file is loaded, this is a constant. 
+      choices <- input$tv_study
 
-        df_query <- query_tv(curr_data,
-                            input$tv_contributor,
-                            input$tv_treatment,
-                            input$tv_study,
-                            input$tv_disease_type)
+      updatePickerInput(
+        session,
+        inputId = "tv_study_filtered",
+        choices = choices
+      )
+      # update the sub-list in 'Individual Study'
 
-        updateProgressBar(
-          session = session,
-          id = "pbar_tv",
-          value = length(unique((df_query$df)$Study)),
-          total = length(unique(curr_data$Study))
-        )
+      df_query
 
-        for (i in 1:10) {
-          incProgress(0.025, detail = "[Status] Finishing up...")
-          Sys.sleep(0.02)
-        }
+    })
 
-        incProgress(0.15, detail = "[Status] Rendering data...")
+  })
+
+# OBSERVE EVENTS
+
+  # Watch to see if study is empty.  
+  observeEvent(input$tv_contributor, {
+    if (check_state$loaded_data) {
+      if( is.null(input$tv_contributor) ) {
+        showNotification(id = 'missing_contrib', "You must select a contributor from the contributor list", type = c("error"), duration = NULL, closeButton = FALSE)
+        shinyjs::disable('query_button')
+      } else {
+        removeNotification(id = 'missing_contrib')
+        shinyjs::enable('query_button')
       }
-    )
-    df_query
-  })
+    }
+  }, ignoreNULL = F)
 
-
-  # Watch the selected study list, and pass that list to the study pick list for the study specific metrics. 
-  observeEvent(input$tv_study, {
-    choices <- input$tv_study
-
-    updatePickerInput(
-      session,
-      inputId = "tv_study_filtered",
-      choices = choices
-    )
-
-  })
-
-  # Watch to see if 'Control' is or is not selected in treatment Arms. Notify user that 'Control' must be selected. 
+  # Watch to see if any treatments are picked, and if 'Control' is or is not selected in treatment Arms. Notify user that a treatment AND 'Control' must be selected. 
   observeEvent(input$tv_treatment, {
     if (check_state$loaded_data) {
       if( !('Control' %in% input$tv_treatment)) {
         showNotification(id = 'missing_control', "You must select 'Control' in the treatment arm list", type = c("error"), duration = NULL, closeButton = FALSE)
+        shinyjs::disable('query_button')
       } else {
         removeNotification(id = 'missing_control')
+        shinyjs::enable('query_button')
       }
     }
-  },ignoreNULL = F)
+  }, ignoreNULL = F)
 
-  # Watch is the study selector changes, and update what is available in ANOVA tumor selector.
+  # Watch to see if study is empty.  
+  observeEvent(input$tv_study, {
+    if (check_state$loaded_data) {
+      if( is.null(input$tv_study) ) {
+        showNotification(id = 'missing_study', "You must select a study from the study list", type = c("error"), duration = NULL, closeButton = FALSE)
+        shinyjs::disable('query_button')
+      } else {
+        removeNotification(id = 'missing_study')
+        shinyjs::enable('query_button')
+      }
+    }
+  }, ignoreNULL = F)
+
+  # Watch to see if study is empty.  
+  observeEvent(input$tv_disease_type, {
+    if (check_state$loaded_data) {
+      if( is.null(input$tv_disease_type) ) {
+        showNotification(id = 'missing_disease', "You must select a disease type from the disease type list", type = c("error"), duration = NULL, closeButton = FALSE)
+        shinyjs::disable('query_button')
+      } else {
+        removeNotification(id = 'missing_disease')
+        shinyjs::enable('query_button')
+      }
+    }
+  }, ignoreNULL = F)
+
+
+
+  # Watch is the study selector in the 'individual study' section changes, and update what is available in ANOVA tumor selector.
   observeEvent(input$tv_study_filtered, {
     if (check_state$loaded_data) {
       
@@ -321,6 +416,68 @@ rownames(data) <- NULL
 
     }
   },ignoreNULL = F)
+
+  # # Watch is the contributor selector changes, and update what is available in study / treatment / disease type.
+  observeEvent(input$tv_contributor, {
+    if (check_state$loaded_data) {
+
+      # get full data, and then filter to what is selected in contrib. 
+      df <- get_data()
+
+      filtered.df <- base::subset(
+        df, Contributor %in% input$tv_contributor
+      )
+
+      n_unique_arms <- length(unique(filtered.df$Arms))
+
+      agents <- factor(unique(filtered.df$Arms))
+      agents <- levels(relevel(agents, 'Control'))
+
+      n_studies <- length(unique(sort(filtered.df$Study)))
+
+      updatePickerInput(session, "tv_study",
+                    choices = unique(sort(filtered.df$Study)),
+                    selected = unique(sort(filtered.df$Study))[1:n_studies])
+
+      updatePickerInput(session, "tv_treatment",
+                    choices = agents,
+                    selected = c('Control', unique(filtered.df$Arms)[1:min(3,n_unique_arms)]))
+
+      updatePickerInput(session, "tv_disease_type",
+                    choices = unique(sort(filtered.df$Disease_Type)),
+                    selected = unique(sort(filtered.df$Disease_Type))[1])
+
+      updatePickerInput(session, inputId = "tv_study_filtered",
+                    choices = unique(sort(filtered.df$Study)))
+    } 
+  },ignoreNULL = T) #
+
+  # # Watch is the study selector changes, and update what is available in treatment / disease type.
+  observeEvent(input$tv_study, {
+    if (check_state$loaded_data) {
+
+      # get full data, and then filter to what is selected in contrib. 
+      df <- get_data()
+
+      filtered.df <- df %>% dplyr::filter(Contributor %in% input$tv_contributor & Study %in% input$tv_study) 
+
+      n_unique_arms <- length(unique(filtered.df$Arms))
+
+      agents <- factor(unique(filtered.df$Arms))
+      agents <- levels(relevel(agents, 'Control'))
+
+      n_studies <- length(unique(sort(filtered.df$Study)))
+
+      updatePickerInput(session, "tv_treatment",
+                    choices = agents,
+                    selected = c('Control', unique(filtered.df$Arms)[1:min(3,n_unique_arms)]))
+
+      updatePickerInput(session, "tv_disease_type",
+                    choices = unique(sort(filtered.df$Disease_Type)),
+                    selected = unique(sort(filtered.df$Disease_Type))[1])
+
+    } 
+  },ignoreNULL = T)
 
 ## ## ## ## ##
 
@@ -642,7 +799,6 @@ rownames(data) <- NULL
 
     ### Generate the plot
     output$plot_tumorvol_study <- renderPlotly({
-
       df <- base::subset(
         get_query_tv()$"df", Study %in% c(input$tv_study_filtered)
       )

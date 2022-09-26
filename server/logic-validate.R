@@ -1,8 +1,12 @@
 flag_user_data <- reactiveValues(flag = 0L)
 
 observeEvent(input$user_tv_data, {
-  
+
+  values$upload_state <- 'uploaded'
+  # if we are in this logic block, it is because a file is being uploaded. 
+
   shinyjs::enable(selector = '.nav-tabs a[data-value="weight_tab"')
+  # turn weight_tab on unless we turn it off once we find no weight data. 
 
   file <- input$user_tv_data
   ext <- tools::file_ext(file$datapath)
@@ -103,7 +107,7 @@ observeEvent(input$user_tv_data, {
     flag_user_data$flag <- 1
 
     output$tv_text_continue <- renderText({
-      paste0("Successfully Validated Your Tumor Volume Data!")
+      paste0("Successfully validated the tumor volume data!")
     })
 
     output$tv_text_upload <- renderText({
@@ -123,11 +127,7 @@ observeEvent(input$user_tv_data, {
     flag_user_data$flag <- 0
 
     output$tv_text_stop <- renderText({
-      paste0("Failed Validation!")
-    })
-
-    output$tv_text_guide <- renderText({
-      paste0("Edit your data import based on the example data presented below.!")
+      paste0("Failed validation! See explanation in box above.")
     })
 
     output$tv_text_continue <- renderText({
@@ -140,8 +140,15 @@ observeEvent(input$user_tv_data, {
 
      error_check_string <- paste(error_check_string, '\nImported data are not in expected format for reasons above.\nCorrect issues in local file and re-upload to test. Example valid input data is provided below for reference.')
   }
+
   updateTabsetPanel(session, "main_tabset", selected = "Cross Study Plots & Analysis")
   updateTextAreaInput(session, "tv_user_return_msg", value = paste(error_check_string))
+
+  get_data()
+  click('query_button')
+  # Fire 'get_data()' and simulate a click of the 'query_button'
+  # doing these two steps will refresh the data on the 'tv' page, and update pick lists, plots and metrics on that page. 
+
 })
 
 

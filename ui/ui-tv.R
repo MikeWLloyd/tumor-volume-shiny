@@ -107,6 +107,10 @@ $(document).on("shiny:idle", function() {
  }
 });'
 )
+
+
+
+
 ## Deactivate all Buttons as long as shiny is busy. 
 ## There was an issue where if a user clicked through tabs before one plot finished loading, the size of plots could shrink.
 ## This JS code avoids this by disabling buttons while the app is 'busy' 
@@ -116,6 +120,17 @@ tabPanel(
   title = title_tumor_volume, icon = icon("fa-solid fa-chart-line", verify_fa = FALSE),
   shinyjs::inlineCSS(css),
   tags$head(tags$script(js)),
+  tags$head(
+      tags$style(
+        HTML(".shiny-notification {
+             position:fixed;
+             top: calc(0%);
+             left: calc(80%);
+             }
+             "
+            )
+        ) # move the notifications to top right of screen. current issue: with this code multiple notifications overlap and don't stack right.
+  ),
   shinydashboard::box(
     width=12,
     title="Query and Data Summary", status="primary",solidHeader = T,
@@ -163,6 +178,14 @@ tabPanel(
                             selected = get_tv_disease()[1],
                             options = pickerOptions(actionsBox = TRUE, style = 'btn-light',
                                                     showContent = TRUE),multiple = T)
+              )
+            ),
+            fluidRow(
+              column(
+                width = 4,
+                offset = 4,
+                align="center",
+                actionButton('query_button', "Query the Dataset / Regenerate Plots")
               )
             )
           )
