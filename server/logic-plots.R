@@ -8,9 +8,6 @@ colorblind_pallet <- c("#888888", "#88CCEE", "#CC6677", "#DDCC77", "#117733", "#
 # HELPER FUNCTION - GET SUMMARIZED DATA FOR CROSS STUDY PLOT
 get_data_summary <- function(data, plot.type,  measure.var, group.vars){
 
-  if(class(data) != 'data.frame'){
-    data<-as.data.frame(data)
-  }
   data.summary <- ddply(.data = data, .variables = group.vars,
                         .fun = function(xx, col) {
                           c(N    = sum(!is.na(xx[[col]])),
@@ -31,9 +28,7 @@ get_data_summary <- function(data, plot.type,  measure.var, group.vars){
 
 # HELPER FUNCTION - GET SUMMARIZED DATA FOR PLOT WITHIN A STUDY. 
 get_data_summary_study <- function(data, measure.var, group.vars){
-  if(class(data) != 'data.frame'){
-    data<-as.data.frame(data)
-  }
+
   # make sure the colnames of indata including 'Arms', 'ID', 'Times', 'Volume' or 'BodyWeight', which guarantee normal running for the following code.
 
   need.cols <- c('Arms', 'ID', 'Times', 'Volume')
@@ -573,9 +568,6 @@ get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment'
   if (is.null(data) | nrow(data) == 0) {
     plot_ly()
   }else{
-    if(class(data) != 'data.frame'){
-      data<-as.data.frame(data)
-    }
 
     data$Arms <- relevel(factor(data$Arms), 'Control')
 
@@ -1163,9 +1155,15 @@ study_volume_plot <- function(data, orders = NULL, position.dodge, title = NULL,
     p <- p + scale_color_manual(values=colorblind_pallet) + geom_hline(yintercept = 0, size = 0.3)
 
     if (! is.null(title)) {
-      plot(p + ggtitle(title))
+      
+      p <- p + ggtitle(title)
+
+      p
+
     } else {
-      plot(p)
+
+      p
+
     }
   }
 }
@@ -1394,9 +1392,6 @@ get_weight_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatm
   if (is.null(data) | nrow(data) == 0) {
     plot_ly()
   }else{
-    if(class(data) != 'data.frame'){
-      data<-as.data.frame(data)
-    }
 
     data$Arms <- relevel(factor(data$Arms), 'Control')
 
