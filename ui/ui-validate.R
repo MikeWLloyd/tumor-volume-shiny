@@ -1,5 +1,5 @@
 tabPanel(
-  title = title_validate, icon = icon("fa-solid fa-check"),
+  title = title_validate, icon = icon("fa-solid fa-check", verify_fa = FALSE),
 
   fluidRow(column(
     width = 10, offset = 1,

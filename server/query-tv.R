@@ -1,4 +1,3 @@
-
 # Query TV Data
 query_tv <- function(tv_df, tv_contributor, tv_treatment, tv_study, tv_disease_type) {
 

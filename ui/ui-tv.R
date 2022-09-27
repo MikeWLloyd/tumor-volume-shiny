@@ -83,7 +83,8 @@ css <- "
 .nav li a.disabled {
 background-color: #ffffff !important;
 color: #333 !important;
-cursor: not-allowed !important;
+pointer-events: none;
+text-decoration: line-through;
 }"
 ## This css is used to disable the 'Body Weight Analysis' tab, when no body weight data is provided. 
 # border-color: #aaa !important;
@@ -106,15 +107,30 @@ $(document).on("shiny:idle", function() {
  }
 });'
 )
+
+
+
+
 ## Deactivate all Buttons as long as shiny is busy. 
 ## There was an issue where if a user clicked through tabs before one plot finished loading, the size of plots could shrink.
 ## This JS code avoids this by disabling buttons while the app is 'busy' 
 # https://stackoverflow.com/a/52978427/18557826
 
 tabPanel(
-  title = title_tumor_volume, icon = icon("fa-solid fa-chart-line"),
+  title = title_tumor_volume, icon = icon("fa-solid fa-chart-line", verify_fa = FALSE),
   shinyjs::inlineCSS(css),
   tags$head(tags$script(js)),
+  tags$head(
+      tags$style(
+        HTML(".shiny-notification {
+             position:fixed;
+             top: calc(0%);
+             left: calc(80%);
+             }
+             "
+            )
+        ) # move the notifications to top right of screen. current issue: with this code multiple notifications overlap and don't stack right.
+  ),
   shinydashboard::box(
     width=12,
     title="Query and Data Summary", status="primary",solidHeader = T,
@@ -162,6 +178,14 @@ tabPanel(
                             selected = get_tv_disease()[1],
                             options = pickerOptions(actionsBox = TRUE, style = 'btn-light',
                                                     showContent = TRUE),multiple = T)
+              )
+            ),
+            fluidRow(
+              column(
+                width = 4,
+                offset = 4,
+                align="center",
+                actionButton('query_button', "Query the Dataset / Regenerate Plots")
               )
             )
           )
@@ -253,7 +277,7 @@ tabPanel(
                   fluidRow(
                     div(
                       withSpinner(
-                        plotlyOutput("plot_tumorvol", width = "100%", height = "750px", inline = T),
+                        plotlyOutput("plot_tumorvol", width = "100%", height = "750px", inline = F),
                         proxy.height = "100px", color="#0273B7"
                       )
                     )
@@ -278,14 +302,15 @@ tabPanel(
                 ),
                 column(
                   offset = 0,
-                  width = 2,
+                  width = 3,
+                  HTML("<br>"),
                   checkboxInput("main_avgplot_interpolate", "Interpolate Data\nFor Calculation", FALSE)
                 ),
                 column(
                   width = 12,
                   div(
                     withSpinner(
-                      plotlyOutput("avg_growth_plot", width = "100%", height = "750px", inline = T),
+                      plotlyOutput("avg_growth_plot", width = "100%", height = "750px", inline = F),
                       proxy.height = "100px", color="#0273B7"
                     )
                   )
@@ -305,14 +330,15 @@ tabPanel(
               fluidRow(
                 column(
                   offset = 0,
-                  width = 2,
+                  width = 3,
+                  HTML("<br>"),
                   checkboxInput("main_log2_interpolate", "Interpolate Data For Calculation", FALSE)
                 ),
                 column(
                   width = 12,
                   div(
                     withSpinner(
-                      plotlyOutput("log2_foldchange", width = "100%", height = "750px", inline = T),
+                      plotlyOutput("log2_foldchange", width = "100%", height = "750px", inline = F),
                       proxy.height = "100px", color="#0273B7"
                     )
                   )
@@ -338,14 +364,15 @@ tabPanel(
                 ),
                 column(
                   offset = 0,
-                  width = 2,
+                  width = 3,
+                  HTML("<br>"),
                   checkboxInput("main_tc_interpolate", "Interpolate Data For Calculation", FALSE)
                 ),
                 column(
                   width = 12,
                   div(
                     withSpinner(
-                      plotlyOutput("hybrid_waterfall", width = "100%", height = "750px", inline = T),
+                      plotlyOutput("hybrid_waterfall", width = "100%", height = "750px", inline = F),
                       proxy.height = "100px", color="#0273B7"
                     )
                   )
@@ -371,7 +398,8 @@ tabPanel(
                 ),
                 column(
                   offset = 0,
-                  width = 2,
+                  width = 3,
+                  HTML("<br>"),
                   checkboxInput("main_tgi_interpolate", "Interpolate Data For Calculation", FALSE)
                 )
               ),
@@ -380,14 +408,16 @@ tabPanel(
 
               fluidRow(
                 column(
-                  width = 6, offset = 0,
+                  width = 10, offset = 1,
                   withSpinner(
-                    plotlyOutput("main_tgi", width = "100%", height = '500px'),
+                    plotlyOutput("main_tgi", width = "100%", height = '350px'),
                     proxy.height = "100px", color="#0273B7"
                   )
-                ),
+                )
+              ),
+              fluidRow(
                 column(
-                  width = 6,
+                  width = 6, offset = 3,
                   HTML("<br>"),
                   withSpinner(
                     DTOutput("main_tc_table"),
@@ -415,7 +445,8 @@ tabPanel(
                 ),
                 column(
                   offset = 0,
-                  width = 2,
+                  width = 3,
+                  HTML("<br>"),
                   checkboxInput("main_stackedorc_interpolate", "Interpolate Data For Calculation", FALSE)
                 ),
                 column(
@@ -442,7 +473,7 @@ tabPanel(
         pickerInput("tv_study_filtered", "Study",
                     choices = get_tv_study(),
                     options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
-                                            showContent = TRUE),multiple = FALSE),
+                                            showContent = TRUE),multiple = FALSE)
       )
     ),
 
@@ -463,6 +494,7 @@ tabPanel(
                 column(
                   offset = 0,
                   width = 2,
+                  HTML("<br>"),
                   checkboxInput("tv_interpolate", "Interpolate Data For Calculation", FALSE)
                 )
               )
@@ -485,7 +517,7 @@ tabPanel(
           column(
             width = 6, offset = 0,
             withSpinner(
-              plotlyOutput("plot_tumorvol_study", width = "100%", inline=F, height = '500px'),
+              plotlyOutput("plot_tumorvol_study", width = "100%", inline = F, height = '500px'),
               proxy.height = "100px", color="#0273B7"
             )
           ),
@@ -494,7 +526,7 @@ tabPanel(
             width = 6,
             HTML("<br>"),
             withSpinner(
-              DTOutput("dt_dr_table"),
+              DTOutput("dt_ocr_cohort_table"),
               proxy.height = "100px", color="#0273B7"
             )
           )
@@ -585,6 +617,13 @@ tabPanel(
               fluidRow(
                 column(
                   width = 2,
+                  pickerInput("tv_tumor_filtered", "Tumor",
+                    choices = get_tv_tumor(),
+                    options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                                            showContent = TRUE),multiple = FALSE)
+                ),
+                column(
+                  width = 2,
                   numericInput("anova_Measure_Day", "ANOVA Calc. Day",
                               value = 21,
                               min = 0, max = 99999),
@@ -592,6 +631,7 @@ tabPanel(
                 column(
                   offset = 0,
                   width = 2,
+                  HTML("<br>"),
                   checkboxInput("main_anova_interpolate", "Interpolate Data For Analysis", FALSE)
                 )
               )
@@ -659,15 +699,13 @@ tabPanel(
       ),
       hr(),
       fluidRow(
-        column(
-          width = 10, offset = 1,
-          div(
-            withSpinner(
-              plotlyOutput("plot_mouseweight", width = "100%", height = "750px", inline = F),
-              proxy.height = "100px", color="#0273B7"
-            )
+         div(
+          withSpinner(
+            plotlyOutput("plot_mouseweight", width = "100%", height = "750px", inline = F),
+            proxy.height = "100px", color="#0273B7"
           )
         )
+        
       )
     ),
     tabPanel("Current Data Table",

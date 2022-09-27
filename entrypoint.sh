@@ -15,7 +15,7 @@ echo "Mount $BUCKET at $MNT_DIR"
 mount.gcsfuse -o uid=999,gid=999,implicit_dirs,allow_other $BUCKET $MNT_DIR
 echo "Done"
 
-ln -s /srv/shiny-server/ /opt
+#ln -s /srv/shiny-server/ /opt
 
 echo "Start shiny-server"
 sudo -u shiny shiny-server &

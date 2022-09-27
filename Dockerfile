@@ -1,8 +1,21 @@
-# Base Dockerfile for Rshiny application
+# Base Dockerfile for Rshiny application hosted out of GCS bucket
 #
 # Adjust version of container to match desired R version
+# Usage: 
+#  Tune this Dockerfile to install the appropriate version of R and necessary prequisites
+#  Tune the entrypoint.sh script to set up any runtime prerequisites as necessary. By default, mount gcs and start shiny-server.
+#  Create a service account for the application to run as in IAM
+#  Create a bucket for the application to run out of
+#  Add Storage Legacy Bucket+Object Reader permission for application service account on bucket
+#  Upload the R source code and any other app files to the bucket
+#  Build container and push the image to the project's container or artifact registry
+#  Create as a Cloud Run application, hardware generation 2 (critical!). Set port the following environment vars:
+#    BUCKET  - the name of the bucket that contains the app
+#    MNT_DIR - where to mount the bucket in the container. Defaults to /srv/shiny-server. Creates symlink from $MNT_DIR to /srv/shiny-server/$MNT_DIR,
+#              (This is if it needs to be accessable at https://url/somepath. Set mountdir to /opt/somepath to make this happen) 
 
 FROM rocker/shiny:4.2
+
 
 # Install any prerequisites with package manager. This will depend on R packags required.
 
@@ -16,17 +29,14 @@ RUN apt-get update && apt-get install -y curl libssl-dev libcurl4-gnutls-dev lib
     apt-get install -y gcsfuse \
     && apt-get clean
 
-RUN R -e 'install.packages(c("shiny","plotly","dygraphs","shinywidgets","BiocManager","plyr","dplyr","zoo","ggpubr","grid","gridExtra","gtable","shinydashboard","reactable","bcrypt","shinyBS","shinyjs","shinyFeedback","shinycssloaders","shinyAce","jsonlite","magrittr","knitr","DT","readxl","survival","survminer","multcomp","validate"))'
+RUN R -e 'install.packages(c("shiny","plotly","dygraphs","shinyWidgets","BiocManager","plyr","dplyr","zoo","ggpubr","grid","gridExtra","gtable","shinydashboard","reactable","bcrypt","shinyBS","shinyjs","shinyFeedback","shinycssloaders","shinyAce","jsonlite","magrittr","knitr","DT","readxl","survival","survminer","multcomp","validate","purrr","stringr"))'
 
 RUN R -e "BiocManager::install(c('httr', 'yaml', 'sevenbridges'))"
 
 RUN mkdir -p /var/lib/shiny-server/bookmarks && chown shiny:shiny /var/lib/shiny-server/bookmarks
 
-# Copy application source code into /srv/shiny-server in container
-#COPY . /srv/shiny-server/
 RUN mkdir -p /srv/shiny-server
 RUN chown -R shiny:shiny /srv/shiny-server
-# If this app has an renv (highly recommended), install the dependencies into R
 
 ENV MNT_DIR /srv/shiny-server
 ENV PORT 3838

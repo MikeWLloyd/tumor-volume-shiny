@@ -22,11 +22,11 @@ tabPanel(
 
     br(), br(),
 
-    span(h1("Tumor Volume Analysis Suite", style = "color:#FFF; text-shadow: rgba(0, 0, 0, 0.3) 0px 0px 15px; text-align: center; font-weight: 700;") , align = "center"),
+    span(h1("Tumor Growth Analysis in PDX", style = "color:#FFF; text-shadow: rgba(0, 0, 0, 0.3) 0px 0px 15px; text-align: center; font-weight: 700;") , align = "center"),
 
     br(), br(),
 
-    span(h4("A tool for uploading, validating, plotting, and analyzing your tumor volume data"), style = "color:#FFF; text-shadow: rgba(0, 0, 0, 0.7) 0px 0px 15px; text-align: center;", align = "center"),
+    span(h4("A tool for uploading, validating, plotting, and analyzing your PDX tumor volume data"), style = "color:#FFF; text-shadow: rgba(0, 0, 0, 0.7) 0px 0px 15px; text-align: center;", align = "center"),
 
     br(), br(),
 
@@ -34,12 +34,12 @@ tabPanel(
       align = "center",
        actionButton(
         "btn_nav_val", "Data Upload and Validation",
-        icon("arrow-circle-o-right"),
+        icon("arrow-alt-circle-right"),
         class = "btn btn-lg", style = "margin-left: 25px; background-color: rgb(14, 104, 96); border-color: rgb(14, 104, 96);"
       ),
       actionButton(
         "btn_nav_tv", "Tumor Volume Analysis",
-        icon("arrow-circle-o-right"),
+        icon("arrow-alt-circle-right"),
         class = "btn btn-lg", style = "margin-left: 25px; background-color: rgb(14, 104, 96); border-color: rgb(14, 104, 96);"
       )
     ),
