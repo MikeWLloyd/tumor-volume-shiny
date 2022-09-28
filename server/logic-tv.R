@@ -203,12 +203,23 @@ rownames(data) <- NULL
             shinyjs::enable(selector = '.nav-tabs a[data-value="weight_tab"')
 
         } else{
-            # else there is a data file and it passed validation, and we should load it in.  
+          # else there is a data file and it passed validation, and we should load it in.
+          removeNotification(id = 'bad_import_format')
+          ext <- tools::file_ext(input_file_user$datapath)
 
+          if (ext == "csv") {
             curr_data <- read.csv(input_file_user$datapath, header = TRUE)
-            # files <- list.files(outputDir, full.names = TRUE)
-            # data <- lapply(files, read.csv, stringsAsFactors = FALSE) 
-            # Concatenate all data together into one data.frame. Example commented code is untested.
+          } else if (ext %in% c("xlsx","xls")) {
+            curr_data <- read_excel(input_file_user$datapath)
+          } else {
+            # should not get here, as users are only able to pick valid extensions. 
+            showNotification(id = 'bad_import_format', "Expected import formats are CSV and Excel (xlsx or xls). Please upload correct format.", type = c("error"), duration = NULL, closeButton = FALSE)
+            curr_data <- data
+            shinyjs::enable(selector = '.nav-tabs a[data-value="weight_tab"')
+          }
+          # files <- list.files(outputDir, full.names = TRUE)
+          # data <- lapply(files, read.csv, stringsAsFactors = FALSE) 
+          # Concatenate all data together into one data.frame. Example commented code is untested.
         }
 
         ## With the new data, update all pick lists. 
@@ -397,8 +408,6 @@ rownames(data) <- NULL
       }
     }
   }, ignoreNULL = F)
-
-
 
   # Watch is the study selector in the 'individual study' section changes, and update what is available in ANOVA tumor selector.
   observeEvent(input$tv_study_filtered, {
@@ -1058,14 +1067,16 @@ rownames(data) <- NULL
     })
 
 
+## example empty plot / placeholder
+  # output$generic_plot_start <- renderPlotly({
 
-# output$generic_plot_start <- renderPlotly({
+  #   temp <- data.frame(X = c(1,2,3,4), Y = c(2,3,4,5))
+  #   p <- ggplot(temp, aes(x=X, y=Y)) + geom_point(size=3)
+  #   return(p)
 
-#   temp <- data.frame(X = c(1,2,3,4), Y = c(2,3,4,5))
-#   p <- ggplot(temp, aes(x=X, y=Y)) + geom_point(size=3)
-#   return(p)
+  # })
 
-# })
+##
 
 ## Current Data Tab
   output$tbl_tv_all <- DT::renderDataTable(
