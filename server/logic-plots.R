@@ -498,8 +498,8 @@ IndividualMouseResponse <- function(data, last.measure.day = NULL) {
             dplyr::select(ID, Times, AUC.Filtered.Measures) %>%
             dplyr::full_join(data.id.i, by = c('ID', 'Times')) %>%
             dplyr::filter(Times == last.avail.day) %>%
-            dplyr::mutate(ORC = case_when(dVt <= -80 ~ 'CR', 
-                                          dVt > -80 & dVt <= -30 ~ 'PR', 
+            dplyr::mutate(ORC = case_when(dVt <= -95 ~ 'CR', 
+                                          dVt > -95 & dVt <= -30 ~ 'PR', 
                                           dVt > -30 & dVt <= 20 ~ 'SD',
                                           dVt > 20 ~ 'PD')) %>% 
             dplyr::select(c('ID', 'Times', 'Contributor', 'Study', 'Arms', 'Tumor', 'Volume', 'dVt', 'log2.Fold.Change', 'AUC.Filtered.Measures', 'AUC.All.Measures', 'ORC'))
