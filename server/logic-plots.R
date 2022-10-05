@@ -1,9 +1,37 @@
 # COLOR
-colorblind_pallet <- c("#888888", "#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499",
-                       "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#000000", "#E69F00", "#56B4E9", "#009E73",
-                       "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "#009900", "#E00F00", "#50B0E9", "#999E73",
-                       "#F9E992", "#3372B2", "#A33E00", "#EE79A7","#777888", "#44CCEE", "#CC1177", "#AACC00")
 
+colorblind_palette <- c(
+  '#000034',
+  '#328AE2',
+  "#7F9DA7",
+  "#C1B8AA",
+  "#DDD4C6",
+  '#db6d00',
+  '#6db6ff',
+  '#924900',
+  "#e69f00",
+  "#3372b2", 
+  '#ffff6d',
+  '#24ff24',
+  '#b66dff',
+  '#ff6db6',
+  '#ffb6db',
+  '#e5ffb2',
+  '#6b990f',
+  '#aa4499',
+  '#44aa99',
+  '#B7B2D1',
+  '#BD6666',
+  "#007E5C", 
+  "#f0e442", 
+  '#e00f00', 
+  '#cc8d4d')
+
+colorblind_palette_noControl <- colorblind_palette[-1]
+
+shape_palette <- c( 
+  16,15,17,18,3,4,5,6,15,16,17,18,3,4,5,6,16,15,17,18,3,4,5,6,15
+)
 
 # HELPER FUNCTION - GET SUMMARIZED DATA FOR CROSS STUDY PLOT
 get_data_summary <- function(data, plot.type,  measure.var, group.vars){
@@ -470,8 +498,8 @@ IndividualMouseResponse <- function(data, last.measure.day = NULL) {
             dplyr::select(ID, Times, AUC.Filtered.Measures) %>%
             dplyr::full_join(data.id.i, by = c('ID', 'Times')) %>%
             dplyr::filter(Times == last.avail.day) %>%
-            dplyr::mutate(ORC = case_when(dVt <= -95 ~ 'CR', 
-                                          dVt > -95 & dVt <= -30 ~ 'PR', 
+            dplyr::mutate(ORC = case_when(dVt <= -80 ~ 'CR', 
+                                          dVt > -80 & dVt <= -30 ~ 'PR', 
                                           dVt > -30 & dVt <= 20 ~ 'SD',
                                           dVt > 20 ~ 'PD')) %>% 
             dplyr::select(c('ID', 'Times', 'Contributor', 'Study', 'Arms', 'Tumor', 'Volume', 'dVt', 'log2.Fold.Change', 'AUC.Filtered.Measures', 'AUC.All.Measures', 'ORC'))
@@ -580,26 +608,26 @@ get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment'
       if(pattern == 'Study'){
         s.data$label <- with(s.data,paste0("Contrib: ",Contributor,", ","Study: ",Study,", ","Tumor: ",Tumor))
       
-        p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Arms)) +
+        p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Arms, shape = Arms)) +
               geom_hline(yintercept = 0, size = 0.3) +
-              geom_line(position = position_dodge(position.dodge), cex = 1.2) +
+              geom_line(position = position_dodge(position.dodge), cex = 0.8) +
               geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
                             width = 1,
                             position = position_dodge(position.dodge)) +
-              geom_point(cex = 2,
+              geom_point(cex = 1.5,
                         position = position_dodge(position.dodge)
               )
       }
       if(pattern == 'Treatment'){
         s.data$label <- with(s.data,paste0("Contrib: ",Contributor,", ","Tumor: ",Tumor,", ","Arm: ",Arms))
       
-        p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Study)) +
+        p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Study, shape = Study)) +
               geom_hline(yintercept = 0, size = 0.3) +
-              geom_line(position = position_dodge(position.dodge), cex = 1.2) +
+              geom_line(position = position_dodge(position.dodge), cex = 0.8) +
               geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
                             width = 1,
                             position = position_dodge(position.dodge)) +
-              geom_point(cex = 2,
+              geom_point(cex = 1.5,
                         position = position_dodge(position.dodge)
               )
       }
@@ -611,7 +639,7 @@ get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment'
       if(pattern == 'Study'){
         data$label <- with(data,paste0("Contrib: ",Contributor,", ","Study: ",Study,", ","Tumor: ",Tumor))
       
-        p <- ggplot(data, aes(x = Times, y = Volume, group = ID, color = Arms)) +
+        p <- ggplot(data, aes(x = Times, y = Volume, group = ID, color = Arms, shape = Arms)) +
           geom_hline(yintercept = 0, size = 0.3) +
           geom_line(size=0.8) +
           geom_point(cex=1.5,aes(colour = Arms))
@@ -619,7 +647,7 @@ get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment'
       if(pattern == 'Treatment'){
         data$label <- with(data,paste0("Contrib: ",Contributor,", ","Tumor: ",Tumor,", ","Arm: ",Arms))
       
-        p <- ggplot(data, aes(x = Times, y = Volume, group = ID, color = Study)) +
+        p <- ggplot(data, aes(x = Times, y = Volume, group = ID, color = Study, shape = Study)) +
               geom_hline(yintercept = 0, size = 0.3) +
               geom_line(size=0.8) +
               geom_point(cex=1.5,aes(colour = Study))
@@ -667,7 +695,8 @@ get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment'
         )
     }
 
-    p <- p + scale_color_manual(values=colorblind_pallet)
+    p <- p + scale_color_manual(values=colorblind_palette)
+    p <- p + scale_shape_manual(values=shape_palette)
     return(p)
   }
 }
@@ -737,19 +766,19 @@ get_plot_scaled <- function(data, orders = NULL, position.dodge, title = NULL, s
       if(pattern == 'Study'){
         adjusted.data$label <- with(adjusted.data,paste0("Contrib: ",Contributor,", ","Study: ",Study,", ","Tumor: ",Tumor))
       
-        p <- ggplot(data = adjusted.data, aes(x = Times, y = Moscow, group = ID, color = Arms)) +
+        p <- ggplot(data = adjusted.data, aes(x = Times, y = Moscow, group = ID, color = Arms, shape = Arms)) +
           geom_hline(yintercept = 0, size = 0.3) +
-          geom_line(position = position_dodge(position.dodge),cex = 1.2) +
-          geom_point(cex = 2, position = position_dodge(position.dodge)) +
+          geom_line(position = position_dodge(position.dodge), cex = 0.8) +
+          geom_point(cex = 1.5, position = position_dodge(position.dodge)) +
           ylim(-100, 100) + labs(caption = caption_text)
       }
       if(pattern == 'Treatment'){
         adjusted.data$label <- with(adjusted.data,paste0("Contrib: ",Contributor,", ","Tumor: ",Tumor,", ","Arm: ",Arms))
       
-        p <- ggplot(data = adjusted.data, aes(x = Times, y = Moscow, group = ID, color = Study)) +
+        p <- ggplot(data = adjusted.data, aes(x = Times, y = Moscow, group = ID, color = Study, shape = Study)) +
           geom_hline(yintercept = 0, size = 0.3) +
-          geom_line(position = position_dodge(position.dodge),cex = 1.2) +
-          geom_point(cex = 2, position = position_dodge(position.dodge)) +
+          geom_line(position = position_dodge(position.dodge), cex = 0.8) +
+          geom_point(cex = 1.5, position = position_dodge(position.dodge)) +
           ylim(-100, 100) + labs(caption = caption_text)
       }
     }
@@ -765,24 +794,24 @@ get_plot_scaled <- function(data, orders = NULL, position.dodge, title = NULL, s
       if(pattern == 'Study'){
         s.data$label <- with(s.data,paste0("Contrib: ",Contributor,", ","Study: ",Study,", ","Tumor: ",Tumor))
       
-        p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Arms)) +
+        p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Arms, shape = Arms)) +
               geom_hline(yintercept = 0, size = 0.3) +
-              geom_line(position = position_dodge(position.dodge),cex = 1.2) +
+              geom_line(position = position_dodge(position.dodge), cex = 0.8) +
               geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
                             position = position_dodge(position.dodge)) +
-              geom_point(cex = 2,position = position_dodge(position.dodge)) +
+              geom_point(cex = 1.5, position = position_dodge(position.dodge)) +
               ylim(-100, 100) + labs(caption = caption_text)
       }
 
       if(pattern == 'Treatment'){
         s.data$label <- with(s.data,paste0("Contrib: ",Contributor,", ","Tumor: ",Tumor,", ","Arm: ",Arms))
       
-        p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Study)) +
+        p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Study, shape = Study)) +
               geom_hline(yintercept = 0, size = 0.3) +
-              geom_line(position = position_dodge(position.dodge),cex = 1.2) +
+              geom_line(position = position_dodge(position.dodge), cex = 0.8) +
               geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
                             position = position_dodge(position.dodge)) +
-              geom_point(cex = 2,position = position_dodge(position.dodge)) +
+              geom_point(cex = 1.5, position = position_dodge(position.dodge)) +
               ylim(-100, 100) + labs(caption = caption_text)
       }
 
@@ -821,7 +850,8 @@ get_plot_scaled <- function(data, orders = NULL, position.dodge, title = NULL, s
         )
     }
 
-    p <- p + scale_color_manual(values=colorblind_pallet)
+    p <- p + scale_color_manual(values=colorblind_palette)
+    p <- p + scale_shape_manual(values=shape_palette)
 
     if (! is.null(title)) {
       p <- p + ggtitle(title)
@@ -846,7 +876,7 @@ plotAvgGrowthBar <- function(data) {
     geom_hline(yintercept = 0) + 
     geom_bar(stat = 'identity', position = position_dodge2(width = 0.9, preserve = "single")) +
     geom_errorbar(aes(x = Tumor, ymin = mean.dVt - SE.dVt , ymax = mean.dVt + SE.dVt ), width=0.2, position = position_dodge(0.9)) +
-    scale_fill_manual(values=colorblind_pallet) +
+    scale_fill_manual(values=colorblind_palette_noControl) +
     scale_y_continuous(limits = c(-150, max(adjusted.data$mean.dVt) + max(adjusted.data$SE.dVt )), breaks = c(-100, seq(0, max(adjusted.data$mean.dVt) + max(adjusted.data$SE.dVt ), by = 100))) 
   
   p <- p + xlab('') + ylab("Average Tumor Volume Change (%)")
@@ -907,7 +937,7 @@ log2FoldPlot <- function(data, caption_text_on = TRUE, ...) {
   p <- ggplot(data, aes(x = Tumor, y = mean)) +
     geom_hline(yintercept = 0, size = 0.5, colour = 'black') +
     geom_pointrange(aes(ymin=q1, ymax=q3, color = Arms), position=position_dodge(width=0.5), size = 3, lwd=2) +
-    scale_color_manual(name = "Treatment Arms", limits = levels, values = colorblind_pallet) +
+    scale_color_manual(name = "Treatment Arms", limits = levels, values = colorblind_palette) +
     #scale_color_discrete(guide = "none") + 
     ylab('Log2 Fold Change (95% CI)') + 
     xlab('') +
@@ -951,7 +981,7 @@ WaterfallPlot_Hybrid <- function(data) {
   data$label <- with(data,paste0("Contrib: ",Contributor,", ", "Study: ",Study)) 
 
   p <- ggplot(data, aes(x = Tumor, y = Value, fill = Arms)) + 
-    scale_fill_manual(name = "Treatment Arms", values = colorblind_pallet) +
+    scale_fill_manual(name = "Treatment Arms", values = colorblind_palette_noControl) +
     scale_color_discrete(guide = "none") + 
     xlab('') + 
     ylab('% change in TV                             T/C Ratio * 100') +
@@ -1006,7 +1036,7 @@ plotTC.ratio <- function(data, plot_measure = c('TC.ratio', 'aov.TC.ratio')) {
                       ymin = ifelse(!!as.name(plot_measure) - se_TC.ratio < 0, 0, !!as.name(plot_measure) - se_TC.ratio)), 
                   width=0.2, position = position_dodge(0.9)) +
     scale_y_continuous(name="aov.T/C Ratio (SE)", limits = xlim, breaks=c(0, 0.25, 0.5, 0.75, 1), labels=c(0, 0.25, 0.5, 0.75, 1)) + 
-    scale_fill_manual(values=colorblind_pallet) +
+    scale_fill_manual(values=colorblind_palette_noControl) +
     xlab('')
 
   p <- p + xlab('')
@@ -1046,9 +1076,8 @@ plotTC.ratio <- function(data, plot_measure = c('TC.ratio', 'aov.TC.ratio')) {
 
 ## ORC STACKED PLOT
 plotStackedORC <- function(data) {
-
-  color_pallet <- c("#888888", "#A1D2CE", "#50858B", "#237593")
-
+  #c("#888888", "#A1D2CE", "#50858B", "#237593")
+  color_pallet <- c("#5C8FC1", "#728D96", "#9DB4BC", "#D6DBE1")
   adjusted.data <- data %>%
     dplyr::group_by(Contributor, Study, Tumor, Arms) %>%
     count(ORC) %>% 
@@ -1129,7 +1158,7 @@ study_volume_plot <- function(data, orders = NULL, position.dodge, title = NULL,
 
     s.data$label <- with(s.data,paste0(Tumor, " - ", Arms))
 
-    p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = label)) +
+    p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = label, shape = label)) +
       geom_line(position = position_dodge(position.dodge),cex = 1.2) +
       geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
                     width = 1.2,
@@ -1152,7 +1181,8 @@ study_volume_plot <- function(data, orders = NULL, position.dodge, title = NULL,
       axis.text.y  = element_text(hjust = 1,size = 12)
     )
 
-    p <- p + scale_color_manual(values=colorblind_pallet) + geom_hline(yintercept = 0, size = 0.3)
+    p <- p + scale_color_manual(values=colorblind_palette) + geom_hline(yintercept = 0, size = 0.3)
+    p <- p + scale_shape_manual(values=shape_palette)
 
     if (! is.null(title)) {
       
@@ -1193,7 +1223,7 @@ WaterfallPlot_PDX <- function(data,
   }
 
   p <- ggplot(data, aes(x = ID, y = vc.rate, fill = Arms)) +
-    scale_fill_manual(name = "Treatment Arms", limits = levels, values = colorblind_pallet) +
+    scale_fill_manual(name = "Treatment Arms", limits = levels, values = colorblind_palette) +
     scale_color_discrete(guide = "none") +
     ylab(ylab_text) +
     xlab('Animals') +
@@ -1263,7 +1293,7 @@ EFSplot <- function(data, PercChange_EventSize = 100, plot_on = TRUE) {
   p <- ggsurvplot(fit,
                   data = data,
                   size = 1,                 # change line size
-                  palette = colorblind_pallet,
+                  palette = colorblind_palette,
                   pval = TRUE,              # Add p-value
                   pval.size = 4,
                   risk.table = TRUE,        # Add risk table
@@ -1486,7 +1516,7 @@ get_weight_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatm
         )
     }
 
-    p <- p + scale_color_manual(values=colorblind_pallet)
+    p <- p + scale_color_manual(values=colorblind_palette)
 
     return(p)
   }

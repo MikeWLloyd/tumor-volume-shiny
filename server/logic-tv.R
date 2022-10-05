@@ -4,7 +4,7 @@
 
 # DATA
 ## load example data. 
-data <- try(as.data.frame(readRDS("include/tv-test.rds")), silent = T)
+data <- try(as.data.frame(readRDS("include/tv-test.rds")), silent = T) #%>% withSpinner(color="#0dc5c1")
 rownames(data) <- NULL
 
 # data <- try(as.data.frame(read.csv("include/unit_test.csv", header = TRUE)), silent = T)
@@ -174,7 +174,6 @@ rownames(data) <- NULL
   # The first is to check what data to load to the app, the second is to allow for checks to be done on selected items
   # Without checking if any data is loaded, the app will display invalid messages to the splash page on instantiation of the app. 
 
-
   ## holdover code from prior 'reset' button
   # observeEvent(input$user_tv_load_default_btn, {
   #   values$upload_state <- 'reset'
@@ -241,7 +240,7 @@ rownames(data) <- NULL
 
         updatePickerInput(session, "tv_treatment",
                       choices = agents,
-                      selected = c('Control', unique(filtered.df$Arms)[1:min(3,n_unique_arms)]))
+                      selected = c('Control', unique(filtered.df$Arms)[1:min(10,n_unique_arms)]))
 
         updatePickerInput(session, "tv_disease_type",
                       choices = unique(sort(filtered.df$Disease_Type)),
@@ -380,13 +379,23 @@ rownames(data) <- NULL
         removeNotification(id = 'missing_control')
         shinyjs::enable('query_button')
       }
+
+      if( length(input$tv_treatment) > 25) {
+        showNotification(id = 'too_many_arms', "You must select fewer treatment arms. Plots support a maximum of 25 arms.", type = c("error"), duration = NULL, closeButton = FALSE)
+        shinyjs::disable('query_button')
+      } else {
+        removeNotification(id = 'missing_control')
+        shinyjs::enable('query_button')
+      }
+
     }
   }, ignoreNULL = F)
+
 
   # Watch to see if study is empty.  
   observeEvent(input$tv_study, {
     if (check_state$loaded_data) {
-      if( is.null(input$tv_study) ) {
+      if(is.null(input$tv_study) ) {
         showNotification(id = 'missing_study', "You must select a study from the study list", type = c("error"), duration = NULL, closeButton = FALSE)
         shinyjs::disable('query_button')
       } else {
@@ -450,7 +459,7 @@ rownames(data) <- NULL
 
       updatePickerInput(session, "tv_treatment",
                     choices = agents,
-                    selected = c('Control', unique(filtered.df$Arms)[1:min(3,n_unique_arms)]))
+                    selected = c('Control', unique(filtered.df$Arms)[1:min(10,n_unique_arms)]))
 
       updatePickerInput(session, "tv_disease_type",
                     choices = unique(sort(filtered.df$Disease_Type)),
@@ -479,7 +488,7 @@ rownames(data) <- NULL
 
       updatePickerInput(session, "tv_treatment",
                     choices = agents,
-                    selected = c('Control', unique(filtered.df$Arms)[1:min(3,n_unique_arms)]))
+                    selected = c('Control', unique(filtered.df$Arms)[1:min(10,n_unique_arms)]))
 
       updatePickerInput(session, "tv_disease_type",
                     choices = unique(sort(filtered.df$Disease_Type)),
@@ -1088,7 +1097,7 @@ rownames(data) <- NULL
     extensions = "Buttons",
     options = list(
       dom = "Bflrtip", scrollX = TRUE, autoWidth = TRUE, keys = TRUE, pageLength = 5, lengthMenu = list(c(5, 20, 50, 100, 500, -1), c('5', '20', '50', '100','500', 'All')),paging = T,
-      buttons = list(I("colvis"), "copy", "print", list(extend = "collection", buttons = c("csv", "excel"), text = "Download"))
+      buttons = list(I("colvis"), list(extend = 'copy', title = NULL), list(extend = "collection", buttons = list('csv', list(extend = 'excel', title = NULL)), title = NULL, text = "Download"))
     )
   )
   # Render selected data for "Current Data Table" tab. 
@@ -1097,3 +1106,7 @@ rownames(data) <- NULL
 observeEvent(input$btn_nav_val, updateNavlistPanel(session, "nav_bco", selected = title_validate))
 observeEvent(input$btn_nav_tv, updateNavlistPanel(session, "nav_bco", selected = title_tumor_volume))
 observeEvent(input$btn_nav_help, updateNavlistPanel(session, "nav_bco", selected = title_help))
+
+  # output$sessionInfo <- renderPrint({
+  #    capture.output(sessionInfo())
+  # })

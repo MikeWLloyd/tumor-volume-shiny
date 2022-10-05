@@ -29,6 +29,7 @@ library("multcomp")
 library("validate")
 library("purrr")
 library("stringr")
+library("shinyalert")
 
 # Add variable to control whether login page will be allowed
 source(file.path("ui", "interface_variables.R"), local = TRUE)
@@ -40,6 +41,7 @@ server <- function(input, output, session) {
 
   # ui
   output$ui <- renderUI({
+    shinyalert(title = 'Loading...', "Please be patient while the application loads.", type = "info", showConfirmButton = F, animation = F)
     source(file.path("ui", "ui-main.R"), local = TRUE)$value
   })
 

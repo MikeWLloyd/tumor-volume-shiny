@@ -1,7 +1,7 @@
 navbarPage(
   id = nav_id,
 
-  windowTitle = "TV Analysis Suite",
+  windowTitle = "PVA",
 
   title = div(
     img(src = "logo-new.png", height='40', style = "margin:-10px -10px -10px -10px;"),
@@ -11,4 +11,5 @@ navbarPage(
   source(file.path("ui", "ui-validate.R"), local = TRUE)$value,
   source(file.path("ui", "ui-tv.R"), local = TRUE)$value,
   source(file.path("ui", "ui-help.R"), local = TRUE)$value
+  
 )

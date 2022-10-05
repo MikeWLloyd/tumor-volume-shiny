@@ -33,21 +33,30 @@ tabPanel(
       )
     )
   ),
+  br(),
+  fluidRow(
+    column(
+      width = 10, offset = 1,
 
-  fluidRow(column(
-    width = 10, offset = 1,
+      shinydashboard::box(
+        width = 12,
+        title = "Example Expected Tumor Volume File Formatting", status = "primary", solidHeader = TRUE,
 
-    shinydashboard::box(
-      width = 12,
-      title = "Example Expected Tumor Volume File Formatting", status = "primary", solidHeader = TRUE,
-
-      withSpinner(
-        DTOutput("table_tv_validate_default"),
-        proxy.height = "100px", color="#0273B7"
-      ),
-      hr()
+        withSpinner(
+          DTOutput("table_tv_validate_default"),
+          proxy.height = "100px", color="#0273B7"
+        ),
+        hr(),
+        fluidRow(
+          column(
+            width = 4,
+            offset = 4,
+            align="center",
+            downloadButton("downloadTemplate", "Download Empty Data Template")
+          )
+        ),
+      )
     )
-  )),
-
+  ),
   br()
 )

@@ -24,5 +24,6 @@ tabPanel(
 
   )),
 
-  br()
+  br(),
+  closeAlert()
 )

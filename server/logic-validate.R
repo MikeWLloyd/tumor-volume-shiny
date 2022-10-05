@@ -151,7 +151,6 @@ observeEvent(input$user_tv_data, {
 
 })
 
-
 output$table_tv_validate_default <- DT::renderDataTable(
   data,
   style = "bootstrap",
@@ -159,8 +158,18 @@ output$table_tv_validate_default <- DT::renderDataTable(
   filter = list(position = "top", clear = T),
   class = "cell-border stripe",
   extensions = "Buttons",
+  rownames= FALSE,
   options = list(
-    dom = "Bflrtip", scrollX = TRUE, autoWidth = TRUE, keys = TRUE, pageLength = 5, lengthMenu = list(c(5, 20, 50, 100, 500, -1), c('5', '20', '50', '100','500', 'All')),paging = T,
-    buttons = list(I("colvis"), "copy", "print", list(extend = "collection", buttons = c("csv", "excel"), text = "Download"))
+    dom = "Bflrtip", scrollX = TRUE, autoWidth = TRUE, keys = TRUE, pageLength = 5, lengthMenu = list(c(5, 20, 50, 100, 500, -1), c('5', '20', '50', '100','500', 'All')), paging = T,
+    buttons = list(I("colvis"), list(extend = 'copy', title = NULL), list(extend = "collection", buttons = list('csv', list(extend = 'excel', title = NULL)), title = NULL, text = "Download"))
   )
+)
+
+output$downloadTemplate <- downloadHandler(
+  filename = function() {
+    paste("PVA_Template_", Sys.Date(), ".csv", sep="")
+  },
+  content = function(file) {
+    write.csv(data[0,], file, row.names = FALSE)
+  }
 )
