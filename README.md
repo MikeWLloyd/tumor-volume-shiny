@@ -81,8 +81,9 @@ This application relies on heavily modified code originally from [DRAP](https://
 Quanxue Li, Wentao Dai, Jixiang Liu, Yi‑Xue Li, and Yuan‑Yuan Li. DRAP: a toolbox for drug response analysis and visualization tailored for preclinical drug testing on patient-derived xenograft models. Journal of Translational Medicine, 2019, 17(1): 39.
 ```
 
-The following libraries are used: 
+The following libraries are used:  
 
+```
 shiny
     Chang W, Cheng J, Allaire J, Sievert C, Schloerke B, Xie Y, Allen J, McPherson J, Dipert A, Borges B (2021). _shiny:
     Web Application Framework for R_. R package version 1.7.1, <URL: https://CRAN.R-project.org/package=shiny>.
@@ -218,3 +219,4 @@ stringr
 shinyalert
     Attali D, Edwards T (2021). _shinyalert: Easily Create Pretty Popup Messages (Modals) in 'Shiny'_. R package version
     3.0.0, <URL: https://CRAN.R-project.org/package=shinyalert>.
+```

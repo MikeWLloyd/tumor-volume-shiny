@@ -1,6 +1,6 @@
 # Tumor Volume Analysis Suite
 
-<p align="center">
+<p align="left">
 <img src="images/0.splash_page.png" alt="drawing" width="500"/>
 </p>  
 
@@ -8,7 +8,7 @@ From the splash page, or via the top menu users can access "Data Upload and Vali
 
 ## Data Upload and Validation
 
-<p align="center">
+<p align="left">
 <img src="images/1.data_upload.png" alt="drawing" width="500"/>
 </p>
 
@@ -67,6 +67,9 @@ The following columns with the **exact names** and **data types** are expected i
         The measured body weights of the animals (e.g., 14.2, 14, 15.1). 
         NOTE: This field is optional, if not provided the 'Body Weight Analysis' tab will be disabled.  
 
+### Data Upload Template
+
+An empty template with these file headers is available for download at the bottom of the Data Upload and Validation
 
 ### Upload Validation Message: 
 
@@ -84,7 +87,7 @@ An example data table is provided on this page to show users the expected data s
 
 The Tumor Volume Analysis page contains all plot and analysis functions.  
 
-<p align="center">
+<p align="left">
 <img src="images/2.tv_landing_page.png" alt="" width="500"/>
 </p>  
 
@@ -120,7 +123,7 @@ When these boxes are checked, a linear interpolation method is used to adjusts f
 #### Data Selection and Filtering
 
 
-<p align="center">
+<p align="left">
 <img src="images/3.tv_query.png" alt="" width="800"/>
 </p>
 
@@ -128,11 +131,13 @@ This section contains data query filters, which allows the user to select subset
 
 **NOTE:** When selecting treatment arms, 'Control' **MUST** be selected, or plots and analysis metrics will not be generated. Likewise, if no data is selected, the tool will not function. 
 
+After selections are made, clicking the 'Query Dataset / Regenerate Plots' will submit the data filtering query. 
+
 --- 
 
 #### Selected Volume Data - Summary
 
-<p align="center">
+<p align="left">
 <img src="images/4.tv_data_summary.png" alt="" width="800"/>
 </p>
 
@@ -148,7 +153,7 @@ Below the data query and summary are three sub-tabs that allow users to access d
 3. Body Weight Analysis (if body weights provided)
 4. Current Data Table
 
-<p align="center">
+<p align="left">
 <img src="images/5.tv_main_subtabs.png" alt="" width="800"/>
 </p>
 
@@ -160,7 +165,7 @@ The user selects from six tabs that provide access to different visualizations a
 
 **NOTE:** Data filtering via 'Data Selection and Filtering' dropdowns can be used to select or deselect studies as needed.
 
-<p align="center">
+<p align="left">
 <img src="images/6.tv_cross_study_options.png" alt="" width="800"/>  
 </p>
 
@@ -170,7 +175,7 @@ The user selects from six tabs that provide access to different visualizations a
 
 #### 1a. Response Plot
 
-<p align="center">
+<p align="left">
 <img src="images/7.tv_resp_plot_default.png" alt="" width="700"/>
 </p>  
 
@@ -195,7 +200,7 @@ Tumor growth curves in this panel are by default as the 'Study Average' of tumor
 
 A. Volume (default)
 
-<p align="center">
+<p align="left">
 <img src="images/8.tv_resp_volume.png" alt="" width="500"/>
 </p>
 
@@ -204,7 +209,7 @@ This plot displays tumor volume as provided by the user in the 'Volume' column o
 ---
 
 B. Scaled  
-<p align="center">
+<p align="left">
 <img src="images/9.tv_scaled_plot.png" alt="" width="500"/>
 </p>  
 
@@ -212,7 +217,7 @@ This plot re-scales volume data from -100 to 100. Where -100 represents total tu
 
 Users are able to define the endpoint as either a growth factor (e.g., 4x) or volume (e.g., 1200 mm<sup>3</sup>). When 'Scaled' is selected, the 'Scale Plot By' and 'Endpoint Scaling' options will appear. 
 
-<p align="center">
+<p align="left">
 <img src="images/10.tv_scaled_plot_options.png" alt="" width="300"/>
 </p> 
 
@@ -220,7 +225,7 @@ Users are able to define the endpoint as either a growth factor (e.g., 4x) or vo
   
 C. Percent Change  
 
-<p align="center">
+<p align="left">
 <img src="images/11.tv_percChange_plot.png" alt="" width="500"/>
 </p>  
 
@@ -233,22 +238,34 @@ This plot shows an alternate way to demonstrate growth curves using percent chan
 
 ---
 
-D. Semi-Log  
+D. Log2(Volume)
 
 
-<p align="center">
-<img src="images/12.tv_semi_log_plot.png" alt="" width="500"/>
+<p align="left">
+<img src="images/12.tv_log2_plot.png" alt="" width="500"/>
 </p> 
 
 
-This plot show the natural logarithm transformation of volume measures on the y-axis, and study day along the x-axis.
+This plot show the log2 transformation of volume measures on the y-axis, and study day along the x-axis.
+
+---
+
+D. Log2[Proportion Volume Change]
+
+
+<p align="left">
+<img src="images/13.tv_log2_propchange.png" alt="" width="500"/>
+</p> 
+
+
+This plot show the log2 transformation of the proportion of volume change on the y-axis, and study day along the x-axis.
 
 ---
 
 #### 1b. Average Volume Plot
 
-<p align="center">
-<img src="images/13.tv_avgStudy_plot.png" alt="" width="500"/>
+<p align="left">
+<img src="images/14.tv_avgStudy_plot.png" alt="" width="500"/>
 </p> 
 
 This plot shows cross study average volume across all animals for treatment arms +/- SE at a user defined time point (default "Avg Measure Calc. Day" is 21). Data underlying this plot can be interpolated with the checkbox.  
@@ -256,18 +273,18 @@ This plot shows cross study average volume across all animals for treatment arms
 
 #### 1c. Log2 Fold Change Plot
 
-<p align="center">
-<img src="images/14.tv_log2fold_plot.png" alt="" width="500"/>
+<p align="left">
+<img src="images/15.tv_log2fold_plot.png" alt="" width="500"/>
 </p> 
 
-This plot shows cross study mean log2 fold change [log2(Volume<sub>t</sub> / Volume<sub>t</sub>)] across all animals for treatment arms +/- SE across all measurement time points. Data underlying this plot can be interpolated with the checkbox.  
+This plot shows cross study mean log2 fold change [log2(Volume<sub>t</sub> / Volume<sub>t</sub>)] across all animals for treatment arms +/- SE at a user defined time point (default "Log2(Fold Change) Measure Calc. Day" is 21). Data underlying this plot can be interpolated with the checkbox.  
 
 ---
 
 #### 1d. Hybrid Waterfall Plot
 
-<p align="center">
-<img src="images/15.tv_hybridWaterfall_plot.png" alt="" width="500"/>
+<p align="left">
+<img src="images/16.tv_hybridWaterfall_plot.png" alt="" width="500"/>
 </p> 
 
 This plot shows cross study hybrid waterfall plot. Where model by treatment arm shows progression, T / C ratio +/- SE  is displayed in the plot. T/C is defined within study, tumor, and treatment arm defined roughly as:  
@@ -285,8 +302,8 @@ Where model by treatment arm shows regression, percent change in tumor volume (a
 
 #### 1e. Tumor Growth Inhibition
 
-<p align="center">
-<img src="images/16.tv_TGI_plot.png" alt="" width="500"/>
+<p align="left">
+<img src="images/17.tv_TGI_plot.png" alt="" width="500"/>
 </p> 
 
 This plot and table shows cross study tumor growth inhibition defined as the T/C ratio at the user defined time point (default "TGI Calc. Day" is 21). 
@@ -322,8 +339,8 @@ Where TGI < 1 indicates the degree of growth inhibition of the treatment relativ
 
 #### 1f. Stacked Objective Response Plot
 
-<p align="center">
-<img src="images/17.tv_ORC_stacked_plot.png" alt="" width="500"/>
+<p align="left">
+<img src="images/18.tv_ORC_stacked_plot.png" alt="" width="500"/>
 </p> 
 
 
@@ -342,14 +359,14 @@ The classification used mimics RECIST criteria commonly used in clinical trials 
 
 Users select the 'Study' of interest from the study selection dropdown. Four sub-tabs provide access to different visualizations and analysis metrics for analysis of the selected study. 
 
-<p align="center">
-<img src="images/18.tv_individual_study_options.png" alt="" width="700"/>
+<p align="left">
+<img src="images/19.tv_individual_study_options.png" alt="" width="700"/>
 </p>
 
 #### 2a. Objective Response (RECIST)
 
-<p align="center">
-<img src="images/19.tv_RECIST_plot_table.png" alt="" width="500"/>
+<p align="left">
+<img src="images/20.tv_RECIST_plot_table.png" alt="" width="500"/>
 </p> 
 
 This plot and table summarize cohort level objective response criteria at the user defined time point (default "RECIST Calc. Day" is 21). Data underlying this metric can be interpolated with the checkbox.  
@@ -368,8 +385,8 @@ The classification used mimics RECIST criteria commonly used in clinical trials 
 
 #### 2b. Waterfall Plot
 
-<p align="center">
-<img src="images/20.tv_waterfall_plot.png" alt="" width="500"/>
+<p align="left">
+<img src="images/21.tv_waterfall_plot.png" alt="" width="500"/>
 </p> 
 
 Waterfall plots can be shown for individual animals using one of three different metrics selected in the 'Waterfall Metric' dropdown.
@@ -379,8 +396,8 @@ Waterfall plots can be shown for individual animals using one of three different
 3. AUC.Filtered.Measures : Area under the curve for the time series up through the user specified day (default "Final Day for AUC Calc." is 21). Note that "Final Day for AUC Calc." will only be present when AUC.Filtered.Measures is selected. 
 
 
-<p align="center">
-<img src="images/21.tv_waterfall_options.png" alt="" width="300"/>
+<p align="left">
+<img src="images/22.tv_waterfall_options.png" alt="" width="300"/>
 </p> 
 
 Area under the tumor growth curve from baseline up to time *t* (either max time, or user specific time) is normalized by dividing by *t*. With this normalization factor, the interpretation of this measure is the average percent change in tumor size from baseline to time *t*. For area under a spline interpolation was used (`splinefun` function in combination with `integrate` to calculate a numerical integral). All three measures can be computed from interpolated data using the checkbox. 
@@ -388,8 +405,8 @@ Area under the tumor growth curve from baseline up to time *t* (either max time,
 #### 2c. Event Free Survival
 
 
-<p align="center">
-<img src="images/22.tv_EFS_plots.png" alt="" width="500"/>
+<p align="left">
+<img src="images/23.tv_EFS_plots.png" alt="" width="500"/>
 </p> 
 
 Event free survival analysis is conducted based on censoring events which occur when tumor growth exceeds the user defined percent change in volume. By default the "Event Size: Percent Change in Volume" is 100% which represents 2x tumor growth (200% would represents 4x growth etc). EFS is censored at the last measurement for animals whose tumors do not reach the defined threshold. The survival curve estimates and significance for the censored data is computed using the Kaplan-Meier method in the `survfit` package. Median survival is shown as a dotted line. Data underlying this metric/plot can be interpolated with the checkbox.
@@ -398,8 +415,8 @@ Event free survival analysis is conducted based on censoring events which occur 
 
 #### 2d. ANOVA
 
-<p align="center">
-<img src="images/23.tv_ANOVA.png" alt="" width="500"/>
+<p align="left">
+<img src="images/24.tv_ANOVA.png" alt="" width="500"/>
 </p> 
 
 The difference in tumor volumes among treatment arms at a user defined day can be compared using one-way ANOVA. By default ANOVA Calc. Day is 21 days. If at the user defined day, fewer than 2 groups exists, and error message will be displayed. If this occurs select a different time point. When the number of treatment arms is two or more, a multiple mean comparison test (Tukey) is provided to compare treatment arms against control.
@@ -408,8 +425,8 @@ The difference in tumor volumes among treatment arms at a user defined day can b
 
 ### 3. Body Weight Analysis
 
-<p align="center">
-<img src="images/24.tv_body_weight_plots.png" alt="" width="500"/>
+<p align="left">
+<img src="images/25.tv_body_weight_plots.png" alt="" width="500"/>
 </p> 
 
 PDX experiments should include monitoring of body weight and overall health as toxicity analogs. Antitumor activity is only clinically relevant if it can be achieved without substantial toxicity.
@@ -429,8 +446,8 @@ When provided with body weight data, users can select the 'Body Weight Analysis'
 
 A. Weight (default)
 
-<p align="center">
-<img src="images/25.tv_body_weight_average_plot.png" alt="" width="500"/>
+<p align="left">
+<img src="images/26.tv_body_weight_average_plot.png" alt="" width="500"/>
 </p>
 
 This plot displays body weight as provided by the user in 'Body_Weight' column of the loaded/filtered dataset. 
@@ -439,8 +456,8 @@ This plot displays body weight as provided by the user in 'Body_Weight' column o
 
 B. Percent Change  
 
-<p align="center">
-<img src="images/26.tv_body_weight_percChange_plot.png" alt="" width="500"/>
+<p align="left">
+<img src="images/27.tv_body_weight_percChange_plot.png" alt="" width="500"/>
 </p>  
 
 This plot shows an alternate way to demonstrate body weight curves using percent change in body weight. Percent change is defined for each individual within study and treatment arm. It is calculated as in percent tumor volume change, but using weights rather than volumes.  

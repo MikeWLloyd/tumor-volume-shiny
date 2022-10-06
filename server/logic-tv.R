@@ -551,16 +551,24 @@ rownames(data) <- NULL
         }
 
           #Adjust the data to semi-log if asked for.
-        if (input$tv_all_plotType == 'Semi-Log'){
-            s.data$Volume <- log(s.data$Volume)
+        if (input$tv_all_plotType == 'Log2(Volume)'){
+            s.data$Volume <- log2(1 + s.data$Volume)
 
           # Adjust the data to percent change the data if asked for
-        } else if (input$tv_all_plotType == 'Percent Change'){
+        } else if (input$tv_all_plotType == 'Percent Change') {
             s.data <- s.data %>%
               dplyr::arrange(Contributor, Study, Tumor, Arms, ID, Times) %>%
               dplyr::group_by(Contributor, Study, Tumor, Arms, ID) %>%
               dplyr::mutate(dVt = (((Volume - Volume[1]) / Volume[1] ) * 100))
             s.data$Volume <- s.data$dVt
+
+          # Adjust to semi-log of prop change if asked for
+        } else if (input$tv_all_plotType == 'Log2(Proportion Volume Change)') {
+            s.data <- s.data %>%
+              dplyr::arrange(Contributor, Study, Tumor, Arms, ID, Times) %>%
+              dplyr::group_by(Contributor, Study, Tumor, Arms, ID) %>%
+              dplyr::mutate(log2.dVt = log2(1 + ((Volume - Volume[1]) / Volume[1])))
+            s.data$Volume <- s.data$log2.dVt
         }
 
         # Call plot
@@ -634,6 +642,12 @@ rownames(data) <- NULL
 
   ## Log2Fold change plot
 
+    
+    ### Get Calculation day
+    log2fold.study.day <- reactive({
+      return(input$main_log2fold.day)
+    })
+
     ### Generate the plot
     output$log2_foldchange <- renderPlotly({
 
@@ -647,7 +661,8 @@ rownames(data) <- NULL
           s.data <- get_interpolated_pdx_data(data = s.data)
           s.data$Volume <- s.data$Interpolated_Volume
         }
-        vc_change <- IndividualMouseResponse(s.data)
+
+        vc_change <- IndividualMouseResponse(s.data, last.measure.day = log2fold.study.day())
 
         p1 <- ggplotly(log2FoldPlot(vc_change, caption_text_on = F))
 

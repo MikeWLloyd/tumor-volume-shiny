@@ -485,7 +485,9 @@ IndividualMouseResponse <- function(data, last.measure.day = NULL) {
             dplyr::arrange(Contributor, Study, Tumor, Arms, ID, Times) %>%
             dplyr::group_by(ID) %>%
             dplyr::mutate(dVt = round((((Volume - Volume[1]) / Volume[1] ) * 100), 2),
-                          log2.Fold.Change = round(log2(Volume / Volume[1]), 2))
+                          log2.Fold.Change = round(log2((Volume / Volume[1])), 2),
+                          log2.volume = round(log2(1 + Volume), 2),
+                          log2.dVt = round(log2(1 + (dVt / 100))), 2)
 
           data.id.i <- data.id.i %>%
             dplyr::group_by(ID) %>%
@@ -505,7 +507,7 @@ IndividualMouseResponse <- function(data, last.measure.day = NULL) {
             dplyr::select(c('ID', 'Times', 'Contributor', 'Study', 'Arms', 'Tumor', 'Volume', 'dVt', 'log2.Fold.Change', 'AUC.Filtered.Measures', 'AUC.All.Measures', 'ORC'))
 
           data.id.sub <- as.data.frame(data.id.sub)
-
+         
           Response.Level <- rbind(Response.Level, data.id.sub)
         }
       }
@@ -656,8 +658,10 @@ get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment'
 
     p <- p + xlab('Time (days)')
 
-    if (input$tv_all_plotType == 'Semi-Log') {
-      p <- p + ylab('log[Tumor Volume (mm3)]')
+    if (input$tv_all_plotType == 'Log2(Volume)') {
+      p <- p + ylab('log2[Tumor Volume (mm3)]')
+    } else if (input$tv_all_plotType == 'Log2(Proportion Volume Change)') {
+      p <- p + ylab('log2[Proportion Volume Change]')
     } else if (input$tv_all_plotType == 'Percent Change') {
       p <- p + ylab('Tumor Volume Change (%)')
     } else {
@@ -930,7 +934,9 @@ log2FoldPlot <- function(data, caption_text_on = TRUE, ...) {
                      median = round(median(log2.Fold.Change),2),
                      mean = round(mean(log2.Fold.Change), 2),
                      q3 = round(quantile(log2.Fold.Change, 0.95), 2),
-                     max = max(log2.Fold.Change))
+                     max = max(log2.Fold.Change), .groups = "keep")
+
+  print(data)
 
   data$label <- with(data,paste0("Contrib: ",Contributor,", ", "Study: ",Study)) 
 
@@ -945,8 +951,8 @@ log2FoldPlot <- function(data, caption_text_on = TRUE, ...) {
     theme(axis.line.x = element_blank(),
           axis.text.x  = element_text(hjust = 1, vjust = 1, size = 11, angle = 0),
           axis.ticks.x = element_blank(),
-          axis.text.y  = element_text(hjust = 1,vjust = 0.5,size = 11),
-          axis.title.y = element_text(angle = 90,size = 11))
+          axis.text.y  = element_text(hjust = 1,vjust = 0.5, size = 11),
+          axis.title.y = element_text(angle = 90, size = 11))
   ###  NOTE: plotly does not respect geom_pointrange line width: https://github.com/plotly/plotly.R/issues/2133
 
   #geom_abline(intercept = 50, slope = 0, size = 0.5, colour = 'black', linetype="dotdash") + 

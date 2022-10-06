@@ -1,12 +1,12 @@
 Contributor,Arms,Times,Volume,Study,ID,Tumor,Disease_Type,Body_Weight
 Example_Set_1,Control,0,204.768,Study_1,PDX1_503,PDX12,Example Models,16.87
-Example_Set_1,Control,4,358.706,Study_1,PDX1_503,PDX12,Example Models,16.86
-Example_Set_1,Control,8,424.128,Study_1,PDX1_503,PDX12,Example Models,16.4
-Example_Set_1,Control,12,446.218,Study_1,PDX1_503,PDX12,Example Models,16.44
+Example_Set_1,Control,4,204.768,Study_1,PDX1_503,PDX12,Example Models,16.86
+Example_Set_1,Control,8,204.768,Study_1,PDX1_503,PDX12,Example Models,16.4
+Example_Set_1,Control,12,204.768,Study_1,PDX1_503,PDX12,Example Models,16.44
 Example_Set_1,Control,15,497.664,Study_1,PDX1_503,PDX12,Example Models,16.01
 Example_Set_1,Control,18,594.104,Study_1,PDX1_503,PDX12,Example Models,15.67
-Example_Set_1,Control,21,634.834,Study_1,PDX1_503,PDX12,Example Models,15.52
-Example_Set_1,Control,25,834.272,Study_1,PDX1_503,PDX12,Example Models,15.46
+Example_Set_1,Control,21,204.768,Study_1,PDX1_503,PDX12,Example Models,15.52
+Example_Set_1,Control,25,204.768,Study_1,PDX1_503,PDX12,Example Models,15.46
 Example_Set_1,Control,0,216.5625,Study_1,PDX1_509,PDX12,Example Models,15.52
 Example_Set_1,Control,4,470.596,Study_1,PDX1_509,PDX12,Example Models,16.14
 Example_Set_1,Control,8,541.008,Study_1,PDX1_509,PDX12,Example Models,16.41

@@ -28,7 +28,16 @@ parameter_tabs <- tabsetPanel(
     br(),
     br()
   ),
-  tabPanel("Semi-Log",
+  tabPanel("Log2(Volume)",
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br()
+  ),
+  tabPanel("Log2(Proportion Volume Change)",
     br(),
     br(),
     br(),
@@ -250,7 +259,7 @@ tabPanel(
                         column(
                           width = 3,
                           pickerInput("tv_all_plotType", "Plot Type",
-                                            choices = c("Volume", "Scaled", "Percent Change", "Semi-Log"),
+                                            choices = c("Volume", "Scaled", "Percent Change", "Log2(Volume)", "Log2(Proportion Volume Change)"),
                                             selected = c("Volume"),
                                             options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
                                                                     showContent = TRUE),multiple = FALSE)
@@ -296,7 +305,7 @@ tabPanel(
               fluidRow(
                 column(
                   width = 2,
-                  numericInput("main_avgplot.day", "Avg Measure Calc. Day",
+                  numericInput("main_avgplot.day", "Avg. Measure Calc. Day",
                                 value = 21,
                                 min = 0, max = 500),
                 ),
@@ -304,7 +313,7 @@ tabPanel(
                   offset = 0,
                   width = 3,
                   HTML("<br>"),
-                  checkboxInput("main_avgplot_interpolate", "Interpolate Data\nFor Calculation", FALSE)
+                  checkboxInput("main_avgplot_interpolate", "Interpolate Data For Calculation", FALSE)
                 ),
                 column(
                   width = 12,
@@ -329,8 +338,15 @@ tabPanel(
             div(
               fluidRow(
                 column(
+                  width = 2,
+                  numericInput("main_log2fold.day", HTML("Log2(Fold Change)<br/>Measure Calc. Day"),
+                                value = 21,
+                                min = 0, max = 500),
+                ),
+                column(
                   offset = 0,
                   width = 3,
+                  HTML("<br>"),
                   HTML("<br>"),
                   checkboxInput("main_log2_interpolate", "Interpolate Data For Calculation", FALSE)
                 ),

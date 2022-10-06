@@ -34,7 +34,7 @@ library("shinyalert")
 # Add variable to control whether login page will be allowed
 source(file.path("ui", "interface_variables.R"), local = TRUE)
 
-# Define User Interface baraible
+# Define User Interface variable
 ui <- uiOutput("ui")
 
 server <- function(input, output, session) {
