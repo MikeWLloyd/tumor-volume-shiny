@@ -3,7 +3,7 @@ source(file.path("ui", "interface_variables.R"), local = TRUE)
 
 # Generate Navigation Page
 tabPanel(
-  title = title_home, icon = icon("home"),
+  title = title_home, icon = icon("home", verify_fa = FALSE),
   tags$head(HTML(
     '<link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
@@ -36,12 +36,12 @@ tabPanel(
       align = "center",
        actionButton(
         "btn_nav_val", "Data Upload and Validation",
-        icon("arrow-alt-circle-right"),
+        icon("arrow-alt-circle-right", verify_fa = FALSE),
         class = "btn btn-lg", style = "margin-left: 25px; background-color: rgb(14, 104, 96); border-color: rgb(14, 104, 96);"
       ),
       actionButton(
         "btn_nav_tv", "Tumor Volume Analysis",
-        icon("arrow-alt-circle-right"),
+        icon("arrow-alt-circle-right", verify_fa = FALSE),
         class = "btn btn-lg", style = "margin-left: 25px; background-color: rgb(14, 104, 96); border-color: rgb(14, 104, 96);"
       )
     ),

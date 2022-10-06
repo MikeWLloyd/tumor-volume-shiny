@@ -84,7 +84,7 @@ rownames(data) <- NULL
     ret <- get_query_tv()$"df"
     shinydashboard::valueBox(
       get_tv_contributor_count(ret), "Contributors",
-      icon = icon("hospital"), color = "light-blue"
+      icon = icon("hospital", verify_fa = FALSE), color = "light-blue"
     )
   })
 
@@ -94,7 +94,7 @@ rownames(data) <- NULL
     ret <- get_query_tv()$"df"
     shinydashboard::valueBox(
       get_tv_volumes_count(ret), "Unique Mouse IDs",
-      icon = icon("file-medical"), color = "green"
+      icon = icon("file-medical", verify_fa = FALSE), color = "green"
     )
   })
 
@@ -104,7 +104,7 @@ rownames(data) <- NULL
     ret <- get_query_tv()$"df"
     shinydashboard::valueBox(
       get_tv_studies_count(ret), "Studies",
-      icon = icon("chart-area"), color = "yellow"
+      icon = icon("chart-area", verify_fa = FALSE), color = "yellow"
     )
   })
 
@@ -114,7 +114,7 @@ rownames(data) <- NULL
     ret <- get_query_tv()$"df"
     shinydashboard::valueBox(
       get_tv_models_count(ret), "Models",
-      icon = icon("paw"), color = "blue"
+      icon = icon("paw", verify_fa = FALSE), color = "blue"
     )
   })
 
@@ -124,7 +124,7 @@ rownames(data) <- NULL
     ret <- get_query_tv()$"df"
     shinydashboard::valueBox(
       get_tv_disease_count(ret), "Disease Types",
-      icon = icon("disease"), color = "red"
+      icon = icon("disease", verify_fa = FALSE), color = "red"
     )
   })
 
@@ -134,7 +134,7 @@ rownames(data) <- NULL
     ret <- get_query_tv()$"df"
     shinydashboard::valueBox(
       get_tv_treatment_count(ret), "Treatment Arms",
-      icon = icon("pills"), color = "maroon"
+      icon = icon("pills", verify_fa = FALSE), color = "maroon"
     )
   })
 

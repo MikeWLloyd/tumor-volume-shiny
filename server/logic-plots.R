@@ -936,13 +936,11 @@ log2FoldPlot <- function(data, caption_text_on = TRUE, ...) {
                      q3 = round(quantile(log2.Fold.Change, 0.95), 2),
                      max = max(log2.Fold.Change), .groups = "keep")
 
-  print(data)
-
   data$label <- with(data,paste0("Contrib: ",Contributor,", ", "Study: ",Study)) 
 
   p <- ggplot(data, aes(x = Tumor, y = mean)) +
     geom_hline(yintercept = 0, size = 0.5, colour = 'black') +
-    geom_pointrange(aes(ymin=q1, ymax=q3, color = Arms), position=position_dodge(width=0.5), size = 3, lwd=2) +
+    geom_pointrange(aes(ymin=q1, ymax=q3, color = Arms), position=position_dodge(width=0.5), size = 3) +
     scale_color_manual(name = "Treatment Arms", limits = levels, values = colorblind_palette) +
     #scale_color_discrete(guide = "none") + 
     ylab('Log2 Fold Change (95% CI)') + 
