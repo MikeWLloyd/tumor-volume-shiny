@@ -1,6 +1,6 @@
 ### If the App idles for more than 4 min, this will warn the user a shutdown is coming. 
 observeEvent(input$warnTimeOut, { 
-    print(paste0("Session (", session$token, ") timed out at: ", Sys.time()))
+    #print(paste0("Session (", session$token, ") approaching time out at: ", Sys.time()))
     
     showModal(modalDialog(
         title = "Timeout",
@@ -16,7 +16,7 @@ observeEvent(input$dismiss_modal, {
 
 ### If the App idles for more than 5 min, this will close the session and stop the server. 
 observeEvent(input$timeOut, { 
-    print(paste0("Session (", session$token, ") timed out at: ", Sys.time()))
+    #print(paste0("Session (", session$token, ") timed out at: ", Sys.time()))
     
     showModal(modalDialog(
         title = "Timeout",
@@ -26,7 +26,7 @@ observeEvent(input$timeOut, {
 
     session$close()
     
-    stopApp()
+    #stopApp()
 })
 ####
 

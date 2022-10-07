@@ -40,3 +40,4 @@ inactivity <- sprintf("function idleTimer() {
     # Each of the '%s' corresponds to the a statement in the comma delim string. 
 )
 
+#https://stackoverflow.com/a/53207050/18557826
