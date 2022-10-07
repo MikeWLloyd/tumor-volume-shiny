@@ -1,3 +1,35 @@
+### If the App idles for more than 4 min, this will warn the user a shutdown is coming. 
+observeEvent(input$warnTimeOut, { 
+    print(paste0("Session (", session$token, ") timed out at: ", Sys.time()))
+    
+    showModal(modalDialog(
+        title = "Timeout",
+        HTML(paste('Session will time out due to inactivity in 60 seconds.<br>Click continue to maintain your session.')),
+        footer = actionButton("dismiss_modal", label = "Continue")
+    ))
+})
+####
+
+observeEvent(input$dismiss_modal, {
+  removeModal()
+})
+
+### If the App idles for more than 5 min, this will close the session and stop the server. 
+observeEvent(input$timeOut, { 
+    print(paste0("Session (", session$token, ") timed out at: ", Sys.time()))
+    
+    showModal(modalDialog(
+        title = "Timeout",
+        HTML(paste("Session timed out due to", round((as.numeric(input$timeOut) / 60), 2) , "min of inactivity at -", Sys.time(), '<br>Refresh the page to reconnect to the Shiny server, and start a new session.')),
+        footer = NULL
+    ))
+
+    session$close()
+    
+    stopApp()
+})
+####
+
 ### NOTE: 
 ### 
 ### The factors: Contributor, Study, Tumor, and Arms must be accounted for by every plot / metric. 

@@ -38,6 +38,7 @@ source(file.path("ui", "interface_variables.R"), local = TRUE)
 ui <- uiOutput("ui")
 
 server <- function(input, output, session) {
+  source(file.path("server", "timeout.R"), local = TRUE)
 
   # ui
   output$ui <- renderUI({
@@ -49,6 +50,10 @@ server <- function(input, output, session) {
   source(file.path("server", "query-tv.R"), local = TRUE)$value
   source(file.path("server", "logic-plots.R"), local = TRUE)$value
   source(file.path("server", "logic-tv.R"), local = TRUE)$value
+
+
+
+
 }
 
 shinyApp(ui, server)
