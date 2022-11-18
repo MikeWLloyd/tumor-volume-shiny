@@ -12,5 +12,6 @@ navbarPage(
   source(file.path("ui", "ui-home.R"), local = TRUE)$value,
   source(file.path("ui", "ui-validate.R"), local = TRUE)$value,
   source(file.path("ui", "ui-tv.R"), local = TRUE)$value,
-  source(file.path("ui", "ui-help.R"), local = TRUE)$value
+  source(file.path("ui", "ui-help.R"), local = TRUE)$value,
+  source(file.path("ui", "ui-about.R"), local = TRUE)$value
 )

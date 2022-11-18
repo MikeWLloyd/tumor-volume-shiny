@@ -5,10 +5,22 @@ source(file.path("ui", "interface_variables.R"), local = TRUE)
 tabPanel(
   title = title_home, icon = icon("home", verify_fa = FALSE),
   tags$head(HTML(
-    '<link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
+  '<link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png">
   <meta name="theme-color" content="#ffffff">')),
+
+  tags$head(
+    tags$style(
+      HTML(".shiny-notification {
+              height: 50px;
+              width: 300px;
+            }
+           "
+      )
+    )
+  ),
+  
   includeCSS(path = "www/custom.css"),
   includeCSS(path = "css/AdminLTE.css"),
   includeCSS(path = "css/shinydashboard.css"),
@@ -17,6 +29,7 @@ tabPanel(
   useShinyFeedback(),
 
   useShinyjs(),
+
   div(
     class = "jumbotron",
 
@@ -51,6 +64,11 @@ tabPanel(
       actionButton(
         "btn_nav_help", "Need Help?",
         icon("book-open"),
+        class = "btn btn-lg", style = "margin-left: 25px; background-color: rgb(3, 111, 173); border-color: rgb(3, 111, 173);"
+      ),
+      downloadButton(
+        "report", "Generate Report",
+        icon("list-ul"),
         class = "btn btn-lg", style = "margin-left: 25px; background-color: rgb(3, 111, 173); border-color: rgb(3, 111, 173);"
       )
     ),

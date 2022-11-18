@@ -50,9 +50,7 @@ server <- function(input, output, session) {
   source(file.path("server", "query-tv.R"), local = TRUE)$value
   source(file.path("server", "logic-plots.R"), local = TRUE)$value
   source(file.path("server", "logic-tv.R"), local = TRUE)$value
-
-
-
+  source(file.path("server", "report.R"), local = TRUE)$value
 
 }
 

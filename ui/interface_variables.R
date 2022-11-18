@@ -8,7 +8,7 @@ title_tumor_volume = "Tumor Volume Analysis"
 
 # title_validate = "Validator"
 title_help = "Help"
-name_tab_about = "About"
+title_about = "About"
 
 # Main navigator
 nav_id = "nav_bco"

@@ -1006,27 +1006,6 @@ rownames(data) <- NULL
 
     })
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   ## Individual study EFS
 
     ### Get the calculation threshold
@@ -1149,11 +1128,14 @@ rownames(data) <- NULL
   )
   # Render selected data for "Current Data Table" tab. 
 
+
 ## landing page buttons
 observeEvent(input$btn_nav_val, updateNavlistPanel(session, "nav_bco", selected = title_validate))
 observeEvent(input$btn_nav_tv, updateNavlistPanel(session, "nav_bco", selected = title_tumor_volume))
 observeEvent(input$btn_nav_help, updateNavlistPanel(session, "nav_bco", selected = title_help))
+observeEvent(input$btn_nav_about, updateNavlistPanel(session, "nav_bco", selected = title_about))
 
   # output$sessionInfo <- renderPrint({
   #    capture.output(sessionInfo())
   # })
+

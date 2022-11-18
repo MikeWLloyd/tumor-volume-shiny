@@ -148,6 +148,17 @@ tabPanel(
     shinydashboard::box(
       width = 12,
       title = "Data Selection and Filtering", status = "primary", solidHeader = TRUE,
+      fluidRow(
+        column(
+          width = 4,
+          offset = 4,
+          align="center",
+          actionButton('generate_report', "Generate a Report")
+        )
+      ),
+
+    
+
 
       fluidRow(
         id = "input_group_tv", # for reset button
