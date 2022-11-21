@@ -1365,7 +1365,7 @@ response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANO
   }
 
   #get mean growth rate
-  ID <- unique(as.character(data$ID))
+  ID <- unique(as.character(df$ID))
 
   dra.res <- switch (method,
                       endpoint.ANOVA = summary(aov(Volume ~ Arms, data = endpoint.data)),
