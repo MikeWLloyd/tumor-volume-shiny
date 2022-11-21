@@ -633,7 +633,7 @@ rownames(data) <- NULL
           # Reset Info Text of the Scaled Plot
           output$tv_all_text_scaled <- renderText({""})
 
-          get_tv_plot(data = s.data, level = level_type, pattern = pattern_type, position.dodge = 0.2)
+          get_tv_plot(data = s.data, level = level_type, pattern = pattern_type, position.dodge = 0.2, tv_all_plotType = input$tv_all_plotType)
         }
       }
     })
@@ -796,8 +796,6 @@ rownames(data) <- NULL
 
       response_list = list()
       response_list <- T.C_ratio(df, last.measure.day = mainTGI.study.day())
-
-      # response_list[[study]]$Response.Level <- factor(response_list[[study]]$Response.Level)
 
       response_list <- response_list %>% dplyr::select(-mean.TVratio,	-var.TVratio,	-mean.dVt, -TC.ratio) %>%
                                         dplyr::select(Contributor, Study, Tumor, Arms, TC.CalcDay, n.TVratio, aov.TC.ratio, se_TC.ratio, Contrast.pValue) %>%
@@ -1056,12 +1054,12 @@ rownames(data) <- NULL
     })
     ### Get ANOVA table
     output$dt_anova_table <- DT::renderDataTable(
-      response_analysis(method = 'endpoint.ANOVA', last.measure.day = anova_measure_day(), multi_test_anova = FALSE)
+      response_analysis(get_query_tv()$"df", method = 'endpoint.ANOVA', last.measure.day = anova_measure_day(), multi_test_anova = FALSE, tv_study_filtered = input$tv_study_filtered, tv_tumor_filtered = input$tv_tumor_filtered, main_anova_interpolate = input$main_anova_interpolate)
     )
 
     ### Get Tukey table
     output$dt_tukey_table <- DT::renderDataTable(
-      response_analysis(method = 'endpoint.ANOVA', last.measure.day = anova_measure_day(), multi_test_anova = TRUE)
+      response_analysis(get_query_tv()$"df", method = 'endpoint.ANOVA', last.measure.day = anova_measure_day(), multi_test_anova = TRUE, tv_study_filtered = input$tv_study_filtered, tv_tumor_filtered = input$tv_tumor_filtered, main_anova_interpolate = input$main_anova_interpolate)
     )
 
 ##
@@ -1096,7 +1094,7 @@ rownames(data) <- NULL
             s.data$Body_Weight <- s.data$dWeight
         }
       #   # Call plot
-        get_weight_plot(data = s.data, level = level_type, pattern = pattern_type, position.dodge = 0.2)
+        get_weight_plot(data = s.data, level = level_type, pattern = pattern_type, position.dodge = 0.2, tv_weight_plotType = input$tv_weight_plotType)
         
       }
     })

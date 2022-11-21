@@ -594,7 +594,7 @@ clean_pltly_legend <- function(.pltly_obj, .new_legend = c()) {
 #### PLOT FUNCTIONS
 
 # CROSS STUDY TV PLOT
-get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment', 'Study'), orders = NULL, position.dodge, ...){
+get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment', 'Study'), orders = NULL, position.dodge, tv_all_plotType, ...){
   if (is.null(data) | nrow(data) == 0) {
     plot_ly()
   }else{
@@ -658,11 +658,11 @@ get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment'
 
     p <- p + xlab('Time (days)')
 
-    if (input$tv_all_plotType == 'Log2(Volume)') {
+    if (tv_all_plotType == 'Log2(Volume)') {
       p <- p + ylab('log2[Tumor Volume (mm3)]')
-    } else if (input$tv_all_plotType == 'Log2(Proportion Volume Change)') {
+    } else if (tv_all_plotType == 'Log2(Proportion Volume Change)') {
       p <- p + ylab('log2[Proportion Volume Change]')
-    } else if (input$tv_all_plotType == 'Percent Change') {
+    } else if (tv_all_plotType == 'Percent Change') {
       p <- p + ylab('Tumor Volume Change (%)')
     } else {
       p <- p + ylab('Tumor Volume (mm3)')
@@ -1315,23 +1315,23 @@ EFSplot <- function(data, PercChange_EventSize = 100, plot_on = TRUE) {
 }
 
 # STUDY ANOVA / RESPONSE TABLE
-response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANOVA','LMM'), last.measure.day = NULL, multi_test_anova = FALSE) {
+response_analysis <- function(input_data, method=c('endpoint.ANOVA','endpoint.KW','mixed.ANOVA','LMM'), last.measure.day = NULL, multi_test_anova = FALSE, tv_study_filtered, tv_tumor_filtered, main_anova_interpolate) {
 
   ## NOTE: 'Volume' is used here, but dVt could potentially be used.
 
   df <- base::subset(
-    get_query_tv()$"df", Study %in% c(input$tv_study_filtered)
+    input_data, Study %in% c(tv_study_filtered)
   ) %>% droplevels()
 
   df <- base::subset(
-    df, Tumor %in% c(input$tv_tumor_filtered)
+    df, Tumor %in% c(tv_tumor_filtered)
   ) %>% droplevels()
 
   if(inherits(df, "data.frame")){
     df<-as.data.frame(df)
   }
 
-  if (input$main_anova_interpolate){
+  if (main_anova_interpolate){
     df <- get_interpolated_pdx_data(data = df)
     df$Volume <- df$Interpolated_Volume
   }
@@ -1365,7 +1365,7 @@ response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANO
   }
 
   #get mean growth rate
-  ID <- unique(as.character(data$ID))
+  ID <- unique(as.character(df$ID))
 
   dra.res <- switch (method,
                       endpoint.ANOVA = summary(aov(Volume ~ Arms, data = endpoint.data)),
@@ -1422,7 +1422,7 @@ response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANO
 }
 
 # BODY WEIGHT PLOT
-get_weight_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment', 'Study'), orders = NULL, position.dodge, ...){
+get_weight_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment', 'Study'), orders = NULL, position.dodge, tv_weight_plotType, ...){
   if (is.null(data) | nrow(data) == 0) {
     plot_ly()
   }else{
@@ -1486,7 +1486,7 @@ get_weight_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatm
 
     p <- p + xlab('Time (days)')
 
-    if (input$tv_weight_plotType == 'Percent Change') {
+    if (tv_weight_plotType == 'Percent Change') {
       p <- p + ylab('Body Weight Change (%)')
     } else {
       p <- p + ylab('Body Weight')

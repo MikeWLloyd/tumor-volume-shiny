@@ -143,23 +143,10 @@ tabPanel(
   shinydashboard::box(
     width=12,
     title="Query and Data Summary", status="primary",solidHeader = T,
-
     
     shinydashboard::box(
       width = 12,
       title = "Data Selection and Filtering", status = "primary", solidHeader = TRUE,
-      fluidRow(
-        column(
-          width = 4,
-          offset = 4,
-          align="center",
-          actionButton('generate_report', "Generate a Report")
-        )
-      ),
-
-    
-
-
       fluidRow(
         id = "input_group_tv", # for reset button
         column(
@@ -229,12 +216,14 @@ tabPanel(
       )
     ),
   ),
+
   br(),
-  hr(),
   br(),
   shinydashboard::tabBox(
     width = 12,
-    title = "",
+    title = downloadButton(
+            "report", "Generate Report"
+          ),
     id = "main_tabset", height = "250px",
     tabPanel("Cross Study Plots & Analysis",
       tabsetPanel(type = "tabs",
