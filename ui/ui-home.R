@@ -43,8 +43,6 @@ tabPanel(
 
     br(), br(),
 
-    #htmlOutput("sessionInfo"),
-
     div(
       align = "center",
        actionButton(

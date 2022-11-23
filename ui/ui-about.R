@@ -19,6 +19,10 @@ tabPanel(
         includeMarkdown("documentation/about.md")
       )),
 
+      h2('Session Info'),
+
+      htmlOutput("sessionInfo"),
+
       br()
     )
 

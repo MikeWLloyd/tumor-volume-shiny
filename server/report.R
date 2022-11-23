@@ -1,10 +1,17 @@
-
 output$report <- downloadHandler(
 
-  filename = paste0('PVA_Report_Generated_',format(Sys.time(), "%Y-%m-%d_%Hh%Mm"), '.html'),
+  filename = function(){
+        if(input$report_type == 'html'){ 
+          paste0('PVA_Report_Generated_',format(Sys.time(), "%Y-%m-%d_%Hh%Mm"), '.html')
+        } else {
+          paste0('PVA_Report_Generated_',format(Sys.time(), "%Y-%m-%d_%Hh%Mm"), '.pdf')
+        }
+        },
 
   content = function(file) {
     
+    on.exit(removeModal())
+
     # # Copy the report file to a temporary directory before processing it, in
     # # case we don't have write permissions to the current working dir (which
     # # can happen when deployed).
@@ -50,12 +57,27 @@ output$report <- downloadHandler(
     # Knit the document, passing in the `params` list, and eval it in a
     # child of the global environment (this isolates the code in the document
     # from the code in this app).
+
+    if(input$report_type == 'html'){ 
+
       withProgress(message = 'Rendering report, please wait.', {
-        rmarkdown::render('report.Rmd', output_file = file,
+        rmarkdown::render('report/report_html.Rmd', output_file = file,
           params = params,
           envir = new.env(parent = globalenv())
         )
       })
+
+    } else {
+
+      withProgress(message = 'Rendering report, please wait.', {
+        rmarkdown::render('report/report_pdf.Rmd', output_file = file,
+          params = params,
+          envir = new.env(parent = globalenv())
+        )
+      })
+
+    }
+    
     # tryCatch({
     #   withProgress(message = 'Rendering report, please wait.', {
     #     rmarkdown::render('report.Rmd', output_file = file,

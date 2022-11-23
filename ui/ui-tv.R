@@ -221,9 +221,7 @@ tabPanel(
   br(),
   shinydashboard::tabBox(
     width = 12,
-    title = downloadButton(
-            "report", "Generate Report"
-          ),
+    title = actionButton(inputId = "report_modal", label = "Generate Report", icon = icon("download")),
     id = "main_tabset", height = "250px",
     tabPanel("Cross Study Plots & Analysis",
       tabsetPanel(type = "tabs",

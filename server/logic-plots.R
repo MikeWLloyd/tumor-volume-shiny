@@ -918,7 +918,7 @@ plotAvgGrowthBar <- function(data) {
 }
 
 #### LOG2FOLD CHANGE PLOT
-log2FoldPlot <- function(data, caption_text_on = TRUE, ...) {
+log2FoldPlot <- function(data, caption_text_on = TRUE, point_size = 3, ...) {
   
   data$Arms <- relevel(as.factor(data$Arms), 'Control')
   
@@ -940,7 +940,7 @@ log2FoldPlot <- function(data, caption_text_on = TRUE, ...) {
 
   p <- ggplot(data, aes(x = Tumor, y = mean)) +
     geom_hline(yintercept = 0, size = 0.5, colour = 'black') +
-    geom_pointrange(aes(ymin=q1, ymax=q3, color = Arms), position=position_dodge(width=0.5), size = 3) +
+    geom_pointrange(aes(ymin=q1, ymax=q3, color = Arms), position=position_dodge(width=0.5), size = point_size) +
     scale_color_manual(name = "Treatment Arms", limits = levels, values = colorblind_palette) +
     #scale_color_discrete(guide = "none") + 
     ylab('Log2 Fold Change (95% CI)') + 
@@ -1315,7 +1315,7 @@ EFSplot <- function(data, PercChange_EventSize = 100, plot_on = TRUE) {
 }
 
 # STUDY ANOVA / RESPONSE TABLE
-response_analysis <- function(input_data, method=c('endpoint.ANOVA','endpoint.KW','mixed.ANOVA','LMM'), last.measure.day = NULL, multi_test_anova = FALSE, tv_study_filtered, tv_tumor_filtered, main_anova_interpolate) {
+response_analysis <- function(input_data, method=c('endpoint.ANOVA','endpoint.KW','mixed.ANOVA','LMM'), last.measure.day = NULL, multi_test_anova = FALSE, tv_study_filtered, tv_tumor_filtered, main_anova_interpolate, report = FALSE) {
 
   ## NOTE: 'Volume' is used here, but dVt could potentially be used.
 
@@ -1383,6 +1383,10 @@ response_analysis <- function(input_data, method=c('endpoint.ANOVA','endpoint.KW
 
   multiple_comp_test <- TukeyHSD(dra.res.full)
 
+  if (report) {
+    return(list(anova = dra.res, mct = multiple_comp_test))
+  }
+
   if (!multi_test_anova) {
     tab.df <- DT::datatable(dra.res[[1]],
               style = "bootstrap",
@@ -1409,7 +1413,7 @@ response_analysis <- function(input_data, method=c('endpoint.ANOVA','endpoint.KW
     tab.df <- DT::datatable(mct,
               style = "bootstrap",
               escape = FALSE,
-              filter = list(position = "top", clear = T),
+              filter = 'none',
               rownames= TRUE,
               class = "cell-border stripe",
               extensions = "Buttons",

@@ -529,6 +529,26 @@ rownames(data) <- NULL
     } 
   },ignoreNULL = T)
 
+ # # Watch for download report click, and open modal. 
+  observeEvent(input$report_modal, {
+    showModal(modalDialog(
+      title = "Selection Report Options",
+        HTML("Generate a report capturing the selected options.<br><br>NOTE: PDF compile time can be ~3-5min. Please be patient when using this option."),
+        radioButtons("report_type", "Output File Type:",
+               c("HTML" = "html",
+                 "PDF" = "pdf")),
+      footer = tagList(
+        downloadButton(outputId = "report", "Generate Report"),
+        modalButton("Cancel")
+      ),
+      easyClose = TRUE
+    ))
+  })
+
+    # title = downloadButton(
+    #         "report", "Generate Report"
+    #       ),<i class="fa-solid fa-"></i>
+
 ## ## ## ## ##
 
 # PLOTS & METRICS
@@ -1133,7 +1153,7 @@ observeEvent(input$btn_nav_tv, updateNavlistPanel(session, "nav_bco", selected =
 observeEvent(input$btn_nav_help, updateNavlistPanel(session, "nav_bco", selected = title_help))
 observeEvent(input$btn_nav_about, updateNavlistPanel(session, "nav_bco", selected = title_about))
 
-  # output$sessionInfo <- renderPrint({
-  #    capture.output(sessionInfo())
-  # })
+  output$sessionInfo <- renderPrint({
+     capture.output(sessionInfo())
+  })
 

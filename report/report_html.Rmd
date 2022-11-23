@@ -1,8 +1,20 @@
 ---
 title: "Report PVA"
+
 output: 
   html_document:
-    code_folding: hide
+    css: "css/markdown.css"
+    toc: true
+    toc_float:
+        collapsed: false
+    toc_depth: 5
+    theme: cerulean
+    fig_width: 9
+    fig_height: 7
+    fig.caption: true
+    code_folding: 'hide'
+    df_print: kable
+
 params:
     data_subset: NA
     tv_all_plot_type: NA
@@ -36,16 +48,18 @@ params:
     tv_weight_plotType: NA
 ---
 
-```{r, results='hide'}
-    source("server/logic-plots.R", local = knitr::knit_global())
+# Report
+
+```{r load functions, results='hide', echo=FALSE}
+    source("../server/logic-plots.R", local = knitr::knit_global())
 ```
 
-```{r}
+```{r, echo=FALSE}
 # print(params)
 
 # Stub code for adding plots / tables. from main data
 
-# ```{r , fig.width = 12}
+# ```{r }
 
 #     plot_data <- params$data_subset
 
@@ -54,7 +68,7 @@ params:
 
 # Stub code for adding plots /tables from single selected studies
 
-# ```{r , fig.width = 12}
+# ```{r }
 
 #     df <- base::subset(
 #     params$data_subset, Study %in% c(params$tv_study_filtered)
@@ -65,10 +79,33 @@ params:
 
 ```
 
+```{r, results='asis', echo=FALSE}
 
+cat("This report was generated with the PVA tool on: ", format(Sys.time(), "%m.%d.%Y at %Hh:%Mm"), '\n\n\n')
 
+cat("Included in this report is data from ",
+    length(unique(params$data_subset$"Contributor")),
+    "contributing institution(s), ",
+    length(unique(params$data_subset$"ID")),
+    "individual animals, ",
+    length(unique(params$data_subset$"Study")),
+    "studie(s), ",
+    length(unique(params$data_subset$"Tumor")),
+    "tumor(s) [model(s)] from ",
+    length(unique(params$data_subset$"Disease_Type")),
+    "disease type(s), which were treated with ",
+    length(unique(params$data_subset$"Arms")),
+    "agents (control included.")
 
-```{r base volume plot, fig.width = 12}
+```
+
+## Cross Study Plots & Analysis
+
+A Summary of cross study plots and analyses.
+
+### Response Plot
+
+```{r base volume plot, echo=FALSE}
  
     plot_data <- params$data_subset
 
@@ -133,21 +170,50 @@ params:
 
         endpoint_scale_all <- params$tv_all_endpoint_scale
 
-        ggplotly(get_plot_scaled(data = plot_data, position.dodge = 0.2,  title = NULL, scale.factor = endpoint_scale_all, scale.by.volume = scale_by_volume_all, level = level_type, pattern = pattern_type, tv_all_plotType = params$tv_all_plotType))
+        get_plot_scaled(data = plot_data, position.dodge = 0.2,  title = NULL, scale.factor = endpoint_scale_all, scale.by.volume = scale_by_volume_all, level = level_type, pattern = pattern_type, tv_all_plotType = params$tv_all_plotType)
 
     } else {
 
         # Reset Info Text of the Scaled Plot
         tv_all_text_scaled <- renderText({""})
 
-        ggplotly(get_tv_plot(data = plot_data, level = level_type, pattern = pattern_type, position.dodge = 0.2, tv_all_plotType = params$tv_all_plotType))
+        get_tv_plot(data = plot_data, level = level_type, pattern = pattern_type, position.dodge = 0.2, tv_all_plotType = params$tv_all_plotType)
     }
     
     shiny::setProgress(0.1)
 
 ```
 
-```{r avg volume plot, fig.width = 12}
+```{r response plot option text, results='asis', echo=FALSE}
+
+    cat("The response plot metric: ")
+    cat(paste("**",params$tv_all_plotType,"**",sep=""))
+    cat(", was faceted by: ")
+    cat(paste("**",params$tv_all_plot_type,"**",sep=""))
+    cat(", plots were organized by: ")
+    cat(paste("**",params$tv_all_plot_style,"**. ",sep=""))
+
+    if (params$tv_all_plotType == 'Scaled') {
+        if(params$tv_all_scaleby == "Volume") {        
+            cat(paste0("Plots are scaled by **Volume**. Y-axis ranges from 100% with endpoint scaling of ",
+                "**",params$tv_all_endpoint_scale,"**",
+                "**mm3** to -100% (total regression). "))
+        } else {
+            cat(paste0("Plots are scaled by **Relative Growth**. Y-axis ranges from 100% with endpoint scaling of ",
+                "**",params$tv_all_endpoint_scale,"**",
+                "**x** starting growth to -100% (total regression). "))
+        }
+    }
+
+    if (params$tv_all_interpolate) {
+        print("Data were interpolated for this plot.")
+    }
+
+```
+
+### Average Volume Plot
+
+```{r avg volume plot, echo=FALSE}
     
     plot_data <- params$data_subset
 
@@ -158,18 +224,25 @@ params:
 
     tc_ratios <- T.C_ratio(plot_data, last.measure.day = params$main_avgplot.day)
 
-    p1 <- ggplotly(plotAvgGrowthBar(tc_ratios))
-
-    p1 %>% layout(legend = list(
-                    itemclick = FALSE,
-                    itemdoubleclick = FALSE,
-                    groupclick = FALSE
-                    )) # turn off plotly legend click
+    plotAvgGrowthBar(tc_ratios)
 
     shiny::setProgress(0.15)
 ```
 
-```{r log2_foldchange, fig.width = 12}
+```{r average plot option text, results='asis', echo=FALSE}
+
+    cat("The average response plot was computed on (or near) day: ")
+    cat(paste("**",params$main_avgplot.day,"**.",sep=""))
+
+    if (params$main_avgplot_interpolate) {
+        print("Data were interpolated for this plot.")
+    }
+
+```
+
+### Log2 Fold Change Plot
+
+```{r log2_foldchange, echo=FALSE}
 
     plot_data <- params$data_subset
 
@@ -181,18 +254,25 @@ params:
 
     vc_change <- IndividualMouseResponse(plot_data, last.measure.day = params$main_log2fold.day)
 
-    p1 <- ggplotly(log2FoldPlot(vc_change, caption_text_on = F))
-
-    p1 %>% layout(legend = list(
-            itemclick = FALSE,
-            itemdoubleclick = FALSE,
-            groupclick = FALSE
-            ))  # https://stackoverflow.com/questions/56195584/r-plotly-disable-legend-click-and-legend-double-click
+    log2FoldPlot(vc_change, caption_text_on = F, point_size = 1)
 
     shiny::setProgress(0.2)
 ```
 
-```{r hybrid waterfall, fig.width = 12}
+```{r log2 fold change plot option text, results='asis', echo=FALSE}
+
+    cat("The log2 fold change plot was computed on (or near) day: ")
+    cat(paste("**",params$main_log2fold.day,"**.",sep=""))
+
+    if (params$main_log2_interpolate) {
+        print("Data were interpolated for this plot.")
+    }
+
+```
+
+### Hybrid Waterfall Plot
+
+```{r hybrid waterfall, echo=FALSE}
 
     plot_data <- params$data_subset
 
@@ -203,23 +283,27 @@ params:
 
     tc_ratios <- T.C_ratio(plot_data, last.measure.day = params$main_TC.day)
 
-    p1 <- ggplotly(WaterfallPlot_Hybrid(tc_ratios))
+    WaterfallPlot_Hybrid(tc_ratios)
 
-    for (i in 1:length(p1$x$data)){
-        if (!is.null(p1$x$data[[i]]$name)){
-        p1$x$data[[i]]$name = gsub('^\\(|,\\d+\\)$', '', p1$x$data[[i]]$name)
-        }
-    }
-    # remove '(*,1)' from the legends
-    clean_pltly_legend(p1) %>% layout(legend = list(
-                                        itemclick = FALSE,
-                                        itemdoubleclick = FALSE,
-                                        groupclick = FALSE
-                                        )) # turn off the legend click function. 
     shiny::setProgress(0.3)
 ```
 
-```{r TGI plot, fig.width = 12}
+```{r hybrid waterfall plot option text, results='asis', echo=FALSE}
+
+    cat("The hybrid waterfall plot was computed on (or near) day: ")
+    cat(paste("**",params$main_TC.day,"**.",sep=""))
+
+    if (params$main_tc_interpolate) {
+        print("Data were interpolated for this plot.")
+    }
+
+```
+
+### Tumor Growth Inhibition
+
+#### TGI Plot
+
+```{r TGI plot, echo=FALSE}
 
     plot_data <- params$data_subset
 
@@ -231,20 +315,26 @@ params:
     tc_ratios <- T.C_ratio(plot_data, last.measure.day = params$main_TGI.day)
 
     #plot_measure = c('TC.ratio', 'aov.TC.ratio')
-    p1 <- ggplotly(plotTC.ratio(tc_ratios, plot_measure = 'aov.TC.ratio' ))
+    plotTC.ratio(tc_ratios, plot_measure = 'aov.TC.ratio' )
     # NOTE: aov.TC.ratio is used in manuscript.
-
-    p1 %>% layout(legend = list(
-            itemclick = FALSE,
-            itemdoubleclick = FALSE,
-            groupclick = FALSE
-            )) 
-
 
     shiny::setProgress(0.4)
 ```
 
-```{r TGI Table, fig.width = 12}
+```{r TGI option text, results='asis', echo=FALSE}
+
+    cat("Tumor growth inhibition was computed on (or near) day: ")
+    cat(paste("**",params$main_TGI.day,"**.",sep=""))
+
+    if (params$main_tgi_interpolate) {
+        print("Data were interpolated for this plot.")
+    }
+
+```
+
+#### TGI Table
+
+```{r TGI Table, results='asis', echo=FALSE}
 
     plot_data <- params$data_subset
 
@@ -261,24 +351,24 @@ params:
                                     dplyr::select(Contributor, Study, Tumor, Arms, TC.CalcDay, n.TVratio, aov.TC.ratio, se_TC.ratio, Contrast.pValue) %>%
                                     dplyr::rename(pValue = Contrast.pValue)
 
-    tab.df <- DT::datatable(response_list[order(response_list$Arms),],
+    cat(knitr::knit_print(DT::datatable(response_list[order(response_list$Arms),],
             style = "bootstrap",
             escape = FALSE,
             filter = 'none',
             rownames= FALSE,
-            class = "cell-border stripe",
             extensions = "Buttons",
             options = list(
-                dom = "Blrtip", scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, lengthMenu = list(c(5, 20, 50, -1), c('5', '20', '50', 'All')), pageLength = 20, paging = T,
+                dom = "Blrtip", scrollX = TRUE, ordering = F, keys = TRUE, lengthMenu = list(c(5, 20, 50, -1), c('5', '20', '50', 'All')), pageLength = 20, paging = T,
                 buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download")))) %>%
             formatRound(c('aov.TC.ratio', 'se_TC.ratio'), digits = 2) %>%
-            formatSignif(c('pValue'), 2)
-    tab.df
+            formatSignif(c('pValue'), 2)))
 
     shiny::setProgress(0.45)
 ```
 
-```{r Stacked ORC Plot, fig.width = 12}
+### Stacked Objective Response Plot
+
+```{r Stacked ORC Plot, echo=FALSE}
 
     plot_data <- params$data_subset
 
@@ -289,96 +379,101 @@ params:
 
     vc_change <- IndividualMouseResponse(plot_data, last.measure.day = params$main_orc.day)
 
-    p1 <- ggplotly(plotStackedORC(vc_change))
-
-    p1 %>% layout(legend = list(
-                    itemclick = FALSE,
-                    itemdoubleclick = FALSE,
-                    groupclick = FALSE
-                    ))
-    
+    plotStackedORC(vc_change)
 
     shiny::setProgress(0.5)
 ```
 
-```{r individual study ORC plot, fig.width = 12}
+```{r stacked ORC option text, results='asis', echo=FALSE}
 
-    plot_data <- params$data_subset
-    
-    df <- base::subset(
-        plot_data, Study %in% c(params$tv_study_filtered)
-    )
+    cat("Tumor growth inhibition was computed on (or near) day: ")
+    cat(paste("**",params$main_orc.day,"**.",sep=""))
 
-    df <- droplevels(df)
-
-    if (params$tv_interpolate){
-        df = get_interpolated_pdx_data(data = df)
-        df$Volume <- df$Interpolated_Volume
+    if (params$main_stackedorc_interpolate) {
+        print("Data were interpolated for this plot.")
     }
 
-    study <- unlist(levels(factor(df$Study)))[1]
+```
 
-    filtered.df <- df %>%
-    filter(Study == study) %>% droplevels()
+## Individual Study Plots & Analysis
 
-    p1 <- study_volume_plot(filtered.df, position.dodge = 0.2, title = paste('Study:', study))
+Individual Study Plots 
 
-    p1 <- p1 + geom_vline(xintercept = params$tv_recist.day, linetype="dashed",
-                        color = "black", size=1.2)
+### Individual Study ORC{.tabset}
 
-    p1 <- p1 + xlab("Time (d)") + ylab("Tumor Volume (mm3)")
+```{r individual study ORC plot, results='asis', echo=FALSE, out.width="50%"}
 
-    ggplotly(p1)
+plot_data <- params$data_subset
+
+    for (study in levels(as.factor(plot_data$Study))) {
+
+        cat("#### Study", study, "\n")
+        cat("\n")
+
+        df <- base::subset(
+            plot_data, Study %in% c(study)
+        )
+
+        df <- droplevels(df)
+
+        if (params$tv_interpolate){
+            df = get_interpolated_pdx_data(data = df)
+            df$Volume <- df$Interpolated_Volume
+        }
+
+        study <- unlist(levels(factor(df$Study)))[1]
+
+        filtered.df <- df %>%
+        filter(Study == study) %>% droplevels()
+
+        p1 <- study_volume_plot(filtered.df, position.dodge = 0.2, title = paste('Study:', study))
+
+        p1 <- p1 + geom_vline(xintercept = params$tv_recist.day, linetype="dashed",
+                            color = "black", size=1.2)
+
+        p1 <- p1 + xlab("Time (d)") + ylab("Tumor Volume (mm3)")
+
+        print(p1)
+
+        response_list = list()
+        response_list[[study]] <- get_response_level(filtered.df, last.measure.day = params$recist.day)$Response.Level
+        response_list[[study]]$Study <- study
+
+
+        if ('Control'%in%unique(response_list[[study]]$Arms)){
+        response_list[[study]]$Arms <- relevel(factor(response_list[[study]]$Arms), 'Control')
+        }
+
+        response_list[[study]]$Response.Level <- factor(response_list[[study]]$Response.Level)
+
+        response_list[[study]] <- response_list[[study]] %>% dplyr::select(-Study)
+
+        cat(kable(response_list[[study]][order(response_list[[study]]$Arms),]) %>%
+        kableExtra::kable_styling(full_width = FALSE, position = "float_right"))
+
+
+        # cat(knitr::knit_print(DT::datatable(response_list[[study]][order(response_list[[study]]$Arms),],
+        #         style = "bootstrap",
+        #         escape = FALSE,
+        #         filter = 'none',
+        #         rownames= FALSE,
+        #         extensions = "Buttons",
+        #         options = list(
+        #             dom = "Blrtip", scrollX = TRUE, ordering = F, keys = TRUE, lengthMenu = list(c(5, 20, 50, -1), c('5', '20', '50', 'All')), pageLength = 20, paging = T,
+        #             buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download")))) %>%
+        #         formatRound(c('Best.Response', 'Avg.Response'), digits = 2)))
+
+        cat("\n")
+
+        cat("\n")
+    }
 
     shiny::setProgress(0.6)
 ```
 
-```{r RECIST Table, fig.width = 12}
+### Individual Study Waterfall
 
-    df <- base::subset(
-        plot_data, Study %in% c(params$tv_study_filtered)
-      )
-
-      if (params$tv_interpolate){
-          df = get_interpolated_pdx_data(data = df)
-          df$Volume <- df$Interpolated_Volume
-      }
-
-      study <- unlist(levels(factor(df$Study)))[1]
-
-      filtered.df <- df %>%
-        filter(Study == study) %>% droplevels()
-
-      response_list = list()
-      response_list[[study]] <- get_response_level(filtered.df, last.measure.day = params$recist.day)$Response.Level
-      response_list[[study]]$Study <- study
-
-
-      if ('Control'%in%unique(response_list[[study]]$Arms)){
-        response_list[[study]]$Arms <- relevel(factor(response_list[[study]]$Arms), 'Control')
-      }
-
-      response_list[[study]]$Response.Level <- factor(response_list[[study]]$Response.Level)
-
-      response_list[[study]] <- response_list[[study]] %>% dplyr::select(-Study)
-
-      tab.df <- DT::datatable(response_list[[study]][order(response_list[[study]]$Arms),],
-                style = "bootstrap",
-                escape = FALSE,
-                filter = list(position = "top", clear = T),
-                rownames= FALSE,
-                class = "cell-border stripe",
-                extensions = "Buttons",
-                options = list(
-                  dom = "Blrtip", scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, lengthMenu = list(c(5, 20, 50, -1), c('5', '20', '50', 'All')), pageLength = 20, paging = T,
-                  buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download")))) %>%
-                formatRound(c('Best.Response', 'Avg.Response'), digits = 2)
-      tab.df
-
-    shiny::setProgress(0.65)
-```
-
-```{r individual study waterfall, fig.width = 12}
+```{r individual study waterfall, echo=FALSE}
 
     df <- base::subset(
         params$data_subset, Study %in% c(params$tv_study_filtered)
@@ -398,29 +493,14 @@ params:
 
     resp <- IndividualMouseResponse(filtered.df, last.measure.day = params$tv_AUC.day.waterfall)
 
-    p1 <- ggplotly(WaterfallPlot_PDX(resp, params$waterfall_metric))
-
-    for (i in 1:length(p1$x$data)){
-        if (!is.null(p1$x$data[[i]]$name)){
-            p1$x$data[[i]]$name = gsub('^\\(|,\\d+\\)$', '', p1$x$data[[i]]$name)
-        }
-    }
-    # remove '(*,1)' from the legends
-
-    for (i in 1:length(p1$x$data)){
-    p1$x$data[[i]]$text <- c(p1$x$data[[i]]$text, "") 
-    }
-
-    clean_pltly_legend(p1) %>% layout(legend = list(
-                                        itemclick = FALSE,
-                                        itemdoubleclick = FALSE,
-                                        groupclick = FALSE
-                                        ))
+    WaterfallPlot_PDX(resp, params$waterfall_metric)
 
     shiny::setProgress(0.7)
 ```
 
-```{r EFS, fig.width = 12}
+### Event Free Survival
+
+```{r EFS, echo=FALSE}
 
     df <- base::subset(
     params$data_subset, Study %in% c(params$tv_study_filtered)
@@ -435,52 +515,40 @@ params:
 
     p1 <- EFSplot(filtered.df, params$tv_PercChange_EventSize)
 
-    s <- subplot(p1[[1]], p1[[2]], heights = c(0.75, 0.25), margin = 0.05, nrows=2, shareX = T, titleY = T)
-
-    for(i in 1:length(s$x$data)) {
-    if (i <= length(levels(as.factor(p1$data.survtable$strata)))) {
-        s$x$data[[i]]$showlegend <- TRUE
-    } else {
-        s$x$data[[i]]$showlegend <- FALSE
-    }
-    }
-    for (i in 1:length(s$x$data)){
-    if (!is.null(s$x$data[[i]]$name)){
-        s$x$data[[i]]$name = gsub('^\\(|,\\d+\\)$', '', s$x$data[[i]]$name)
-    }
-    }
-    # remove '(*,1)' from the legends
-
-    s
+    p1
 
     shiny::setProgress(0.8)
 ```
 
-```{r ANOVA, fig.width = 12}
+### ANOVA
 
-    response_analysis(params$data_subset,
+```{r ANOVA, echo=FALSE}
+
+    aov_res <- response_analysis(params$data_subset,
                     method = 'endpoint.ANOVA', 
                     last.measure.day = params$anova_Measure_Day, 
                     multi_test_anova = FALSE, 
                     tv_study_filtered = params$tv_study_filtered, 
                     tv_tumor_filtered = params$tv_tumor_filtered, 
-                    main_anova_interpolate = params$main_anova_interpolate)
+                    main_anova_interpolate = params$main_anova_interpolate,
+                    report = TRUE)
 
-    # ### Get Tukey table
+    kable(aov_res$anova[[1]]) %>%
+        kableExtra::kable_styling(full_width = FALSE, position = "float_left")
 
-    response_analysis(params$data_subset,
-                    method = 'endpoint.ANOVA', 
-                    last.measure.day = params$anova_Measure_Day, 
-                    multi_test_anova = TRUE, 
-                    tv_study_filtered = params$tv_study_filtered, 
-                    tv_tumor_filtered = params$tv_tumor_filtered, 
-                    main_anova_interpolate = params$main_anova_interpolate)
-    
+    mct <- as.data.frame(aov_res$mct[['Arms']])
+    mct$'diff' <- round(mct$'diff', digits=2)
+    mct$'lwr' <- round(mct$'lwr', digits=2)
+    mct$'upr' <- round(mct$'upr', digits=2)
+    mct$'p adj' <- round(mct$'p adj', digits=4)
+
+    kable(mct) %>%
+        kableExtra::kable_styling(full_width = FALSE, position = "left")
 
     shiny::setProgress(0.9)
 ```
 
-```{r Body_Weight, fig.width = 12}
+```{r Body_Weight, echo=FALSE}
     #   # Get Level Type Input by User
     if (params$tv_weight_plot_type == "Treatment Plot") {
         pattern_type <- "Treatment"
@@ -505,7 +573,7 @@ params:
         data <- params$data_subset
     }
     #   # Call plot
-    ggplotly(get_weight_plot(data = data, level = level_type, pattern = pattern_type, position.dodge = 0.2, tv_weight_plotType = params$tv_weight_plotType))
+    get_weight_plot(data = data, level = level_type, pattern = pattern_type, position.dodge = 0.2, tv_weight_plotType = params$tv_weight_plotType)
     
     shiny::setProgress(1)
 ```
