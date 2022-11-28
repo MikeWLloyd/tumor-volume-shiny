@@ -61,16 +61,20 @@ output$report <- downloadHandler(
     if(input$report_type == 'html'){ 
 
       withProgress(message = 'Rendering report, please wait.', {
-        rmarkdown::render('report/report_html.Rmd', output_file = file,
+        rmarkdown::render('report/report.Rmd', 
+          output_file = file,
+          output_format = 'html_document',
           params = params,
-          envir = new.env(parent = globalenv())
+          envir = new.env(parent = globalenv()),
+          clean = TRUE
         )
       })
 
     } else {
 
       withProgress(message = 'Rendering report, please wait.', {
-        rmarkdown::render('report/report_pdf.Rmd', output_file = file,
+        rmarkdown::render('report/report.Rmd', output_file = file,
+        output_format = 'pdf_document',
           params = params,
           envir = new.env(parent = globalenv())
         )

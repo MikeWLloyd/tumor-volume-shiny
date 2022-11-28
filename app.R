@@ -30,6 +30,7 @@ library("validate")
 library("purrr")
 library("stringr")
 library("shinyalert")
+library("kableExtra")
 
 # Add variable to control whether login page will be allowed
 source(file.path("ui", "interface_variables.R"), local = TRUE)

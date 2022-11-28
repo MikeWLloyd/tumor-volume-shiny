@@ -1,14 +1,31 @@
 ---
 title: "Report PVA"
 
-output: 
-  pdf_document:
-    toc: true
-    toc_depth: 5
-    fig_width: 9
-    fig_height: 7
-    df_print: kable
-    
+author: "TTS"
+date: '`r format(Sys.time(), "%d %B, %Y")`'
+
+output:
+    html_document:
+        css: "markdown.css"
+        toc: true
+        toc_float:
+            collapsed: false
+        toc_depth: 4
+        theme: cerulean
+        fig_width: 9
+        fig_height: 7
+        fig.caption: true
+        code_folding: 'hide'
+        df_print: kable
+    pdf_document:
+        toc: true
+        toc_depth: 5
+        fig_width: 9
+        fig_height: 7
+        df_print: kable
+
+always_allow_html: true
+
 params:
     data_subset: NA
     tv_all_plot_type: NA
@@ -32,17 +49,14 @@ params:
     tv_interpolate: NA
     waterfall_metric: NA
     tv_AUC.day.waterfall: NA
+    tv_waterfall_interpolate: NA
     tv_PercChange_EventSize: NA
     anova_Measure_Day: NA
     tv_tumor_filtered: NA
     main_anova_interpolate: NA
-    tv_waterfall_interpolate: NA
     tv_weight_plot_type: NA
     tv_weight_plot_style: NA
     tv_weight_plotType: NA
-
-always_allow_html: yes
-
 ---
 
 # Report
@@ -56,7 +70,7 @@ always_allow_html: yes
 
 # Stub code for adding plots / tables. from main data
 
-# ```{r }
+# ```{r code stubs}
 
 #     plot_data <- params$data_subset
 
@@ -86,13 +100,13 @@ cat("Included in this report is data from ",
     length(unique(params$data_subset$"ID")),
     "individual animals, ",
     length(unique(params$data_subset$"Study")),
-    "studie(s), ",
+    "study group(s), ",
     length(unique(params$data_subset$"Tumor")),
     "tumor(s) [model(s)] from ",
     length(unique(params$data_subset$"Disease_Type")),
     "disease type(s), which were treated with ",
     length(unique(params$data_subset$"Arms")),
-    "agents (control included.")
+    "agents (control included in count).")
 
 ```
 
@@ -298,9 +312,7 @@ A Summary of cross study plots and analyses.
 
 ### Tumor Growth Inhibition
 
-#### TGI Plot
-
-```{r TGI plot, echo=FALSE}
+```{r TGI, results='asis', echo=FALSE}
 
     plot_data <- params$data_subset
 
@@ -314,6 +326,20 @@ A Summary of cross study plots and analyses.
     #plot_measure = c('TC.ratio', 'aov.TC.ratio')
     plotTC.ratio(tc_ratios, plot_measure = 'aov.TC.ratio' )
     # NOTE: aov.TC.ratio is used in manuscript.
+
+
+    response_list = list()
+
+    response_list <- T.C_ratio(plot_data, last.measure.day = params$main_TGI.day)
+
+    response_list <- response_list %>% dplyr::select(-mean.TVratio,	-var.TVratio,	-mean.dVt, -TC.ratio) %>%
+                                dplyr::select(Contributor, Study, Tumor, Arms, TC.CalcDay, n.TVratio, aov.TC.ratio, se_TC.ratio, Contrast.pValue) %>%
+                                dplyr::rename(pValue = Contrast.pValue)
+
+    knit_print(kable(response_list[order(response_list$Arms),], digits=2, row.names = FALSE, booktabs = TRUE) %>%
+        kableExtra::kable_styling(full_width = TRUE, position = "left", latex_options = 'scale_down'))
+
+
 
     shiny::setProgress(0.4)
 ```
@@ -329,41 +355,7 @@ A Summary of cross study plots and analyses.
 
 ```
 
-#### TGI Table
-
-```{r TGI Table, results='asis', echo=FALSE}
-
-    plot_data <- params$data_subset
-
-
-    if (params$main_tgi_interpolate){
-        plot_data = get_interpolated_pdx_data(data = plot_data)
-        plot_data$Volume <- plot_data$Interpolated_Volume
-    }
-
-    response_list = list()
-    response_list <- T.C_ratio(plot_data, last.measure.day = params$main_TGI.day)
-
-    response_list <- response_list %>% dplyr::select(-mean.TVratio,	-var.TVratio,	-mean.dVt, -TC.ratio) %>%
-                                    dplyr::select(Contributor, Study, Tumor, Arms, TC.CalcDay, n.TVratio, aov.TC.ratio, se_TC.ratio, Contrast.pValue) %>%
-                                    dplyr::rename(pValue = Contrast.pValue)
-
-    # cat(knitr::knit_print(DT::datatable(response_list[order(response_list$Arms),],
-    #         style = "bootstrap",
-    #         escape = FALSE,
-    #         filter = 'none',
-    #         rownames= FALSE,
-    #         extensions = "Buttons",
-    #         options = list(
-    #             dom = "Blrtip", scrollX = TRUE, ordering = F, keys = TRUE, lengthMenu = list(c(5, 20, 50, -1), c('5', '20', '50', 'All')), pageLength = 20, paging = T,
-    #             buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download")))) %>%
-    #         formatRound(c('aov.TC.ratio', 'se_TC.ratio'), digits = 2) %>%
-    #         formatSignif(c('pValue'), 2)))
-
-    shiny::setProgress(0.45)
-```
-
-### Stacked Objective Response Plot
+### Stacked ORC Plot
 
 ```{r Stacked ORC Plot, echo=FALSE}
 
@@ -383,7 +375,7 @@ A Summary of cross study plots and analyses.
 
 ```{r stacked ORC option text, results='asis', echo=FALSE}
 
-    cat("Tumor growth inhibition was computed on (or near) day: ")
+    cat("Objective response was computed on (or near) day: ")
     cat(paste("**",params$main_orc.day,"**.",sep=""))
 
     if (params$main_stackedorc_interpolate) {
@@ -396,18 +388,18 @@ A Summary of cross study plots and analyses.
 
 Individual Study Plots 
 
-### Individual Study ORC{.tabset}
-
-###### FIX THE TABSETS THEY DON'T WORK IN A PDF FRAMEWORK! 
+### Individual Study ORC Analysis
 
 ```{r individual study ORC plot, results='asis', echo=FALSE, out.width="50%"}
 
-plot_data <- params$data_subset
+    plot_data <- params$data_subset
+    
+    response_list = list()
 
     for (study in levels(as.factor(plot_data$Study))) {
 
-        cat("#### Study", study, "\n")
-        cat("\n")
+        # cat("#### Study", study, "\n")
+        # cat("\n")
 
         df <- base::subset(
             plot_data, Study %in% c(study)
@@ -425,19 +417,8 @@ plot_data <- params$data_subset
         filtered.df <- df %>%
         filter(Study == study) %>% droplevels()
 
-        p1 <- study_volume_plot(filtered.df, position.dodge = 0.2, title = paste('Study:', study))
-
-        p1 <- p1 + geom_vline(xintercept = params$tv_recist.day, linetype="dashed",
-                            color = "black", size=1.2)
-
-        p1 <- p1 + xlab("Time (d)") + ylab("Tumor Volume (mm3)")
-
-        print(p1)
-
-        response_list = list()
         response_list[[study]] <- get_response_level(filtered.df, last.measure.day = params$recist.day)$Response.Level
         response_list[[study]]$Study <- study
-
 
         if ('Control'%in%unique(response_list[[study]]$Arms)){
         response_list[[study]]$Arms <- relevel(factor(response_list[[study]]$Arms), 'Control')
@@ -445,109 +426,202 @@ plot_data <- params$data_subset
 
         response_list[[study]]$Response.Level <- factor(response_list[[study]]$Response.Level)
 
-        response_list[[study]] <- response_list[[study]] %>% dplyr::select(-Study)
+        response_list[[study]] <- response_list[[study]]
 
-        cat(kable(response_list[[study]][order(response_list[[study]]$Arms),]) %>%
-        kableExtra::kable_styling(full_width = FALSE, position = "float_right"))
-
-
-        # cat(knitr::knit_print(DT::datatable(response_list[[study]][order(response_list[[study]]$Arms),],
-        #         style = "bootstrap",
-        #         escape = FALSE,
-        #         filter = 'none',
-        #         rownames= FALSE,
-        #         extensions = "Buttons",
-        #         options = list(
-        #             dom = "Blrtip", scrollX = TRUE, ordering = F, keys = TRUE, lengthMenu = list(c(5, 20, 50, -1), c('5', '20', '50', 'All')), pageLength = 20, paging = T,
-        #             buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download")))) %>%
-        #         formatRound(c('Best.Response', 'Avg.Response'), digits = 2)))
-
-        cat("\n")
-
-        cat("\n")
     }
+
+    output_response <- bind_rows(response_list)
+
+    cat(kable(output_response[order(output_response$Study, output_response$Arms),], digits=2, row.names = FALSE) %>%
+        kableExtra::kable_styling(full_width = TRUE, position = "left"))
 
     shiny::setProgress(0.6)
 ```
 
-### Individual Study Waterfall
+```{r individual study ORC option text, results='asis', echo=FALSE}
 
-```{r individual study waterfall, echo=FALSE}
+    cat("Objective response was computed on (or near) day: ")
+    cat(paste("**",params$tv_recist.day,"**.",sep=""))
 
-    df <- base::subset(
-        params$data_subset, Study %in% c(params$tv_study_filtered)
-    )
-    
-    df <- droplevels(df)
-
-    study <- unlist(levels(factor(df$Study)))[1]
-
-    filtered.df <- df %>%
-    dplyr::filter(Study == study) %>% droplevels()
-
-    if (params$tv_waterfall_interpolate) {
-        filtered.df = get_interpolated_pdx_data(data = filtered.df)
-        filtered.df$Volume <- filtered.df$Interpolated_Volume
+    if (params$tv_interpolate) {
+        print("Data were interpolated for this plot.")
     }
 
-    resp <- IndividualMouseResponse(filtered.df, last.measure.day = params$tv_AUC.day.waterfall)
+```
 
-    WaterfallPlot_PDX(resp, params$waterfall_metric)
+### Individual Animal Waterfall Plot(s)
 
+```{r individual study waterfall, results='asis', echo=FALSE}
+
+    for (study in levels(as.factor(plot_data$Study))) {
+
+        cat("#### Study", study, "\n")
+        cat("\n")
+
+        df <- params$data_subset %>% dplyr::filter(Study == study)
+                
+        df <- droplevels(df)
+
+        study <- unlist(levels(factor(df$Study)))[1]
+
+        filtered.df <- df %>%
+        dplyr::filter(Study == study) %>% droplevels()
+
+        if (params$tv_waterfall_interpolate) {
+            filtered.df = get_interpolated_pdx_data(data = filtered.df)
+            filtered.df$Volume <- filtered.df$Interpolated_Volume
+        }
+
+        resp <- IndividualMouseResponse(filtered.df, last.measure.day = params$tv_AUC.day.waterfall)
+
+        print(WaterfallPlot_PDX(resp, params$waterfall_metric))
+
+        cat("\n")
+        cat("\n")
+    }
     shiny::setProgress(0.7)
 ```
 
-### Event Free Survival
+```{r individual study waterfall option text, results='asis', echo=FALSE}
+    cat("Waterfall plots were generated using the metric: ")
+    cat(paste("**",params$waterfall_metric,"**, ",sep=""))
 
-```{r EFS, echo=FALSE}
+    if (params$waterfall_metric == 'AUC.Filtered.Measures') {
+        cat("on (or near) day: ")
+        cat(paste("**",params$tv_AUC.day.waterfall,"**.",sep=""))
+    } else {
+        cat("at study end.")
+    }
 
-    df <- base::subset(
-    params$data_subset, Study %in% c(params$tv_study_filtered)
-    )
-    
-    df <- droplevels(df)
+    if (params$tv_waterfall_interpolate) {
+        print("Data were interpolated for this plot.")
+    }
 
-    study <- unlist(levels(factor(df$Study)))[1]
+```
 
-    filtered.df <- df %>%
-    dplyr::filter(Study == study) %>% droplevels()
+### Event Free Survival Analysis
 
-    p1 <- EFSplot(filtered.df, params$tv_PercChange_EventSize)
+```{r EFS, results='asis', echo=FALSE}
 
-    p1
+    for (study in levels(as.factor(plot_data$Study))) {
+
+        cat("#### Study", study, "\n")
+        cat("\n")
+        
+        df <- params$data_subset %>% dplyr::filter(Study == study)
+             
+        df <- droplevels(df)
+
+        study <- unlist(levels(factor(df$Study)))[1]
+
+        filtered.df <- df %>%
+        dplyr::filter(Study == study) %>% droplevels()
+
+        p1 <- EFSplot(filtered.df, params$tv_PercChange_EventSize)
+
+        print(p1)
+
+        cat('\n')
+        cat('\n')
+    }    
 
     shiny::setProgress(0.8)
 ```
 
+```{r individual study EFS option text, results='asis', echo=FALSE}
+    cat("Event free survival analysis was computed using the event size (percent Change in volume) of: ")
+    cat(paste("**",params$tv_PercChange_EventSize,"**, ",sep=""))
+```
+
+
+
 ### ANOVA
 
-```{r ANOVA, echo=FALSE}
+```{r ANOVA, results='asis', echo=FALSE}
 
-    aov_res <- response_analysis(params$data_subset,
+    for (study in levels(as.factor(plot_data$Study))) {
+
+        cat("#### Study", study, "\n")
+        cat("\n")
+        
+        df <- params$data_subset %>% dplyr::filter(Study == study)
+
+        df <- droplevels(df)     
+
+        for (tumor in levels(as.factor(df$Tumor))) {
+
+            cat("##### Tumor", tumor, "\n")
+            cat("\n")
+
+            aov_res <- response_analysis(params$data_subset,
                     method = 'endpoint.ANOVA', 
                     last.measure.day = params$anova_Measure_Day, 
                     multi_test_anova = FALSE, 
-                    tv_study_filtered = params$tv_study_filtered, 
-                    tv_tumor_filtered = params$tv_tumor_filtered, 
+                    tv_study_filtered = study, 
+                    tv_tumor_filtered = tumor, 
                     main_anova_interpolate = params$main_anova_interpolate,
                     report = TRUE)
 
-    kable(aov_res$anova[[1]]) %>%
-        kableExtra::kable_styling(full_width = FALSE, position = "float_left")
+            if(is.null(aov_res)) {
+                cat("ANOVA failed. This is likely due to an invalid study day selection (i.e., study day selected beyond end of available study dates).") 
+            } else {
+                cat(kable(aov_res$anova[[1]], digits=2) %>%
+                kableExtra::kable_styling(full_width = FALSE, position = "float_left"))
 
-    mct <- as.data.frame(aov_res$mct[['Arms']])
-    mct$'diff' <- round(mct$'diff', digits=2)
-    mct$'lwr' <- round(mct$'lwr', digits=2)
-    mct$'upr' <- round(mct$'upr', digits=2)
-    mct$'p adj' <- round(mct$'p adj', digits=4)
+                mct <- as.data.frame(aov_res$mct[['Arms']])
+                mct$'diff' <- round(mct$'diff', digits=2)
+                mct$'lwr' <- round(mct$'lwr', digits=2)
+                mct$'upr' <- round(mct$'upr', digits=2)
+                mct$'p adj' <- round(mct$'p adj', digits=4)
 
-    kable(mct) %>%
-        kableExtra::kable_styling(full_width = FALSE, position = "left")
-
+                cat(kable(mct, digits=2, booktabs = TRUE) %>%
+                kableExtra::kable_styling(full_width = FALSE, position = "right", latex_options = 'scale_down'))
+                cat("\n")
+                cat("\n")
+            }
+            
+            cat("\n")
+            cat("\n")
+        }
+    }
     shiny::setProgress(0.9)
 ```
 
-```{r Body_Weight, echo=FALSE}
+```{r individual ANOVA option text, results='asis', echo=FALSE}
+    cat("Waterfall plots were generated using the metric: ")
+    cat(paste("**",params$waterfall_metric,"**, ",sep=""))
+
+    if (params$waterfall_metric == 'AUC.Filtered.Measures') {
+        cat("on (or near) day: ")
+        cat(paste("**",params$anova_Measure_Day,"**.",sep=""))
+    } else {
+        cat("at study end.")
+    }
+
+    if (params$main_anova_interpolate) {
+        print("Data were interpolated for this plot.")
+    }
+
+```
+
+### Body Weight Plots
+
+
+```{r check_weight_available, echo=FALSE}
+if ("Body_Weight" %in% names(params$data_subset)) {
+    if (all(is.na(params$data_subset$Body_Weight)) | all(is.null(params$data_subset$Body_Weight))) {
+        weight_plots_available <- FALSE
+        cat("Body weights not provided.")
+    } else {
+        weight_plots_available <- TRUE
+    }
+} else {
+    weight_plots_available <- FALSE
+    cat("Body weights not provided.")
+}
+```
+
+```{r Body Weight Plot, echo=FALSE, eval=weight_plots_available}
     #   # Get Level Type Input by User
     if (params$tv_weight_plot_type == "Treatment Plot") {
         pattern_type <- "Treatment"
@@ -576,6 +650,72 @@ plot_data <- params$data_subset
     
     shiny::setProgress(1)
 ```
+
+```{r weight plot option text, results='asis', echo=FALSE, eval=weight_plots_available}
+
+    cat("The response plot metric: ")
+    cat(paste("**",params$tv_weight_plotType,"**",sep=""))
+    cat(", was faceted by: ")
+    cat(paste("**",params$tv_weight_plot_type,"**",sep=""))
+    cat(", plots were organized by: ")
+    cat(paste("**",params$tv_weight_plot_style,"**. ",sep=""))
+
+```
+
+### Session Info
+<!-- https://stackoverflow.com/a/65630773/18557826 -->
+#### R environment used in session
+
+\renewcommand{\arraystretch}{0.8} <!-- decrease line spacing for the table -->
+```{r Reproducibility-SessionInfo-R-environment, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", out.width='100%', results='asis'}
+    library("devtools")
+    library("tibble")
+
+    df_session_platform <- devtools::session_info()$platform %>% 
+    unlist(.) %>% 
+    as.data.frame(.) %>% 
+    rownames_to_column(.)
+
+    colnames(df_session_platform) <- c("Setting", "Value")
+
+    kable(
+    df_session_platform, 
+    booktabs = T, 
+    align = "l",
+    ) %>% 
+    kableExtra::kable_styling(full_width = F,
+                    latex_options = c(
+                    "hold_position" # stop table floating
+                    ) 
+    ) 
+```
+\renewcommand{\arraystretch}{1} <!-- reset row height/line spacing -->
+
+#### R Packages used in session
+
+\renewcommand{\arraystretch}{0.6} <!-- decrease line spacing for the table -->
+```{r Reproducibility-SessionInfo-R-packages, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", out.width='100%', results='asis'}
+    df_session_packages <- devtools::session_info()$packages %>% 
+    as.data.frame(.) %>% 
+    filter(attached == TRUE) %>% 
+    dplyr::select(loadedversion, date) %>% 
+    rownames_to_column
+
+    colnames(df_session_packages) <- c("Package", "Loaded version", "Date")
+
+    kable(
+    df_session_packages, 
+    booktabs = T, 
+    align = "l",
+    ) %>% 
+    kableExtra::kable_styling(full_width = F,
+                    latex_options = c(
+                    "hold_position" # stop table floating
+                    ) 
+    ) 
+```
+\renewcommand{\arraystretch}{1} <!-- reset row height/line spacing -->
+
 
 
 <!-- For individual studies, we should loop over all studies to make a complete report. -->

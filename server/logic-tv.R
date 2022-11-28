@@ -533,10 +533,11 @@ rownames(data) <- NULL
   observeEvent(input$report_modal, {
     showModal(modalDialog(
       title = "Selection Report Options",
-        HTML("Generate a report capturing the selected options.<br><br>NOTE: PDF compile time can be ~3-5min. Please be patient when using this option."),
+        HTML("Generate a report capturing the currently selected options across all tabs.<br>"),
         radioButtons("report_type", "Output File Type:",
                c("HTML" = "html",
                  "PDF" = "pdf")),
+        HTML("<br>NOTE: PDF compile time can be ~3-5min.<br>Please be patient when using this option."),
       footer = tagList(
         downloadButton(outputId = "report", "Generate Report"),
         modalButton("Cancel")
@@ -544,10 +545,6 @@ rownames(data) <- NULL
       easyClose = TRUE
     ))
   })
-
-    # title = downloadButton(
-    #         "report", "Generate Report"
-    #       ),<i class="fa-solid fa-"></i>
 
 ## ## ## ## ##
 
