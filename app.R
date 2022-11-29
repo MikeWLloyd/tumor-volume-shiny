@@ -30,6 +30,7 @@ library("validate")
 library("purrr")
 library("stringr")
 library("shinyalert")
+library("kableExtra")
 
 # Add variable to control whether login page will be allowed
 source(file.path("ui", "interface_variables.R"), local = TRUE)
@@ -50,9 +51,7 @@ server <- function(input, output, session) {
   source(file.path("server", "query-tv.R"), local = TRUE)$value
   source(file.path("server", "logic-plots.R"), local = TRUE)$value
   source(file.path("server", "logic-tv.R"), local = TRUE)$value
-
-
-
+  source(file.path("server", "report.R"), local = TRUE)$value
 
 }
 

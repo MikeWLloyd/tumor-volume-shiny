@@ -529,6 +529,23 @@ rownames(data) <- NULL
     } 
   },ignoreNULL = T)
 
+ # # Watch for download report click, and open modal. 
+  observeEvent(input$report_modal, {
+    showModal(modalDialog(
+      title = "Selection Report Options",
+        HTML("Generate a report capturing the currently selected options across all tabs.<br><br>"),
+        radioButtons("report_type", "Output File Type:",
+               c("HTML" = "html",
+                 "PDF" = "pdf")),
+        HTML("<br>NOTE: Report compile time can be ~1-5min.<br>Please be patient while the report is generated."),
+      footer = tagList(
+        downloadButton(outputId = "report", "Generate Report"),
+        modalButton("Cancel")
+      ),
+      easyClose = TRUE
+    ))
+  })
+
 ## ## ## ## ##
 
 # PLOTS & METRICS
@@ -633,7 +650,7 @@ rownames(data) <- NULL
           # Reset Info Text of the Scaled Plot
           output$tv_all_text_scaled <- renderText({""})
 
-          get_tv_plot(data = s.data, level = level_type, pattern = pattern_type, position.dodge = 0.2)
+          get_tv_plot(data = s.data, level = level_type, pattern = pattern_type, position.dodge = 0.2, tv_all_plotType = input$tv_all_plotType)
         }
       }
     })
@@ -796,8 +813,6 @@ rownames(data) <- NULL
 
       response_list = list()
       response_list <- T.C_ratio(df, last.measure.day = mainTGI.study.day())
-
-      # response_list[[study]]$Response.Level <- factor(response_list[[study]]$Response.Level)
 
       response_list <- response_list %>% dplyr::select(-mean.TVratio,	-var.TVratio,	-mean.dVt, -TC.ratio) %>%
                                         dplyr::select(Contributor, Study, Tumor, Arms, TC.CalcDay, n.TVratio, aov.TC.ratio, se_TC.ratio, Contrast.pValue) %>%
@@ -1006,27 +1021,6 @@ rownames(data) <- NULL
 
     })
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   ## Individual study EFS
 
     ### Get the calculation threshold
@@ -1077,12 +1071,12 @@ rownames(data) <- NULL
     })
     ### Get ANOVA table
     output$dt_anova_table <- DT::renderDataTable(
-      response_analysis(method = 'endpoint.ANOVA', last.measure.day = anova_measure_day(), multi_test_anova = FALSE)
+      response_analysis(get_query_tv()$"df", method = 'endpoint.ANOVA', last.measure.day = anova_measure_day(), multi_test_anova = FALSE, tv_study_filtered = input$tv_study_filtered, tv_tumor_filtered = input$tv_tumor_filtered, main_anova_interpolate = input$main_anova_interpolate)
     )
 
     ### Get Tukey table
     output$dt_tukey_table <- DT::renderDataTable(
-      response_analysis(method = 'endpoint.ANOVA', last.measure.day = anova_measure_day(), multi_test_anova = TRUE)
+      response_analysis(get_query_tv()$"df", method = 'endpoint.ANOVA', last.measure.day = anova_measure_day(), multi_test_anova = TRUE, tv_study_filtered = input$tv_study_filtered, tv_tumor_filtered = input$tv_tumor_filtered, main_anova_interpolate = input$main_anova_interpolate)
     )
 
 ##
@@ -1117,7 +1111,7 @@ rownames(data) <- NULL
             s.data$Body_Weight <- s.data$dWeight
         }
       #   # Call plot
-        get_weight_plot(data = s.data, level = level_type, pattern = pattern_type, position.dodge = 0.2)
+        get_weight_plot(data = s.data, level = level_type, pattern = pattern_type, position.dodge = 0.2, tv_weight_plotType = input$tv_weight_plotType)
         
       }
     })
@@ -1149,11 +1143,14 @@ rownames(data) <- NULL
   )
   # Render selected data for "Current Data Table" tab. 
 
+
 ## landing page buttons
 observeEvent(input$btn_nav_val, updateNavlistPanel(session, "nav_bco", selected = title_validate))
 observeEvent(input$btn_nav_tv, updateNavlistPanel(session, "nav_bco", selected = title_tumor_volume))
 observeEvent(input$btn_nav_help, updateNavlistPanel(session, "nav_bco", selected = title_help))
+observeEvent(input$btn_nav_about, updateNavlistPanel(session, "nav_bco", selected = title_about))
 
-  # output$sessionInfo <- renderPrint({
-  #    capture.output(sessionInfo())
-  # })
+  output$sessionInfo <- renderPrint({
+     capture.output(sessionInfo())
+  })
+

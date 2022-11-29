@@ -594,7 +594,7 @@ clean_pltly_legend <- function(.pltly_obj, .new_legend = c()) {
 #### PLOT FUNCTIONS
 
 # CROSS STUDY TV PLOT
-get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment', 'Study'), orders = NULL, position.dodge, ...){
+get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment', 'Study'), orders = NULL, position.dodge, tv_all_plotType, ...){
   if (is.null(data) | nrow(data) == 0) {
     plot_ly()
   }else{
@@ -658,11 +658,11 @@ get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment'
 
     p <- p + xlab('Time (days)')
 
-    if (input$tv_all_plotType == 'Log2(Volume)') {
+    if (tv_all_plotType == 'Log2(Volume)') {
       p <- p + ylab('log2[Tumor Volume (mm3)]')
-    } else if (input$tv_all_plotType == 'Log2(Proportion Volume Change)') {
+    } else if (tv_all_plotType == 'Log2(Proportion Volume Change)') {
       p <- p + ylab('log2[Proportion Volume Change]')
-    } else if (input$tv_all_plotType == 'Percent Change') {
+    } else if (tv_all_plotType == 'Percent Change') {
       p <- p + ylab('Tumor Volume Change (%)')
     } else {
       p <- p + ylab('Tumor Volume (mm3)')
@@ -918,7 +918,7 @@ plotAvgGrowthBar <- function(data) {
 }
 
 #### LOG2FOLD CHANGE PLOT
-log2FoldPlot <- function(data, caption_text_on = TRUE, ...) {
+log2FoldPlot <- function(data, caption_text_on = TRUE, point_size = 3, ...) {
   
   data$Arms <- relevel(as.factor(data$Arms), 'Control')
   
@@ -940,7 +940,7 @@ log2FoldPlot <- function(data, caption_text_on = TRUE, ...) {
 
   p <- ggplot(data, aes(x = Tumor, y = mean)) +
     geom_hline(yintercept = 0, size = 0.5, colour = 'black') +
-    geom_pointrange(aes(ymin=q1, ymax=q3, color = Arms), position=position_dodge(width=0.5), size = 3) +
+    geom_pointrange(aes(ymin=q1, ymax=q3, color = Arms), position=position_dodge(width=0.5), size = point_size) +
     scale_color_manual(name = "Treatment Arms", limits = levels, values = colorblind_palette) +
     #scale_color_discrete(guide = "none") + 
     ylab('Log2 Fold Change (95% CI)') + 
@@ -1315,23 +1315,23 @@ EFSplot <- function(data, PercChange_EventSize = 100, plot_on = TRUE) {
 }
 
 # STUDY ANOVA / RESPONSE TABLE
-response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANOVA','LMM'), last.measure.day = NULL, multi_test_anova = FALSE) {
+response_analysis <- function(input_data, method=c('endpoint.ANOVA','endpoint.KW','mixed.ANOVA','LMM'), last.measure.day = NULL, multi_test_anova = FALSE, tv_study_filtered, tv_tumor_filtered, main_anova_interpolate, report = FALSE) {
 
   ## NOTE: 'Volume' is used here, but dVt could potentially be used.
 
   df <- base::subset(
-    get_query_tv()$"df", Study %in% c(input$tv_study_filtered)
+    input_data, Study %in% c(tv_study_filtered)
   ) %>% droplevels()
 
   df <- base::subset(
-    df, Tumor %in% c(input$tv_tumor_filtered)
+    df, Tumor %in% c(tv_tumor_filtered)
   ) %>% droplevels()
 
   if(inherits(df, "data.frame")){
     df<-as.data.frame(df)
   }
 
-  if (input$main_anova_interpolate){
+  if (main_anova_interpolate){
     df <- get_interpolated_pdx_data(data = df)
     df$Volume <- df$Interpolated_Volume
   }
@@ -1383,6 +1383,10 @@ response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANO
 
   multiple_comp_test <- TukeyHSD(dra.res.full)
 
+  if (report) {
+    return(list(anova = dra.res, mct = multiple_comp_test))
+  }
+
   if (!multi_test_anova) {
     tab.df <- DT::datatable(dra.res[[1]],
               style = "bootstrap",
@@ -1409,7 +1413,7 @@ response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANO
     tab.df <- DT::datatable(mct,
               style = "bootstrap",
               escape = FALSE,
-              filter = list(position = "top", clear = T),
+              filter = 'none',
               rownames= TRUE,
               class = "cell-border stripe",
               extensions = "Buttons",
@@ -1422,7 +1426,7 @@ response_analysis <- function(method=c('endpoint.ANOVA','endpoint.KW','mixed.ANO
 }
 
 # BODY WEIGHT PLOT
-get_weight_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment', 'Study'), orders = NULL, position.dodge, ...){
+get_weight_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment', 'Study'), orders = NULL, position.dodge, tv_weight_plotType, ...){
   if (is.null(data) | nrow(data) == 0) {
     plot_ly()
   }else{
@@ -1486,7 +1490,7 @@ get_weight_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatm
 
     p <- p + xlab('Time (days)')
 
-    if (input$tv_weight_plotType == 'Percent Change') {
+    if (tv_weight_plotType == 'Percent Change') {
       p <- p + ylab('Body Weight Change (%)')
     } else {
       p <- p + ylab('Body Weight')

@@ -19,7 +19,7 @@ FROM rocker/shiny:4.2
 
 # Install any prerequisites with package manager. This will depend on R packags required.
 
-RUN apt-get update && apt-get install -y curl libssl-dev libcurl4-gnutls-dev libxml2-dev lsb-release gnupg libmariadbclient-dev-compat; \
+RUN apt-get update && apt-get install -y curl libssl-dev libcurl4-gnutls-dev libxml2-dev lsb-release gnupg libmariadbclient-dev-compat texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra; \
     gcsFuseRepo=gcsfuse-`lsb_release -c -s`; \
     echo "deb http://packages.cloud.google.com/apt $gcsFuseRepo main" | \
     tee /etc/apt/sources.list.d/gcsfuse.list; \
@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y curl libssl-dev libcurl4-gnutls-dev lib
     apt-get install -y gcsfuse \
     && apt-get clean
 
-RUN R -e 'install.packages(c("shiny","plotly","dygraphs","shinyWidgets","BiocManager","plyr","dplyr","zoo","ggpubr","grid","gridExtra","gtable","shinydashboard","reactable","bcrypt","shinyBS","shinyjs","shinyFeedback","shinycssloaders","shinyAce","jsonlite","magrittr","knitr","DT","readxl","survival","survminer","multcomp","validate","purrr","stringr","shinyalert"))'
+RUN R -e 'install.packages(c("shiny","plotly","dygraphs","shinyWidgets","BiocManager","plyr","dplyr","zoo","ggpubr","grid","gridExtra","gtable","shinydashboard","reactable","bcrypt","shinyBS","shinyjs","shinyFeedback","shinycssloaders","shinyAce","jsonlite","magrittr","knitr","DT","readxl","survival","survminer","multcomp","validate","purrr","stringr","shinyalert","kableExtra","devtools"))'
 
 RUN R -e "BiocManager::install(c('httr', 'yaml', 'sevenbridges'))"
 

@@ -1,0 +1,6 @@
+.main-container {
+  max-width: 1500px !important;
+  margin: auto;
+  padding: 1em;
+  line-height: 20px ; 
+}   

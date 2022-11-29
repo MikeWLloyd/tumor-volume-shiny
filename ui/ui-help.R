@@ -1,5 +1,7 @@
 source(file.path("ui", "interface_variables.R"), local = TRUE)
 
+addResourcePath("tmpuser", getwd())
+
 # Generate Navigation Page
 tabPanel(
   title = title_help,
@@ -14,11 +16,13 @@ tabPanel(
       width = 12,
       title = "Help", status = "primary", solidHeader = TRUE,
 
-      fluidRow(column(
-        width = 10, offset = 1,
-        includeMarkdown("documentation/help.md")
-      )),
-
+      tags$iframe(
+            src = "tmpuser/documentation/help.html", 
+            width = "100%",
+            style="height: 100vh;",
+            scrolling = 'yes',
+            frameborder="0"
+        ), # https://stackoverflow.com/a/66421428/18557826
       br()
     )
 
@@ -27,3 +31,4 @@ tabPanel(
   br(),
   closeAlert()
 )
+
