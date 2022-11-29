@@ -537,7 +537,7 @@ rownames(data) <- NULL
         radioButtons("report_type", "Output File Type:",
                c("HTML" = "html",
                  "PDF" = "pdf")),
-        HTML("<br>NOTE: PDF compile time can be ~3-5min.<br>Please be patient when using this option."),
+        HTML("<br>NOTE: Report compile time can be ~1-5min.<br>Please be patient while the report is generated."),
       footer = tagList(
         downloadButton(outputId = "report", "Generate Report"),
         modalButton("Cancel")

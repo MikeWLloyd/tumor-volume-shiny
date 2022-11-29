@@ -71,7 +71,7 @@ output$report <- downloadHandler(
       })
 
     } else {
-
+      
       withProgress(message = 'Rendering report, please wait.', {
         rmarkdown::render('report/report.Rmd', output_file = file,
         output_format = 'pdf_document',
@@ -81,20 +81,6 @@ output$report <- downloadHandler(
       })
 
     }
-    
-    # tryCatch({
-    #   withProgress(message = 'Rendering report, please wait.', {
-    #     rmarkdown::render('report.Rmd', output_file = file,
-    #       params = params,
-    #       envir = new.env(parent = globalenv())
-    #     )
-    #   })
-    # }, error = function(e) {
-    #   showNotification('There was an error in the report generation','',type = "error")
-    #   return()
-    # }, silent=TRUE)
-
-
   }
 )
 

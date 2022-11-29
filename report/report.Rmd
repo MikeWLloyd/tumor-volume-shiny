@@ -1,8 +1,18 @@
 ---
-title: "Report PVA"
+title: "PVA Report"
 
-author: "TTS"
+author: "Report generated at https://tumor-volume.jax.org"
+
 date: '`r format(Sys.time(), "%d %B, %Y")`'
+
+header-includes:
+    \usepackage{booktabs}
+    \usepackage{colortbl}
+    \usepackage{caption}
+    \usepackage{float}
+    \floatplacement{figure}{H}
+    
+geometry: "left=3cm,right=3cm,top=2cm,bottom=2cm"
 
 output:
     html_document:
@@ -59,9 +69,12 @@ params:
     tv_weight_plotType: NA
 ---
 
-# Report
+\newpage
 
-```{r load functions, results='hide', echo=FALSE}
+## Report Summary
+
+```{r load options and functions, results='hide', echo=FALSE}
+    knitr::opts_chunk$set(fig.pos = "h", out.extra = "")
     source("../server/logic-plots.R", local = knitr::knit_global())
 ```
 
@@ -106,9 +119,32 @@ cat("Included in this report is data from ",
     length(unique(params$data_subset$"Disease_Type")),
     "disease type(s), which were treated with ",
     length(unique(params$data_subset$"Arms")),
-    "agents (control included in count).")
+    "agents (control included in count).\n\n\n")
+
+
+    cat("The contributing institution(s) present are: ",
+        paste(shQuote(levels(as.factor(params$data_subset$"Contributor"))), collapse = ", "),
+        "\n\n\n")
+
+    cat("The study group(s) present are: ",
+        paste(shQuote(levels(as.factor(params$data_subset$"Study"))), collapse = ", "),
+        "\n\n\n")
+
+    cat("The tumor(s) [model(s)] present are: ",
+        paste(shQuote(levels(as.factor(params$data_subset$"Tumor"))), collapse = ", "),
+        "\n\n\n")
+
+    cat("The disease type(s) present are: ",
+        paste(shQuote(levels(as.factor(params$data_subset$"Tumor"))), collapse = ", "),
+        "\n\n\n")
+
+    cat("The agents present are: ",
+        paste(shQuote(levels(as.factor(params$data_subset$"Arms"))), collapse = ", "),
+        "\n\n\n")
 
 ```
+
+\newpage
 
 ## Cross Study Plots & Analysis
 
@@ -116,7 +152,7 @@ A Summary of cross study plots and analyses.
 
 ### Response Plot
 
-```{r base volume plot, echo=FALSE}
+```{r base volume plot, fig.align='center', echo=FALSE}
  
     plot_data <- params$data_subset
 
@@ -224,7 +260,7 @@ A Summary of cross study plots and analyses.
 
 ### Average Volume Plot
 
-```{r avg volume plot, echo=FALSE}
+```{r avg volume plot, fig.align='center', echo=FALSE}
     
     plot_data <- params$data_subset
 
@@ -253,7 +289,7 @@ A Summary of cross study plots and analyses.
 
 ### Log2 Fold Change Plot
 
-```{r log2_foldchange, echo=FALSE}
+```{r log2_foldchange, fig.align='center', echo=FALSE}
 
     plot_data <- params$data_subset
 
@@ -283,7 +319,7 @@ A Summary of cross study plots and analyses.
 
 ### Hybrid Waterfall Plot
 
-```{r hybrid waterfall, echo=FALSE}
+```{r hybrid waterfall, fig.align='center', echo=FALSE}
 
     plot_data <- params$data_subset
 
@@ -312,7 +348,9 @@ A Summary of cross study plots and analyses.
 
 ### Tumor Growth Inhibition
 
-```{r TGI, results='asis', echo=FALSE}
+\captionsetup[table]{labelformat=empty}
+
+```{r TGI, results='asis', fig.align='center', echo=FALSE}
 
     plot_data <- params$data_subset
 
@@ -336,10 +374,13 @@ A Summary of cross study plots and analyses.
                                 dplyr::select(Contributor, Study, Tumor, Arms, TC.CalcDay, n.TVratio, aov.TC.ratio, se_TC.ratio, Contrast.pValue) %>%
                                 dplyr::rename(pValue = Contrast.pValue)
 
-    knit_print(kable(response_list[order(response_list$Arms),], digits=2, row.names = FALSE, booktabs = TRUE) %>%
-        kableExtra::kable_styling(full_width = TRUE, position = "left", latex_options = 'scale_down'))
-
-
+    if (knitr::is_latex_output()) {
+        kable(response_list[order(response_list$Arms),], digits=2, row.names = FALSE, align = "c", format="latex", booktabs=T, linesep = "", caption = "Tumor Growth Inhibition Summary Table") %>% 
+            kable_styling(latex_options=c("hold_position", "scale_down"), font_size = 7, html_font = "Times New Roman")
+    } else {
+        kable(response_list[order(response_list$Arms),], digits=2, row.names = FALSE, booktabs=T, caption = "Tumor Growth Inhibition Summary Table") %>%
+            kable_styling(full_width = TRUE, position = "left")
+    }
 
     shiny::setProgress(0.4)
 ```
@@ -357,7 +398,7 @@ A Summary of cross study plots and analyses.
 
 ### Stacked ORC Plot
 
-```{r Stacked ORC Plot, echo=FALSE}
+```{r Stacked ORC Plot, fig.align='center', echo=FALSE}
 
     plot_data <- params$data_subset
 
@@ -384,22 +425,21 @@ A Summary of cross study plots and analyses.
 
 ```
 
-## Individual Study Plots & Analysis
+\newpage
 
-Individual Study Plots 
+## Individual Study Plots & Analysis
 
 ### Individual Study ORC Analysis
 
-```{r individual study ORC plot, results='asis', echo=FALSE, out.width="50%"}
+\captionsetup[table]{labelformat=empty}
+
+```{r individual study ORC table, fig.align='center', results='asis', echo=FALSE, out.width="50%"}
 
     plot_data <- params$data_subset
     
     response_list = list()
 
     for (study in levels(as.factor(plot_data$Study))) {
-
-        # cat("#### Study", study, "\n")
-        # cat("\n")
 
         df <- base::subset(
             plot_data, Study %in% c(study)
@@ -426,14 +466,18 @@ Individual Study Plots
 
         response_list[[study]]$Response.Level <- factor(response_list[[study]]$Response.Level)
 
-        response_list[[study]] <- response_list[[study]]
-
+        response_list[[study]] <- response_list[[study]] %>% dplyr::select('Study', 'Tumor', 'Arms', 'Best.Response', 'Avg.Response', 'Response.Level')
     }
 
     output_response <- bind_rows(response_list)
 
-    cat(kable(output_response[order(output_response$Study, output_response$Arms),], digits=2, row.names = FALSE) %>%
-        kableExtra::kable_styling(full_width = TRUE, position = "left"))
+    if (knitr::is_latex_output()) {
+        kable(output_response[order(output_response$Study, output_response$Arms),], digits=2, row.names = FALSE, align = "c", format="latex", booktabs=T, linesep = "", caption = "Cross Study Objective Response Criteria") %>% 
+            kable_styling(latex_options=c("hold_position", "scale_down"), font_size = 7, html_font = "Times New Roman")
+    } else {
+        kable(output_response[order(output_response$Study, output_response$Arms),], digits=2, row.names = FALSE, caption = "Cross Study Objective Response Criteria") %>%
+            kable_styling(full_width = TRUE, position = "left")
+    }
 
     shiny::setProgress(0.6)
 ```
@@ -444,19 +488,37 @@ Individual Study Plots
     cat(paste("**",params$tv_recist.day,"**.",sep=""))
 
     if (params$tv_interpolate) {
-        print("Data were interpolated for this plot.")
+        print("Data were interpolated for this analysis.")
     }
 
 ```
 
+\newpage
+
 ### Individual Animal Waterfall Plot(s)
 
-```{r individual study waterfall, results='asis', echo=FALSE}
+```{r individual study waterfall option text, results='asis', echo=FALSE}
+    cat("Waterfall plot(s) were generated using the metric: ")
+    cat(paste("**",params$waterfall_metric,"**, ",sep=""))
+
+    if (params$waterfall_metric == 'AUC.Filtered.Measures') {
+        cat("on (or near) day: ")
+        cat(paste("**",params$tv_AUC.day.waterfall,"**.",sep=""))
+    } else {
+        cat("at study end.")
+    }
+
+    if (params$tv_waterfall_interpolate) {
+        print("Data were interpolated for this (these) plot.")
+    }
+
+```
+
+```{r individual study waterfall, fig.align='center', results='asis', echo=FALSE}
 
     for (study in levels(as.factor(plot_data$Study))) {
 
-        cat("#### Study", study, "\n")
-        cat("\n")
+        cat("\n\n#### Study: ", study, "\n")
 
         df <- params$data_subset %>% dplyr::filter(Study == study)
                 
@@ -476,38 +538,26 @@ Individual Study Plots
 
         print(WaterfallPlot_PDX(resp, params$waterfall_metric))
 
-        cat("\n")
-        cat("\n")
+        cat("\n\n\\newpage\n")
     }
     shiny::setProgress(0.7)
 ```
 
-```{r individual study waterfall option text, results='asis', echo=FALSE}
-    cat("Waterfall plots were generated using the metric: ")
-    cat(paste("**",params$waterfall_metric,"**, ",sep=""))
-
-    if (params$waterfall_metric == 'AUC.Filtered.Measures') {
-        cat("on (or near) day: ")
-        cat(paste("**",params$tv_AUC.day.waterfall,"**.",sep=""))
-    } else {
-        cat("at study end.")
-    }
-
-    if (params$tv_waterfall_interpolate) {
-        print("Data were interpolated for this plot.")
-    }
-
-```
+\newpage
 
 ### Event Free Survival Analysis
 
-```{r EFS, results='asis', echo=FALSE}
+```{r individual study EFS option text, results='asis', echo=FALSE}
+    cat("Event free survival analysis was computed using the event size (percent Change in volume) of: ")
+    cat(paste("**",params$tv_PercChange_EventSize,"**.",sep=""))
+```
+
+```{r EFS, fig.align='center', results='asis', echo=FALSE}
 
     for (study in levels(as.factor(plot_data$Study))) {
 
-        cat("#### Study", study, "\n")
-        cat("\n")
-        
+        cat("\n\n#### Study: ", study, "\n")
+
         df <- params$data_subset %>% dplyr::filter(Study == study)
              
         df <- droplevels(df)
@@ -517,41 +567,42 @@ Individual Study Plots
         filtered.df <- df %>%
         dplyr::filter(Study == study) %>% droplevels()
 
-        p1 <- EFSplot(filtered.df, params$tv_PercChange_EventSize)
+        print(EFSplot(filtered.df, params$tv_PercChange_EventSize))
 
-        print(p1)
-
-        cat('\n')
-        cat('\n')
+        cat("\n\n\\newpage\n")
     }    
 
     shiny::setProgress(0.8)
 ```
 
-```{r individual study EFS option text, results='asis', echo=FALSE}
-    cat("Event free survival analysis was computed using the event size (percent Change in volume) of: ")
-    cat(paste("**",params$tv_PercChange_EventSize,"**, ",sep=""))
-```
-
-
+\newpage
 
 ### ANOVA
+
+```{r individual ANOVA option text, results='asis', echo=FALSE}
+    cat("ANOVA was conducted on (or near) day: ")
+    cat(paste("**",params$anova_Measure_Day,"**.",sep=""))
+
+    if (params$main_anova_interpolate) {
+        print("Data were interpolated for this analysis.")
+    }
+```
+
+\captionsetup[table]{labelformat=empty}
 
 ```{r ANOVA, results='asis', echo=FALSE}
 
     for (study in levels(as.factor(plot_data$Study))) {
 
-        cat("#### Study", study, "\n")
-        cat("\n")
-        
+        cat("\n\n#### Study: ", study, "\n")
+
         df <- params$data_subset %>% dplyr::filter(Study == study)
 
         df <- droplevels(df)     
 
         for (tumor in levels(as.factor(df$Tumor))) {
 
-            cat("##### Tumor", tumor, "\n")
-            cat("\n")
+            cat("\n\n##### Tumor: ", tumor, "\n")
 
             aov_res <- response_analysis(params$data_subset,
                     method = 'endpoint.ANOVA', 
@@ -563,10 +614,10 @@ Individual Study Plots
                     report = TRUE)
 
             if(is.null(aov_res)) {
-                cat("ANOVA failed. This is likely due to an invalid study day selection (i.e., study day selected beyond end of available study dates).") 
+            
+                cat("\n\nANOVA failed. This is likely due to an invalid study day selection (i.e., study day selected beyond end of available study dates).\n\n") 
+            
             } else {
-                cat(kable(aov_res$anova[[1]], digits=2) %>%
-                kableExtra::kable_styling(full_width = FALSE, position = "float_left"))
 
                 mct <- as.data.frame(aov_res$mct[['Arms']])
                 mct$'diff' <- round(mct$'diff', digits=2)
@@ -574,54 +625,61 @@ Individual Study Plots
                 mct$'upr' <- round(mct$'upr', digits=2)
                 mct$'p adj' <- round(mct$'p adj', digits=4)
 
-                cat(kable(mct, digits=2, booktabs = TRUE) %>%
-                kableExtra::kable_styling(full_width = FALSE, position = "right", latex_options = 'scale_down'))
-                cat("\n")
-                cat("\n")
+                if (knitr::is_latex_output()) {
+
+                    print(knitr::kables(
+                    list(
+                    # the first kable() to change column names
+                    knitr::kable(aov_res$anova[[1]], digits=2, format="latex", booktabs=T, linesep = "", valign = 't'),
+                    # the second kable() to set the digits option
+                    knitr::kable(mct, digits=2, format="latex", booktabs=T, linesep = "", valign = 't')
+                    ),
+                    caption = 'ANOVA and Tukey multiple means comparsion test tables'
+                    ))
+
+                    cat("\n\n###### \n")
+
+                } else {
+                    cat(kable(aov_res$anova[[1]], digits=2, caption = "ANOVA table") %>%
+                    kable_styling(full_width = FALSE, position = "float_left"))
+
+                    cat(kable(mct, digits=2, caption = "Tukey multiple means comparsion test") %>%
+                    kable_styling(full_width = FALSE, position = "left"))
+
+                    cat(kable(mct[0,], digits=2, col.names = NULL, row.names = FALSE) %>%
+                    kable_styling(full_width = TRUE))
+                    # An empty table is required to break the 'float_left'. Without this table, the next header wraps to the right side of the screen. 
+
+                    cat("\n\n###### \n")
+                    
+                }
+                
+                cat("\n\n")
             }
             
-            cat("\n")
-            cat("\n")
+            cat("\n\n")
         }
     }
     shiny::setProgress(0.9)
 ```
 
-```{r individual ANOVA option text, results='asis', echo=FALSE}
-    cat("Waterfall plots were generated using the metric: ")
-    cat(paste("**",params$waterfall_metric,"**, ",sep=""))
-
-    if (params$waterfall_metric == 'AUC.Filtered.Measures') {
-        cat("on (or near) day: ")
-        cat(paste("**",params$anova_Measure_Day,"**.",sep=""))
-    } else {
-        cat("at study end.")
-    }
-
-    if (params$main_anova_interpolate) {
-        print("Data were interpolated for this plot.")
-    }
-
-```
-
 ### Body Weight Plots
 
-
 ```{r check_weight_available, echo=FALSE}
-if ("Body_Weight" %in% names(params$data_subset)) {
-    if (all(is.na(params$data_subset$Body_Weight)) | all(is.null(params$data_subset$Body_Weight))) {
+    if ("Body_Weight" %in% names(params$data_subset)) {
+        if (all(is.na(params$data_subset$Body_Weight)) | all(is.null(params$data_subset$Body_Weight))) {
+            weight_plots_available <- FALSE
+            cat("Body weights not provided.")
+        } else {
+            weight_plots_available <- TRUE
+        }
+    } else {
         weight_plots_available <- FALSE
         cat("Body weights not provided.")
-    } else {
-        weight_plots_available <- TRUE
     }
-} else {
-    weight_plots_available <- FALSE
-    cat("Body weights not provided.")
-}
 ```
 
-```{r Body Weight Plot, echo=FALSE, eval=weight_plots_available}
+```{r Body Weight Plot, fig.align='center', echo=FALSE, eval=weight_plots_available}
     #   # Get Level Type Input by User
     if (params$tv_weight_plot_type == "Treatment Plot") {
         pattern_type <- "Treatment"
@@ -662,12 +720,15 @@ if ("Body_Weight" %in% names(params$data_subset)) {
 
 ```
 
-### Session Info
+\newpage
+
+## Session Info
 <!-- https://stackoverflow.com/a/65630773/18557826 -->
-#### R environment used in session
+
+### R environment used in session
 
 \renewcommand{\arraystretch}{0.8} <!-- decrease line spacing for the table -->
-```{r Reproducibility-SessionInfo-R-environment, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", out.width='100%', results='asis'}
+```{r Reproducibility-SessionInfo-R-environment, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
     library("devtools")
     library("tibble")
 
@@ -678,23 +739,22 @@ if ("Body_Weight" %in% names(params$data_subset)) {
 
     colnames(df_session_platform) <- c("Setting", "Value")
 
-    kable(
-    df_session_platform, 
-    booktabs = T, 
-    align = "l",
-    ) %>% 
-    kableExtra::kable_styling(full_width = F,
-                    latex_options = c(
-                    "hold_position" # stop table floating
-                    ) 
-    ) 
+    if (knitr::is_latex_output()) {
+        kable(df_session_platform, row.names = FALSE, align = "c", format="latex", booktabs=T, linesep = "") %>% 
+        kable_styling(latex_options=c("hold_position", "scale_down"), full_width = F, font_size = 12, html_font = "Times New Roman")
+    } else {
+        kable(df_session_platform, booktabs = T, align = "c") %>% 
+        kableExtra::kable_styling(full_width = F, latex_options = c("hold_position"))
+    }
+
 ```
 \renewcommand{\arraystretch}{1} <!-- reset row height/line spacing -->
 
-#### R Packages used in session
+### R Packages used in session
 
 \renewcommand{\arraystretch}{0.6} <!-- decrease line spacing for the table -->
-```{r Reproducibility-SessionInfo-R-packages, echo=FALSE, message=FALSE, warning=FALSE, fig.align="center", out.width='100%', results='asis'}
+
+```{r Reproducibility-SessionInfo-R-packages, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
     df_session_packages <- devtools::session_info()$packages %>% 
     as.data.frame(.) %>% 
     filter(attached == TRUE) %>% 
@@ -703,20 +763,13 @@ if ("Body_Weight" %in% names(params$data_subset)) {
 
     colnames(df_session_packages) <- c("Package", "Loaded version", "Date")
 
-    kable(
-    df_session_packages, 
-    booktabs = T, 
-    align = "l",
-    ) %>% 
-    kableExtra::kable_styling(full_width = F,
-                    latex_options = c(
-                    "hold_position" # stop table floating
-                    ) 
-    ) 
+    if (knitr::is_latex_output()) {
+        kable(df_session_packages, row.names = FALSE, align = "c", format="latex", booktabs=T, linesep = "") %>% 
+        kable_styling(latex_options=c("hold_position"), full_width = F, font_size = 12, html_font = "Times New Roman")
+    } else {
+        kable(df_session_packages, booktabs = T, align = "c") %>% 
+        kableExtra::kable_styling(full_width = F, latex_options = c("hold_position"))
+    }
+
 ```
 \renewcommand{\arraystretch}{1} <!-- reset row height/line spacing -->
-
-
-
-<!-- For individual studies, we should loop over all studies to make a complete report. -->
-<!-- For ANOVA, not only do we need to loop over study, but also over tumor as 'tumor' is a selection --> 
