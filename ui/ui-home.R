@@ -63,12 +63,7 @@ tabPanel(
         "btn_nav_help", "Need Help?",
         icon("book-open"),
         class = "btn btn-lg", style = "margin-left: 25px; background-color: rgb(3, 111, 173); border-color: rgb(3, 111, 173);"
-      )#,
-      # downloadButton(
-      #   "report", "Generate Report",
-      #   icon("list-ul"),
-      #   class = "btn btn-lg", style = "margin-left: 25px; background-color: rgb(3, 111, 173); border-color: rgb(3, 111, 173);"
-      # )
+      )
     ),
   ),
 

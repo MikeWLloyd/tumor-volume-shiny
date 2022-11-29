@@ -16,7 +16,6 @@ geometry: "left=3cm,right=3cm,top=2cm,bottom=2cm"
 
 output:
     html_document:
-        css: "markdown.css"
         toc: true
         toc_float:
             collapsed: false
@@ -67,6 +66,7 @@ params:
     tv_weight_plot_type: NA
     tv_weight_plot_style: NA
     tv_weight_plotType: NA
+    script_location: NA
 ---
 
 \newpage
@@ -75,7 +75,16 @@ params:
 
 ```{r load options and functions, results='hide', echo=FALSE}
     knitr::opts_chunk$set(fig.pos = "h", out.extra = "")
-    source("../server/logic-plots.R", local = knitr::knit_global())
+    source(params$script_location, local = knitr::knit_global())
+```
+
+```{css, echo=FALSE}
+.main-container {
+  max-width: 1500px !important;
+  margin: auto;
+  padding: 1em;
+  line-height: 20px ; 
+}   
 ```
 
 ```{r, echo=FALSE}

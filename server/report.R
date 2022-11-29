@@ -49,7 +49,8 @@ output$report <- downloadHandler(
                   main_anova_interpolate = input$main_anova_interpolate,
                   tv_weight_plot_type = input$tv_weight_plot_type,
                   tv_weight_plot_style = input$tv_weight_plot_style,
-                  tv_weight_plotType = input$tv_weight_plotType)
+                  tv_weight_plotType = input$tv_weight_plotType,
+                  script_location = file.path(getwd(), "server/logic-plots.R"))
 
     # NOTE: If a new param is added, it must also be listed in the 'params' statement of the markdown document. 
     #       The params are then accessed via `params$` e.g., params$PARAM_NAME
@@ -58,10 +59,13 @@ output$report <- downloadHandler(
     # child of the global environment (this isolates the code in the document
     # from the code in this app).
 
+    tempReport <- file.path(tempdir(), "report.Rmd")
+    file.copy("report/report.Rmd", tempReport, overwrite = TRUE)
+
     if(input$report_type == 'html'){ 
 
       withProgress(message = 'Rendering report, please wait.', {
-        rmarkdown::render('report/report.Rmd', 
+        rmarkdown::render(tempReport, 
           output_file = file,
           output_format = 'html_document',
           params = params,
@@ -73,15 +77,13 @@ output$report <- downloadHandler(
     } else {
       
       withProgress(message = 'Rendering report, please wait.', {
-        rmarkdown::render('report/report.Rmd', output_file = file,
+        rmarkdown::render(tempReport, output_file = file,
         output_format = 'pdf_document',
           params = params,
           envir = new.env(parent = globalenv()),
           clean = TRUE
         )
       })
-
     }
   }
 )
-
