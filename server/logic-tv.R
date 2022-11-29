@@ -533,7 +533,7 @@ rownames(data) <- NULL
   observeEvent(input$report_modal, {
     showModal(modalDialog(
       title = "Selection Report Options",
-        HTML("Generate a report capturing the currently selected options across all tabs.<br>"),
+        HTML("Generate a report capturing the currently selected options across all tabs.<br><br>"),
         radioButtons("report_type", "Output File Type:",
                c("HTML" = "html",
                  "PDF" = "pdf")),
