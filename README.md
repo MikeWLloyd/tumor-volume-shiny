@@ -65,7 +65,7 @@ docker rmi tumor-volume-suite
 
 ## LICENSE
 
-This project is licensed under the ADD_LICENSE (LICENSE).
+This project is licensed under GNU GPLv3.
 
 ## AUTHORS
 
