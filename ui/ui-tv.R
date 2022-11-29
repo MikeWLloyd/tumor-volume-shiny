@@ -126,7 +126,7 @@ $(document).on("shiny:idle", function() {
 # https://stackoverflow.com/a/52978427/18557826
 
 tabPanel(
-  title = title_tumor_volume, icon = icon("fa-solid fa-chart-line", verify_fa = FALSE),
+  title = title_tumor_volume, icon = icon("chart-line", verify_fa = FALSE),
   shinyjs::inlineCSS(css),
   tags$head(tags$script(js)),
   tags$head(

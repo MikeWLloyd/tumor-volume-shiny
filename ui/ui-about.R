@@ -3,7 +3,7 @@ source(file.path("ui", "interface_variables.R"), local = TRUE)
 # Generate Navigation Page
 tabPanel(
   title = title_about,
-  icon = icon("info-circle", verify_fa = FALSE),
+  icon = icon("info", verify_fa = FALSE),
 
   br(),
 
