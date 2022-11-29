@@ -1,4 +1,15 @@
-# Tumor Volume Analysis Suite
+---
+title: "Tumor Volume Analysis Suite"
+
+output: 
+  html_document:
+    css: "../report/markdown.css"
+    toc: true
+    toc_float: true
+    toc_depth: 4
+    number_sections: true
+    self_contained: true
+---
 
 <p align="left">
 <img src="images/0.splash_page.png" alt="drawing" width="500"/>
@@ -6,7 +17,7 @@
 
 From the splash page, or via the top menu users can access "Data Upload and Validation" or "Tumor Volume Analysis." 
 
-## Data Upload and Validation
+# Data Upload and Validation
 
 <p align="left">
 <img src="images/1.data_upload.png" alt="drawing" width="500"/>
@@ -18,7 +29,7 @@ Files uploaded to this tool must also contain expected columns and data structur
 
 ---
 
-### Data Format and Structure
+## Data Format and Structure
 
 The following columns with the **exact names** and **data types** are expected in the dataset uploaded to the tool. 
 
@@ -67,11 +78,11 @@ The following columns with the **exact names** and **data types** are expected i
         The measured body weights of the animals (e.g., 14.2, 14, 15.1). 
         NOTE: This field is optional, if not provided the 'Body Weight Analysis' tab will be disabled.  
 
-### Data Upload Template
+## Data Upload Template
 
 An empty template with these file headers is available for download at the bottom of the Data Upload and Validation
 
-### Upload Validation Message: 
+## Upload Validation Message
 
 Once you file is selected, a validator will run during the upload to ensure that all fields are present, and that each field contains the expected data type. 
 
@@ -79,11 +90,12 @@ If data are correctly formatted, a message 'Successfully Validated Your Tumor Vo
 
 If data are improperly formatted, the validator will list errors associated with the upload. Correct the errors in your local file, and retry the upload. 
 
-### Example Expected Tumor Volume File Formatting
+## Example Formatted File
 
 An example data table is provided on this page to show users the expected data structure and formatting. This table can be download for your reference. 
 
-## Tumor Volume Analysis
+
+# Tumor Volume Analysis
 
 The Tumor Volume Analysis page contains all plot and analysis functions.  
 
@@ -95,32 +107,31 @@ By default an example dataset is loaded. To add your own data, see the **Data Up
 
 ---
 
-> **NOTE:** For many plots and metrics, a user defined time point is required for the calculation (e.g., RECIST objective response classification). In these cases, measures are calculated based on data sampled from the last available time point for each individual (rounded down). 
->
-> **Example:**   
-> Tumors for a study are measured at time points 0, 7, 10, 21, 29.   
-> 1. If a user selects to calculate RECIST classification at time 21; data from time point 21 will be used.   
-> 2. If a user selects to calculate RECIST at time 26; data at time 21 will also be used.
-> 
-> 3. If data are collected in an asynchronous fashion, (e.g., mouse_1: 0, 7, 10; mouse_2: 0, 6, 9, etc.), the last available time point (rounded down) for each individual animal is used.
-> 
-> In all cases where a user must input a day for calculation, data underlying the metric or plot can be interpolated as described below. Using interpolation overcomes asynchronous and missing data issues. Note that the use of interpolation should be reported in final results.
-> 
-> Ultimately, it is up to the user to know their data and select time points for metric calculation that are relevant to the data. 
+## Calculation Day Information 
+For many plots and metrics, a user defined time point is required for the calculation (e.g., RECIST objective response classification). In these cases, measures are calculated based on data sampled from the last available time point for each individual (rounded down).  
 
----
+**Example:**   
+Tumors for a study are measured at time points `0, 7, 10, 21, 29`.   
+1. If a user selects to calculate RECIST classification at time 21; data from time point 21 will be used.   
+2. If a user selects to calculate RECIST at time 26; data at time 21 will also be used.  
+3. If data are collected in an asynchronous fashion, (e.g., `mouse_1: 0, 7, 10`; `mouse_2: 0, 6, 9`, etc.), the last available time point (rounded down) for each individual animal is used.  
 
-### Interpolation 
+In all cases where a user must input a day for calculation, data underlying the metric or plot can be interpolated as described below. Using interpolation overcomes asynchronous and missing data issues. Note that the use of interpolation should be reported in final results.  
+
+Ultimately, it is up to the user to know their data and select time points for metric calculation that are relevant to the data.  
+
+## Data Interpolation 
 
 In all cases where a user must input a day for calculation (plots and metrics), data underlying the metrics can be interpolated using the 'Interpolate Data' or 'Interpolate Data for Calculation' checkboxes. 
 
 When these boxes are checked, a linear interpolation method is used to adjusts for animals where there is no tumor volume measurement at time *t*, but which have flanking volume measurements at time *t*<sub>0</sub> and *t*<sub>1</sub> such that *t*<sub>0</sub> < *t* < *t*<sub>1</sub>.
 
+---
 
 
-### Query and Data Summary
+# Query and Data Summary
 
-#### Data Selection and Filtering
+## Data Selection and Filtering
 
 
 <p align="left">
@@ -135,7 +146,7 @@ After selections are made, clicking the 'Query Dataset / Regenerate Plots' will 
 
 --- 
 
-#### Selected Volume Data - Summary
+## Selected Data Summary
 
 <p align="left">
 <img src="images/4.tv_data_summary.png" alt="" width="800"/>
@@ -144,7 +155,7 @@ After selections are made, clicking the 'Query Dataset / Regenerate Plots' will 
 This section summarized the selected data. The number of unique mouse IDs, treatment arms, disease types, models, studies, and contributors are shown. 
 
 
-## Tumor Volume Analysis Pages
+# Tumor Volume Analysis Pages
 
 Below the data query and summary are three sub-tabs that allow users to access different plots and the filtered data table. 
 
@@ -159,7 +170,31 @@ Below the data query and summary are three sub-tabs that allow users to access d
 
 ---
 
-### 1. Cross Study Plots and Analysis
+## Report Gen. and Figure Download
+
+<p align="left">
+<img src="images/28.tv_report_gen.png" alt="" width="100"/>
+</p>
+
+A report generated using all user selected options across all tabs (e.g., response plot facet type, individual study RECIST calculation day., etc.) can be created by clicking 'Generate Report' in the 'Tumor Volume Analysis' toolbar.  
+
+<p align="left">
+<img src="images/29.tv_report_modal.png" alt="" width="500"/>
+</p>
+
+
+A pop-up window allows the user to select from either HTML or PDF style reports.  
+
+Additionally, should a user require a single figure or plot, the 'Download plot as a png' plotly toolbar function can be used for all figures in the tool. 
+To access this toolbar, hover your mouse over a figure and click the camera icon on the far left side of the plotly toolbar as shown in the image below. 
+
+<p align="left">
+<img src="images/30.tv_download_figure.png" alt="" width="500"/>
+</p>
+
+---
+
+## Cross Study Plots and Analysis
 
 The user selects from six tabs that provide access to different visualizations and analysis metrics for cross study comparisons. 
 
@@ -173,7 +208,7 @@ The user selects from six tabs that provide access to different visualizations a
 
 ---
 
-#### 1a. Response Plot
+### Response Plot
 
 <p align="left">
 <img src="images/7.tv_resp_plot_default.png" alt="" width="700"/>
@@ -262,7 +297,7 @@ This plot show the log2 transformation of the proportion of volume change on the
 
 ---
 
-#### 1b. Average Volume Plot
+### Average Volume Plot
 
 <p align="left">
 <img src="images/14.tv_avgStudy_plot.png" alt="" width="500"/>
@@ -271,7 +306,7 @@ This plot show the log2 transformation of the proportion of volume change on the
 This plot shows cross study average volume across all animals for treatment arms +/- SE at a user defined time point (default "Avg Measure Calc. Day" is 21). Data underlying this plot can be interpolated with the checkbox.  
 
 
-#### 1c. Log2 Fold Change Plot
+### Log2 Fold Change Plot
 
 <p align="left">
 <img src="images/15.tv_log2fold_plot.png" alt="" width="500"/>
@@ -281,7 +316,7 @@ This plot shows cross study mean log2 fold change [log2(Volume<sub>t</sub> / Vol
 
 ---
 
-#### 1d. Hybrid Waterfall Plot
+### Hybrid Waterfall Plot
 
 <p align="left">
 <img src="images/16.tv_hybridWaterfall_plot.png" alt="" width="500"/>
@@ -300,7 +335,7 @@ Where model by treatment arm shows regression, percent change in tumor volume (a
 
 ---
 
-#### 1e. Tumor Growth Inhibition
+### Tumor Growth Inhibition
 
 <p align="left">
 <img src="images/17.tv_TGI_plot.png" alt="" width="500"/>
@@ -337,7 +372,7 @@ Where TGI < 1 indicates the degree of growth inhibition of the treatment relativ
 
 ---
 
-#### 1f. Stacked Objective Response Plot
+### Stacked ORC Plot
 
 <p align="left">
 <img src="images/18.tv_ORC_stacked_plot.png" alt="" width="500"/>
@@ -355,7 +390,7 @@ The classification used mimics RECIST criteria commonly used in clinical trials 
 
 ---
 
-### 2. Individual Study Plots & Analysis
+## Individual Study Plots & Analysis
 
 Users select the 'Study' of interest from the study selection dropdown. Four sub-tabs provide access to different visualizations and analysis metrics for analysis of the selected study. 
 
@@ -363,7 +398,7 @@ Users select the 'Study' of interest from the study selection dropdown. Four sub
 <img src="images/19.tv_individual_study_options.png" alt="" width="700"/>
 </p>
 
-#### 2a. Objective Response (RECIST)
+### Objective Response (RECIST)
 
 <p align="left">
 <img src="images/20.tv_RECIST_plot_table.png" alt="" width="500"/>
@@ -383,7 +418,7 @@ The classification used mimics RECIST criteria commonly used in clinical trials 
     4. PD : All other cases
 
 
-#### 2b. Waterfall Plot
+### Waterfall Plot
 
 <p align="left">
 <img src="images/21.tv_waterfall_plot.png" alt="" width="500"/>
@@ -402,7 +437,7 @@ Waterfall plots can be shown for individual animals using one of three different
 
 Area under the tumor growth curve from baseline up to time *t* (either max time, or user specific time) is normalized by dividing by *t*. With this normalization factor, the interpretation of this measure is the average percent change in tumor size from baseline to time *t*. For area under a spline interpolation was used (`splinefun` function in combination with `integrate` to calculate a numerical integral). All three measures can be computed from interpolated data using the checkbox. 
 
-#### 2c. Event Free Survival
+### Event Free Survival
 
 
 <p align="left">
@@ -413,7 +448,7 @@ Event free survival analysis is conducted based on censoring events which occur 
 
 ---
 
-#### 2d. ANOVA
+### ANOVA
 
 <p align="left">
 <img src="images/24.tv_ANOVA.png" alt="" width="500"/>
@@ -423,7 +458,7 @@ The difference in tumor volumes among treatment arms at a user defined day can b
 
 ---
 
-### 3. Body Weight Analysis
+## Body Weight Analysis
 
 <p align="left">
 <img src="images/25.tv_body_weight_plots.png" alt="" width="500"/>
@@ -461,3 +496,7 @@ B. Percent Change
 </p>  
 
 This plot shows an alternate way to demonstrate body weight curves using percent change in body weight. Percent change is defined for each individual within study and treatment arm. It is calculated as in percent tumor volume change, but using weights rather than volumes.  
+
+## Current Data Table
+
+Shows the currently filtered data table. This table can be copied to your clipboard, or downloaded if required. 
