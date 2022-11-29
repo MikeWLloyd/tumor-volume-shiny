@@ -76,7 +76,8 @@ output$report <- downloadHandler(
         rmarkdown::render('report/report.Rmd', output_file = file,
         output_format = 'pdf_document',
           params = params,
-          envir = new.env(parent = globalenv())
+          envir = new.env(parent = globalenv()),
+          clean = TRUE
         )
       })
 

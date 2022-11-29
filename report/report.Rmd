@@ -376,7 +376,7 @@ A Summary of cross study plots and analyses.
 
     if (knitr::is_latex_output()) {
         kable(response_list[order(response_list$Arms),], digits=2, row.names = FALSE, align = "c", format="latex", booktabs=T, linesep = "", caption = "Tumor Growth Inhibition Summary Table") %>% 
-            kable_styling(latex_options=c("hold_position", "scale_down"), font_size = 7, html_font = "Times New Roman")
+            kable_styling(latex_options=c("hold_position", "scale_down"), font_size = 10, html_font = "Times New Roman")
     } else {
         kable(response_list[order(response_list$Arms),], digits=2, row.names = FALSE, booktabs=T, caption = "Tumor Growth Inhibition Summary Table") %>%
             kable_styling(full_width = TRUE, position = "left")
@@ -473,7 +473,7 @@ A Summary of cross study plots and analyses.
 
     if (knitr::is_latex_output()) {
         kable(output_response[order(output_response$Study, output_response$Arms),], digits=2, row.names = FALSE, align = "c", format="latex", booktabs=T, linesep = "", caption = "Cross Study Objective Response Criteria") %>% 
-            kable_styling(latex_options=c("hold_position", "scale_down"), font_size = 7, html_font = "Times New Roman")
+            kable_styling(latex_options=c("hold_position", "scale_down"), font_size = 10, html_font = "Times New Roman")
     } else {
         kable(output_response[order(output_response$Study, output_response$Arms),], digits=2, row.names = FALSE, caption = "Cross Study Objective Response Criteria") %>%
             kable_styling(full_width = TRUE, position = "left")
@@ -741,7 +741,7 @@ A Summary of cross study plots and analyses.
 
     if (knitr::is_latex_output()) {
         kable(df_session_platform, row.names = FALSE, align = "c", format="latex", booktabs=T, linesep = "") %>% 
-        kable_styling(latex_options=c("hold_position", "scale_down"), full_width = F, font_size = 12, html_font = "Times New Roman")
+        kable_styling(latex_options=c("hold_position"), full_width = F, font_size = 10, html_font = "Times New Roman")
     } else {
         kable(df_session_platform, booktabs = T, align = "c") %>% 
         kableExtra::kable_styling(full_width = F, latex_options = c("hold_position"))
@@ -765,7 +765,7 @@ A Summary of cross study plots and analyses.
 
     if (knitr::is_latex_output()) {
         kable(df_session_packages, row.names = FALSE, align = "c", format="latex", booktabs=T, linesep = "") %>% 
-        kable_styling(latex_options=c("hold_position"), full_width = F, font_size = 12, html_font = "Times New Roman")
+        kable_styling(latex_options=c("hold_position"), full_width = F, font_size = 10, html_font = "Times New Roman")
     } else {
         kable(df_session_packages, booktabs = T, align = "c") %>% 
         kableExtra::kable_styling(full_width = F, latex_options = c("hold_position"))
