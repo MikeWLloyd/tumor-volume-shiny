@@ -61,7 +61,8 @@ output$report <- downloadHandler(
 
     tempReport <- file.path(tempdir(), "report.Rmd")
     file.copy("report/report.Rmd", tempReport, overwrite = TRUE)
-
+    # https://resources.symbolix.com.au/2020/10/28/downloadable-reports-shiny/
+    
     if(input$report_type == 'html'){ 
 
       withProgress(message = 'Rendering report, please wait.', {
