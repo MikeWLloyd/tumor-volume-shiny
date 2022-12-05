@@ -738,9 +738,11 @@ A Summary of cross study plots and analyses.
 
 \renewcommand{\arraystretch}{0.8} <!-- decrease line spacing for the table -->
 ```{r Reproducibility-SessionInfo-R-environment, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
-    library("devtools")
-    library("tibble")
-
+    suppressPackageStartupMessages({
+        library("devtools")
+        library("tibble")
+    })
+    
     df_session_platform <- devtools::session_info()$platform %>% 
     unlist(.) %>% 
     as.data.frame(.) %>% 
