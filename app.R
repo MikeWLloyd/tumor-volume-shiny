@@ -32,7 +32,12 @@ suppressPackageStartupMessages({
   library("stringr")
   library("shinyalert")
   library("kableExtra")
+  library("ipc")
+  library("promises")
+  library("future")
 })
+
+  plan(multisession)
 
 # Add variable to control whether login page will be allowed
 source(file.path("ui", "interface_variables.R"), local = TRUE)

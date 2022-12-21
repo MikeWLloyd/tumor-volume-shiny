@@ -10,14 +10,16 @@ output$report <- downloadHandler(
 
   content = function(file) {
     
-    on.exit(removeModal())
-
     # # Copy the report file to a temporary directory before processing it, in
     # # case we don't have write permissions to the current working dir (which
     # # can happen when deployed).
     # tempReport <- file.path(tempdir(), "report.Rmd")
 
     # file.copy("report.Rmd", tempReport, overwrite = TRUE)
+    
+    on.exit(removeModal())
+
+    progress <- AsyncProgress$new(message="Rendering report, please wait.")
 
     # Set up parameters to pass to Rmd document
     params <- list(data_subset = get_query_tv()$"df",
@@ -50,7 +52,8 @@ output$report <- downloadHandler(
                   tv_weight_plot_type = input$tv_weight_plot_type,
                   tv_weight_plot_style = input$tv_weight_plot_style,
                   tv_weight_plotType = input$tv_weight_plotType,
-                  script_location = file.path(getwd(), "server/logic-plots.R"))
+                  script_location = file.path(getwd(), "server/logic-plots.R"),
+                  progress = progress)
 
     # NOTE: If a new param is added, it must also be listed in the 'params' statement of the markdown document. 
     #       The params are then accessed via `params$` e.g., params$PARAM_NAME
@@ -62,28 +65,28 @@ output$report <- downloadHandler(
     tempReport <- file.path(tempdir(), "report.Rmd")
     file.copy("report/report.Rmd", tempReport, overwrite = TRUE)
     # https://resources.symbolix.com.au/2020/10/28/downloadable-reports-shiny/
-    
-    if(input$report_type == 'html'){ 
 
-      withProgress(message = 'Rendering report, please wait.', {
-        rmarkdown::render(tempReport, 
-          output_file = file,
-          output_format = 'html_document',
-          params = params,
-          envir = new.env(parent = globalenv()),
-          clean = TRUE
-        )
+
+    if(input$report_type == 'html'){
+      future_promise({
+            rmarkdown::render(tempReport, 
+              output_file = file,
+              output_format = 'html_document',
+              params = params,
+              envir = new.env(parent = globalenv()),
+              clean = TRUE
+            )
+          progress$close()
       })
-
     } else {
-      
-      withProgress(message = 'Rendering report, please wait.', {
-        rmarkdown::render(tempReport, output_file = file,
-        output_format = 'pdf_document',
-          params = params,
-          envir = new.env(parent = globalenv()),
-          clean = TRUE
-        )
+      future_promise({
+          rmarkdown::render(tempReport, output_file = file,
+          output_format = 'pdf_document',
+            params = params,
+            envir = new.env(parent = globalenv()),
+            clean = TRUE
+          )
+          progress$close()
       })
     }
   }

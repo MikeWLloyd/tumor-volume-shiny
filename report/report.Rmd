@@ -67,6 +67,7 @@ params:
     tv_weight_plot_style: NA
     tv_weight_plotType: NA
     script_location: NA
+    progress: NA
 ---
 
 \newpage
@@ -74,8 +75,51 @@ params:
 ## Report Summary
 
 ```{r load options and functions, results='hide', echo=FALSE}
+    
     knitr::opts_chunk$set(fig.pos = "h", out.extra = "")
+    
     source(params$script_location, local = knitr::knit_global())
+
+    suppressPackageStartupMessages({
+        library("shiny")
+        library("plotly")
+        library("dygraphs")
+        library("shinyWidgets")
+        library("plyr")
+        library("dplyr")
+        library("zoo")
+        library("ggpubr")
+        library("grid")
+        library("gridExtra")
+        library("gtable")
+        library("shinydashboard")
+        library("reactable")
+        library("bcrypt")
+        library("shinyBS")
+        library("shinyjs")
+        library("shinyFeedback")
+        library("shinycssloaders")
+        library("shinyAce")
+        library("jsonlite")
+        library("magrittr")
+        library("knitr")
+        library("DT")
+        library("readxl")
+        library("survival")
+        library("survminer")
+        library("validate")
+        library("multcomp")
+        library("validate")
+        library("purrr")
+        library("stringr")
+        library("shinyalert")
+        library("kableExtra")
+        library(promises)
+        library(future)
+    })
+
+    set.seed(42)
+
 ```
 
 ```{css, echo=FALSE}
@@ -96,7 +140,7 @@ params:
 
 #     plot_data <- params$data_subset
 
-#     shiny::setProgress(0.3)
+#     # shiny::setProgress(0.3)
 # ```
 
 # Stub code for adding plots /tables from single selected studies
@@ -107,7 +151,7 @@ params:
 #     params$data_subset, Study %in% c(params$tv_study_filtered)
 #     )
     
-#     shiny::setProgress(0.3)
+#     # shiny::setProgress(0.3)
 # ```
 
 ```
@@ -236,8 +280,7 @@ A Summary of cross study plots and analyses.
         get_tv_plot(data = plot_data, level = level_type, pattern = pattern_type, position.dodge = 0.2, tv_all_plotType = params$tv_all_plotType)
     }
     
-    shiny::setProgress(0.1)
-
+    params$progress$inc(1 / 10)
 ```
 
 ```{r response plot option text, results='asis', echo=FALSE}
@@ -282,7 +325,6 @@ A Summary of cross study plots and analyses.
 
     plotAvgGrowthBar(tc_ratios)
 
-    shiny::setProgress(0.15)
 ```
 
 ```{r average plot option text, results='asis', echo=FALSE}
@@ -312,7 +354,7 @@ A Summary of cross study plots and analyses.
 
     log2FoldPlot(vc_change, caption_text_on = F, point_size = 1)
 
-    shiny::setProgress(0.2)
+    params$progress$inc(1 / 10)
 ```
 
 ```{r log2 fold change plot option text, results='asis', echo=FALSE}
@@ -341,7 +383,7 @@ A Summary of cross study plots and analyses.
 
     WaterfallPlot_Hybrid(tc_ratios)
 
-    shiny::setProgress(0.3)
+    params$progress$inc(1 / 10)
 ```
 
 ```{r hybrid waterfall plot option text, results='asis', echo=FALSE}
@@ -391,7 +433,7 @@ A Summary of cross study plots and analyses.
             kable_styling(full_width = TRUE, position = "left")
     }
 
-    shiny::setProgress(0.4)
+    params$progress$inc(1 / 10)
 ```
 
 ```{r TGI option text, results='asis', echo=FALSE}
@@ -420,7 +462,7 @@ A Summary of cross study plots and analyses.
 
     plotStackedORC(vc_change)
 
-    shiny::setProgress(0.5)
+    params$progress$inc(1 / 10)
 ```
 
 ```{r stacked ORC option text, results='asis', echo=FALSE}
@@ -488,7 +530,7 @@ A Summary of cross study plots and analyses.
             kable_styling(full_width = TRUE, position = "left")
     }
 
-    shiny::setProgress(0.6)
+    params$progress$inc(1 / 10)
 ```
 
 ```{r individual study ORC option text, results='asis', echo=FALSE}
@@ -549,7 +591,7 @@ A Summary of cross study plots and analyses.
 
         cat("\n\n\\newpage\n")
     }
-    shiny::setProgress(0.7)
+    params$progress$inc(1 / 10)
 ```
 
 \newpage
@@ -581,7 +623,7 @@ A Summary of cross study plots and analyses.
         cat("\n\n\\newpage\n")
     }    
 
-    shiny::setProgress(0.8)
+    params$progress$inc(1 / 10)
 ```
 
 \newpage
@@ -621,7 +663,7 @@ A Summary of cross study plots and analyses.
                     tv_tumor_filtered = tumor, 
                     main_anova_interpolate = params$main_anova_interpolate,
                     report = TRUE)
-
+    
             if(is.null(aov_res)) {
             
                 cat("\n\nANOVA failed. This is likely due to an invalid study day selection (i.e., study day selected beyond end of available study dates).\n\n") 
@@ -669,7 +711,7 @@ A Summary of cross study plots and analyses.
             cat("\n\n")
         }
     }
-    shiny::setProgress(0.9)
+    params$progress$inc(1 / 10)
 ```
 
 ### Body Weight Plots
@@ -715,7 +757,7 @@ A Summary of cross study plots and analyses.
     #   # Call plot
     get_weight_plot(data = data, level = level_type, pattern = pattern_type, position.dodge = 0.2, tv_weight_plotType = params$tv_weight_plotType)
     
-    shiny::setProgress(1)
+    params$progress$inc(1 / 10)
 ```
 
 ```{r weight plot option text, results='asis', echo=FALSE, eval=weight_plots_available}
