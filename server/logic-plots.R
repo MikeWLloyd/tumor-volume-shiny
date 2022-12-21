@@ -1357,29 +1357,33 @@ response_analysis <- function(input_data, method=c('endpoint.ANOVA','endpoint.KW
   endpoint.data$Arms=factor(endpoint.data$Arms)
 
   if(length(unique(endpoint.data$Arms)) == 1 & !multi_test_anova) {
-    showNotification('There is only one treatment arm at the select time point. Select a different time point, or add more arms','',type = "error")
+    # showNotification('There is only one treatment arm at the select time point. Select a different time point, or add more arms','',type = "error")
     return()
   } else if(length(unique(endpoint.data$Arms)) == 1 & multi_test_anova) {
-    #howNotification('There is only one treatment arm at the select time point. Select a different time point, or add more arms','',type = "error")
+    #showNotification('There is only one treatment arm at the select time point. Select a different time point, or add more arms','',type = "error")
     return()
   }
 
   #get mean growth rate
   ID <- unique(as.character(df$ID))
 
-  dra.res <- switch (method,
-                      endpoint.ANOVA = summary(aov(Volume ~ Arms, data = endpoint.data)),
-                      endpoint.KW    = kruskal.test(Volume ~ Arms, data = endpoint.data),
-                      mixed.ANOVA    = summary(aov(Volume ~ Arms + Error(ID/Times), data = df)),
-                      LMM            = summary(lme(Volume ~ Arms, random = ~1|ID/Times, data = df))[[20]]
-  )
 
-  dra.res.full <- switch (method,
-                      endpoint.ANOVA = aov(Volume ~ Arms, data = endpoint.data),
-                      endpoint.KW    = kruskal.test(Volume ~ Arms, data = endpoint.data),
-                      mixed.ANOVA    = aov(Volume ~ Arms + Error(ID/Times), data = df),
-                      LMM            = lme(Volume ~ Arms, random = ~1|ID/Times, data = df)
-  )
+  dra.res.full <- aov(Volume ~ Arms, data = endpoint.data)
+  dra.res <- summary(dra.res.full)
+
+  # dra.res <- switch (method,
+  #                     endpoint.ANOVA = summary(aov(Volume ~ Arms, data = endpoint.data)),
+  #                     endpoint.KW    = kruskal.test(Volume ~ Arms, data = endpoint.data),
+  #                     mixed.ANOVA    = summary(aov(Volume ~ Arms + Error(ID/Times), data = df)),
+  #                     LMM            = summary(lme(Volume ~ Arms, random = ~1|ID/Times, data = df))[[20]]
+  # )
+
+  # dra.res.full <- switch (method,
+  #                     endpoint.ANOVA = aov(Volume ~ Arms, data = endpoint.data),
+  #                     endpoint.KW    = kruskal.test(Volume ~ Arms, data = endpoint.data),
+  #                     mixed.ANOVA    = aov(Volume ~ Arms + Error(ID/Times), data = df),
+  #                     LMM            = lme(Volume ~ Arms, random = ~1|ID/Times, data = df)
+  # )
 
   multiple_comp_test <- TukeyHSD(dra.res.full)
 
