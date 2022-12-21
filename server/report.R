@@ -20,7 +20,8 @@ output$report <- downloadHandler(
     on.exit(removeModal())
 
     progress <- AsyncProgress$new(message="Rendering report, please wait.")
-
+    # http://htmlpreview.github.io/?https://github.com/fellstat/ipc/blob/master/inst/doc/shinymp.html 
+    
     # Set up parameters to pass to Rmd document
     params <- list(data_subset = get_query_tv()$"df",
                   tv_all_plot_type = input$tv_all_plot_type,
