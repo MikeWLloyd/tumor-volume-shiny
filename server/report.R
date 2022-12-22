@@ -59,14 +59,39 @@ output$report <- downloadHandler(
     # NOTE: If a new param is added, it must also be listed in the 'params' statement of the markdown document. 
     #       The params are then accessed via `params$` e.g., params$PARAM_NAME
 
+    # NOTE: Due to the async future_promise command, and the behavior of tempdir(),
+    #       it is possible to have concurrent users building reports in the same temp directory space. 
+    #       This is because `tempdir()` uses the same directory for all members of a session, and
+    #       sessions are often concurrent based on the cloud server setup. 
+    #       The default behavior of R markdown is to build intermediate files in the directory the *.Rmd file is contained in. 
+    #       Using either `intermediates_dir` or placing the Rmd in a specific folder overcome this conflict. 
+    #       The `file` variable set by `downloadHandler`` is placed in `tempdir`; 
+    #       however, tempfile is used to generate a random temp name for that file. 
+    #       If conflicts are still seen, more explicit use of `intermediates_dir`, `output_dir` can be explored here. 
+
+    random_string <- function(n = 5000) {
+      a <- do.call(paste0, replicate(5, sample(LETTERS, n, TRUE), FALSE))
+      paste0(a, sprintf("%04d", sample(9999, n, TRUE)), sample(LETTERS, n, TRUE))
+    }
+
+    # this will create a folder within our temp folder, with a name of our choice:
+    ReportDir <- paste0(tempdir(), "/", random_string(1))
+    
+    dir.create(path = ReportDir)
+
+    tempReport <- file.path(ReportDir, "report.Rmd") 
+    # If conflict still occurs, consider also adding random_string(1) to the report name. 
+
+    file.copy("report/report.Rmd", tempReport, overwrite = TRUE)
+    # https://resources.symbolix.com.au/2020/10/28/downloadable-reports-shiny/
+
     # Knit the document, passing in the `params` list, and eval it in a
     # child of the global environment (this isolates the code in the document
     # from the code in this app).
 
-    tempReport <- file.path(tempdir(), "report.Rmd")
-    file.copy("report/report.Rmd", tempReport, overwrite = TRUE)
-    # https://resources.symbolix.com.au/2020/10/28/downloadable-reports-shiny/
-
+    # The knit is done with `future_promise` to build the reports asynchronously. 
+    # The async behavior requires minor changes within the report.
+    # Note that the 'progress' bar from above can be incremented within the report. 
 
     if(input$report_type == 'html'){
       future_promise({
@@ -78,17 +103,18 @@ output$report <- downloadHandler(
               clean = TRUE
             )
           progress$close()
-      })
+      }, seed = NULL)
     } else {
       future_promise({
-          rmarkdown::render(tempReport, output_file = file,
-          output_format = 'pdf_document',
+          rmarkdown::render(tempReport, 
+            output_file = file,
+            output_format = 'pdf_document',
             params = params,
             envir = new.env(parent = globalenv()),
             clean = TRUE
           )
           progress$close()
-      })
+      }, seed = NULL)
     }
   }
 )
