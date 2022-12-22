@@ -32,6 +32,7 @@ output:
         fig_width: 9
         fig_height: 7
         df_print: kable
+        extra_dependencies: ["float"]
 
 always_allow_html: true
 
@@ -76,7 +77,7 @@ params:
 
 ```{r load options and functions, results='hide', echo=FALSE}
     
-    knitr::opts_chunk$set(fig.pos = "h", out.extra = "")
+    knitr::opts_chunk$set(fig.pos = "h", out.extra = "", warning = FALSE, message = FALSE)
     
     source(params$script_location, local = knitr::knit_global())
 
@@ -113,12 +114,14 @@ params:
         library("purrr")
         library("stringr")
         library("shinyalert")
-        library("kableExtra")
+        suppressWarnings(library("kableExtra"))
         library(promises)
         library(future)
     })
 
     set.seed(42)
+
+    options(warn=-1)
 
 ```
 
@@ -639,21 +642,17 @@ A Summary of cross study plots and analyses.
     }
 ```
 
-\captionsetup[table]{labelformat=empty}
+<!-- \captionsetup[table]{labelformat=empty} -->
 
 ```{r ANOVA, results='asis', echo=FALSE}
 
     for (study in levels(as.factor(plot_data$Study))) {
-
-        cat("\n\n#### Study: ", study, "\n")
 
         df <- params$data_subset %>% dplyr::filter(Study == study)
 
         df <- droplevels(df)     
 
         for (tumor in levels(as.factor(df$Tumor))) {
-
-            cat("\n\n##### Tumor: ", tumor, "\n")
 
             aov_res <- response_analysis(params$data_subset,
                     method = 'endpoint.ANOVA', 
@@ -665,7 +664,7 @@ A Summary of cross study plots and analyses.
                     report = TRUE)
     
             if(is.null(aov_res)) {
-            
+                cat("\n\n#### Study: ", study, "\n")
                 cat("\n\nANOVA failed. This is likely due to an invalid study day selection (i.e., study day selected beyond end of available study dates).\n\n") 
             
             } else {
@@ -678,19 +677,43 @@ A Summary of cross study plots and analyses.
 
                 if (knitr::is_latex_output()) {
 
-                    print(knitr::kables(
-                    list(
-                    # the first kable() to change column names
-                    knitr::kable(aov_res$anova[[1]], digits=2, format="latex", booktabs=T, linesep = "", valign = 't'),
-                    # the second kable() to set the digits option
-                    knitr::kable(mct, digits=2, format="latex", booktabs=T, linesep = "", valign = 't')
-                    ),
-                    caption = 'ANOVA and Tukey multiple means comparsion test tables'
-                    ))
+                    cat("\n\n#### Study: ", study, "\n")
 
-                    cat("\n\n###### \n")
+                    # print(knitr::kables(
+                    # list(
+                    # # the first kable() to change column names
+                    # knitr::kable(aov_res$anova[[1]], digits=2, format="latex", booktabs=T, linesep = "", valign = 't'),
+                    # # the second kable() to set the digits option
+                    # knitr::kable(mct, digits=2, format="latex", booktabs=T, linesep = "", valign = 't')
+                    # ),
+                    # caption = 'ANOVA and Tukey multiple means comparsion test tables'
+                    # ) %>% kableExtra::kable_styling(latex_options = "HOLD_position"))
+                    
+                                        # print(knitr::kables(
+                    # list(
+                    # # the first kable() to change column names
+                    t1 <- knitr::kable(aov_res$anova[[1]], digits=2, format="latex", booktabs=T, linesep = "", valign = 't')
+                    # # the second kable() to set the digits option
+                    t2 <- knitr::kable(mct, digits=2, format="latex", booktabs=T, linesep = "", valign = 't')
+                    # ),
+                    # caption = 'ANOVA and Tukey multiple means comparsion test tables'
+                    # ))
+                    cat(c("\\begin{table}[!htb]
+                    \\caption{ANOVA table - ",
+                    paste0("Tumor: ", tumor, "}"),
+                    "\\centering",
+                    t1,
+                    "\\\\
+                    \\centering
+                    \\caption{Tukey multiple means comparsion test}",
+                    t2,
+                    "\\end{table}"
+                    ))  
 
                 } else {
+
+                    cat("\n\n#### Study: ", study, "\n")
+
                     cat(kable(aov_res$anova[[1]], digits=2, caption = "ANOVA table") %>%
                     kable_styling(full_width = FALSE, position = "float_left"))
 
@@ -701,8 +724,6 @@ A Summary of cross study plots and analyses.
                     kable_styling(full_width = TRUE))
                     # An empty table is required to break the 'float_left'. Without this table, the next header wraps to the right side of the screen. 
 
-                    cat("\n\n###### \n")
-                    
                 }
                 
                 cat("\n\n")
