@@ -533,10 +533,13 @@ rownames(data) <- NULL
   observeEvent(input$report_modal, {
     showModal(modalDialog(
       title = "Selection Report Options",
-        HTML("Generate a report capturing the currently selected options across all tabs.<br><br>"),
+        HTML("Generate a report capturing the currently selected options across all tabs.<br><br>A single date for calculation can be selected below. Using this option will override dates selected in individual analysis panels.<br><br>"),
         radioButtons("report_type", "Output File Type:",
                c("HTML" = "html",
                  "PDF" = "pdf")),
+        HTML("<br>"),
+        checkboxInput("override_day", "Use single date for report calculations?", FALSE),
+        numericInput("report_day", "Calculation Day for Report", value = '', min = 0, max = 500),
         HTML("<br>NOTE: Report compile time can be ~1-5min.<br>Please be patient while the report is generated."),
       footer = tagList(
         downloadButton(outputId = "report", "Generate Report"),
@@ -545,6 +548,16 @@ rownames(data) <- NULL
       easyClose = TRUE
     ))
   })
+
+# # Watch for if `override day` is selected in report making. If so, enable `report day` numeric box. 
+observeEvent(input$override_day, {
+    if(!input$override_day) {
+      shinyjs::disable('report_day') 
+    } else {
+      shinyjs::enable('report_day')
+    }
+  }, ignoreNULL = T)
+
 
 ## ## ## ## ##
 
