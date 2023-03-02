@@ -771,7 +771,8 @@ A Summary of cross study plots and analyses.
             dplyr::group_by(Study, Tumor, Arms, ID) %>%
             dplyr::mutate(dWeight = (((Body_Weight - Body_Weight[1]) / Body_Weight[1] ) * 100))
 
-        data$Body_Weight <- params$data$dWeight
+        data$Body_Weight <- data$dWeight
+
     } else {
         data <- params$data_subset
     }

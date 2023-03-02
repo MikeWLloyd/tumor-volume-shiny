@@ -26,7 +26,7 @@ observeEvent(input$user_tv_data, {
     is.numeric(Times) | is.integer(Times),
     is.numeric(Volume) | is.integer(Volume),
     is.character(Study),
-    is.character(ID),
+    is.character(ID) | is.integer(ID),
     is.character(Tumor) | is.numeric(Tumor) | is.integer(Tumor),
     is.character((Disease_Type)),
     Volume >= 0,
@@ -41,7 +41,7 @@ observeEvent(input$user_tv_data, {
   out <- confront(df, rules)
   test_results <- as.data.frame(summary(out))
   test_results$ColumnCheck <- c("Contributor", "Arms", "Times", "Volume", "Study", "ID", "Tumor", "Disease_Type", "VolnotNeg", "ControlPresent", "Body_Weights")
-  test_results$ExpectedType <- c('Character', 'Character', 'Numeric or Integer', 'Numeric or Integer', 'Character', 'Character', 'Character or Numeric or Integer', 'Character', 'Volume >= 0', 'Arms contains "Control"', 'Numeric or Integer')
+  test_results$ExpectedType <- c('Character', 'Character', 'Numeric or Integer', 'Numeric or Integer', 'Character', 'Character or Integer', 'Character or Numeric or Integer', 'Character', 'Volume >= 0', 'Arms contains "Control"', 'Numeric or Integer')
 
   error_check_string <- ' COLUMN NAME ERRORS: \n'
   if(nrow(test_results %>% dplyr::filter(error == 'TRUE' & name != 'V11') > 0)) {
