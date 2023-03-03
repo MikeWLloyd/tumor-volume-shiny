@@ -1077,6 +1077,33 @@ observeEvent(input$override_day, {
 
     })
 
+
+    ### Observe downloadHandler, and save EFS table for selected options. 
+    output$download_efs_table <- downloadHandler(
+      
+      filename = function(){
+        paste0('PVA_EFS_Table_',input$tv_study_filtered,'_',format(Sys.time(), "%Y-%m-%d_%Hh%Mm"), '.csv')
+      },
+
+      content = function(file) {
+        df <- base::subset(
+          get_query_tv()$"df", Study %in% c(input$tv_study_filtered)
+        )
+        
+        df <- droplevels(df)
+        
+        study <- unlist(levels(factor(df$Study)))[1]
+        
+        filtered.df <- df %>%
+          filter(Study == study) %>% droplevels()
+        
+        p1 <- EFSplot(filtered.df, PercChange_EventSize())
+
+        write.csv(p1$data.survtable, file, row.names = FALSE)
+      }
+      
+    )
+
   ## Individual study ANOVA
     ### Get calculation day
     anova_measure_day <- reactive({

@@ -602,7 +602,7 @@ tabPanel(
                   width = 2,
                   numericInput("tv_PercChange_EventSize", "Event Size: Percent Change in Volume (%)",
                               value = 100,
-                              min = 0, max = 99999),
+                              min = 0, max = 99999)
                 )
               )
             )
@@ -618,6 +618,10 @@ tabPanel(
               plotlyOutput("tv_plot_EFS", width = "100%", height = '500px'),
               proxy.height = "100px", color="#0273B7"
             )
+          ),
+          column(
+            width = 3, offset = 2,
+            downloadButton("download_efs_table", "Download EFS Table", icon = icon("download"))
           )
         )
       ),
