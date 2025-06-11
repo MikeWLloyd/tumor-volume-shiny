@@ -557,6 +557,41 @@ observeEvent(input$override_day, {
   }, ignoreNULL = T)
 
 
+showReportGeneratingModal <- function() {
+  showModal(
+    modalDialog(
+      easyClose = FALSE,
+      footer = NULL,
+      size = "m",
+      tags$div(
+        style = "display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px;",
+        tags$div(
+          style = "margin-bottom: 20px; font-size: 1.5em; font-weight: normal; text-align: center;",
+          tags$b("Report is being generated"),
+        ),
+        tags$div(
+          style = "margin-bottom: 10px;",
+          tags$div(
+            style = "border: 8px solid #f3f3f3; border-top: 8px solid #0273B7; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite;",
+            ""
+          ),
+          tags$style(HTML("
+            @keyframes spin {
+              0% { transform: rotate(0deg);}
+              100% { transform: rotate(360deg);}
+            }
+          "))
+        ),
+        tags$div(
+          style = "text-align: center;",
+          HTML("<br>NOTE: Report compile time can be ~1-5min.<br>Please be patient while the report is generated.")
+        )
+      )
+    )
+  )
+}
+
+
 ## ## ## ## ##
 
 # PLOTS & METRICS

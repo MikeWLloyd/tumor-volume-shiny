@@ -16,11 +16,12 @@ output$report <- downloadHandler(
     # tempReport <- file.path(tempdir(), "report.Rmd")
 
     # file.copy("report.Rmd", tempReport, overwrite = TRUE)
-    
-    on.exit(removeModal())
+    showReportGeneratingModal()
 
-    progress <- AsyncProgress$new(message="Rendering report, please wait.")
-    # http://htmlpreview.github.io/?https://github.com/fellstat/ipc/blob/master/inst/doc/shinymp.html 
+    # progress <- AsyncProgress$new(message="Rendering report, please wait.")
+    # http://htmlpreview.github.io/?https://github.com/fellstat/ipc/blob/master/inst/doc/shinymp.html
+    ### NOTE that progress does not work async on shinyapps.io,
+    ### so it is commented out here.
     
     # Set up parameters to pass to Rmd document
 
@@ -55,8 +56,8 @@ output$report <- downloadHandler(
                     tv_weight_plot_type = input$tv_weight_plot_type,
                     tv_weight_plot_style = input$tv_weight_plot_style,
                     tv_weight_plotType = input$tv_weight_plotType,
-                    script_location = file.path(getwd(), "server/logic-plots.R"),
-                    progress = progress)
+                    script_location = file.path(getwd(), "server/logic-plots.R") )
+                    # progress = progress)
     } else if (input$override_day) {
       params <- list(data_subset = get_query_tv()$"df",
                     tv_all_plot_type = input$tv_all_plot_type,
@@ -88,8 +89,8 @@ output$report <- downloadHandler(
                     tv_weight_plot_type = input$tv_weight_plot_type,
                     tv_weight_plot_style = input$tv_weight_plot_style,
                     tv_weight_plotType = input$tv_weight_plotType,
-                    script_location = file.path(getwd(), "server/logic-plots.R"),
-                    progress = progress)
+                    script_location = file.path(getwd(), "server/logic-plots.R") )
+                    #progress = progress)
     }
 
 
@@ -139,8 +140,11 @@ output$report <- downloadHandler(
               envir = new.env(parent = globalenv()),
               clean = TRUE
             )
-          progress$close()
-      }, seed = NULL)
+          # progress$close()
+      }, seed = NULL) %...>% {
+        # This runs after the promise resolves
+        removeModal()
+      }
     } else {
       future_promise({
           rmarkdown::render(tempReport, 
@@ -150,8 +154,11 @@ output$report <- downloadHandler(
             envir = new.env(parent = globalenv()),
             clean = TRUE
           )
-          progress$close()
-      }, seed = NULL)
+          # progress$close()
+      }, seed = NULL) %...>% {
+        # This runs after the promise resolves
+        removeModal()
+      }
     }
   }
 )

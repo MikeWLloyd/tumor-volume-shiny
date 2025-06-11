@@ -1,7 +1,7 @@
 ---
 title: "PVA Report"
 
-author: "Report generated at https://tumor-volume.jax.org"
+author: "Report generated at https://pdxnet.shinyapps.io/PDX-Volumetric-Analyzer/"
 
 date: '`r format(Sys.time(), "%d %B, %Y")`'
 
@@ -68,7 +68,7 @@ params:
     tv_weight_plot_style: NA
     tv_weight_plotType: NA
     script_location: NA
-    progress: NA
+    # progress: NA
 ---
 
 \newpage
@@ -290,7 +290,7 @@ A Summary of cross study plots and analyses.
         get_tv_plot(data = plot_data, level = level_type, pattern = pattern_type, position.dodge = 0.2, tv_all_plotType = params$tv_all_plotType)
     }
     
-    params$progress$inc(1 / 10)
+    #params$progress$inc(1 / 10)
 ```
 
 ```{r response plot option text, results='asis', echo=FALSE}
@@ -364,7 +364,7 @@ A Summary of cross study plots and analyses.
 
     log2FoldPlot(vc_change, caption_text_on = F, point_size = 1)
 
-    params$progress$inc(1 / 10)
+    #params$progress$inc(1 / 10)
 ```
 
 ```{r log2 fold change plot option text, results='asis', echo=FALSE}
@@ -393,7 +393,7 @@ A Summary of cross study plots and analyses.
 
     WaterfallPlot_Hybrid(tc_ratios)
 
-    params$progress$inc(1 / 10)
+    #params$progress$inc(1 / 10)
 ```
 
 ```{r hybrid waterfall plot option text, results='asis', echo=FALSE}
@@ -443,7 +443,7 @@ A Summary of cross study plots and analyses.
             kable_styling(full_width = TRUE, position = "left")
     }
 
-    params$progress$inc(1 / 10)
+    #params$progress$inc(1 / 10)
 ```
 
 ```{r TGI option text, results='asis', echo=FALSE}
@@ -472,7 +472,7 @@ A Summary of cross study plots and analyses.
 
     plotStackedORC(vc_change)
 
-    params$progress$inc(1 / 10)
+    #params$progress$inc(1 / 10)
 ```
 
 ```{r stacked ORC option text, results='asis', echo=FALSE}
@@ -540,7 +540,7 @@ A Summary of cross study plots and analyses.
             kable_styling(full_width = TRUE, position = "left")
     }
 
-    params$progress$inc(1 / 10)
+    #params$progress$inc(1 / 10)
 ```
 
 ```{r individual study ORC option text, results='asis', echo=FALSE}
@@ -601,7 +601,7 @@ A Summary of cross study plots and analyses.
 
         cat("\n\n\\newpage\n")
     }
-    params$progress$inc(1 / 10)
+    #params$progress$inc(1 / 10)
 ```
 
 \newpage
@@ -633,7 +633,7 @@ A Summary of cross study plots and analyses.
         cat("\n\n\\newpage\n")
     }    
 
-    params$progress$inc(1 / 10)
+    #params$progress$inc(1 / 10)
 ```
 
 \newpage
@@ -738,7 +738,7 @@ A Summary of cross study plots and analyses.
             cat("\n\n")
         }
     }
-    params$progress$inc(1 / 10)
+    #params$progress$inc(1 / 10)
 ```
 
 ### Body Weight Plots
@@ -785,7 +785,7 @@ A Summary of cross study plots and analyses.
     #   # Call plot
     get_weight_plot(data = data, level = level_type, pattern = pattern_type, position.dodge = 0.2, tv_weight_plotType = params$tv_weight_plotType)
     
-    params$progress$inc(1 / 10)
+    #params$progress$inc(1 / 10)
 ```
 
 ```{r weight plot option text, results='asis', echo=FALSE, eval=weight_plots_available}
