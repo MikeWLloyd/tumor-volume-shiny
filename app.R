@@ -55,7 +55,7 @@ color: #333 !important;
 pointer-events: none;
 text-decoration: line-through;
 }"
-## This css is used to disable the 'Body Weight Analysis' tab, when no body weight data is provided. 
+## This css is used to disable the 'Body Weight Analysis' tab, when no body weight data is provided.
 # border-color: #aaa !important;
 # https://stackoverflow.com/a/64324799/18557826
 

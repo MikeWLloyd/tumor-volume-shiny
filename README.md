@@ -7,7 +7,7 @@ The PDX Volumetric Analyzer is a Shiny app for uploading, validating, plotting, 
 
 This repo offers the source code for the app's Docker image, including the Dockerfile and the app built. The app features PDX Volumetric Data uploading, validating, plotting, and analyzing your tumor volume data.
 
-This `README` gives a brief introduction to pull the Docker image and run the app locally. For detailed usage of the app and more deployment options, please check our [User manual under Help page](https://tumor-volume.jax.org/).
+This `README` gives a brief introduction to pull the Docker image and run the app locally. For detailed usage of the app and more deployment options, please check our [User manual under Help page](https://pdxnet.shinyapps.io/PDX-Volumetric-Analyzer/).
 
 ## LICENSE
 
