@@ -37,13 +37,48 @@ suppressPackageStartupMessages({
   library("future")
 })
 
-  plan(multisession)
+options(shiny.fullstacktrace = FALSE)
+
+plan(multisession)
 
 # Add variable to control whether login page will be allowed
 source(file.path("ui", "interface_variables.R"), local = TRUE)
 
 # Define User Interface variable
 ui <- uiOutput("ui")
+
+
+css <- "
+.nav li a.disabled {
+background-color: #ffffff !important;
+color: #333 !important;
+pointer-events: none;
+text-decoration: line-through;
+}"
+## This css is used to disable the 'Body Weight Analysis' tab, when no body weight data is provided. 
+# border-color: #aaa !important;
+# https://stackoverflow.com/a/64324799/18557826
+
+js <- HTML('
+$(document).on("shiny:busy", function() {
+  var inputs = document.getElementsByTagName("a");
+  for (var i = 0; i < inputs.length; i++) {
+    if (inputs[i]) {
+      inputs[i].classList.add("disabled");
+    }
+  }
+});
+
+$(document).on("shiny:idle", function() {
+  var inputs = document.getElementsByTagName("a");
+  for (var i = 0; i < inputs.length; i++) {
+    if (inputs[i]) {
+      inputs[i].classList.remove("disabled");
+    }
+  }
+});
+')
+
 
 server <- function(input, output, session) {
   source(file.path("server", "timeout.R"), local = TRUE)

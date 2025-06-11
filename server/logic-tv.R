@@ -42,155 +42,6 @@ rownames(data) <- NULL
 # data <- try(as.data.frame(read.csv("include/unit_test.csv", header = TRUE)), silent = T)
 # rownames(data) <- NULL
 
-# GET methods
-  get_tv_contributor <- function() {
-    if (length(unique(data$Contributor)) < 1) {
-      unique(data$Contributor)
-    } else {
-      sort(unique(data$Contributor), na.last = T,)
-    }
-  }
-
-  get_tv_treatment <- function() {
-    
-    filtered.df <- base::subset(
-      data, Contributor %in% unique(sort(data$Contributor))[1]
-    ) # filter list by what contributor is first picked.
-    
-    if (length(unique(filtered.df$Arms)) < 2) {
-      unique(filtered.df$Arms)
-    } else {
-      agents <- factor(unique(filtered.df$Arms))
-      agents <- relevel(agents, 'Control')
-      levels(agents)
-    }
-  }
-
-  get_tv_disease <- function() {
-
-    filtered.df <- base::subset(
-      data, Contributor %in% unique(sort(data$Contributor))[1]
-    ) # filter list by what contributor is first picked.
-    
-
-    if (length(unique(filtered.df$Disease_Type)) < 2) {
-      list(unique(filtered.df$Disease_Type))
-    } else {
-      sort(unique(filtered.df$Disease_Type), na.last = T)
-    }
-  }
-
-  get_tv_study <- function() {
-
-    filtered.df <- base::subset(
-      data, Contributor %in% unique(sort(data$Contributor))[1]
-    ) # filter list by what contributor is first picked.
-    
-
-    if (length(unique(filtered.df$Study)) < 2) {
-      unique(sort(filtered.df$Study))
-    } else {
-      unique(sort(filtered.df$Study, na.last = T))
-    }
-  }
-
-  get_tv_tumor <- function() {
-
-    filtered.df <- base::subset(
-      data, Contributor %in% unique(sort(data$Contributor))[1]
-    ) # filter list by what contributor is first picked.
-    
-    if (length(unique(filtered.df$Tumor)) < 2) {
-      unique(sort(filtered.df$Tumor))
-    } else {
-      unique(sort(filtered.df$Tumor, na.last = T))
-    }
-  }
-
-## ## ## ## ##
-
-# CARDS
-  get_tv_contributor_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"Contributor")))
-
-  output$card_tv_contributor <- shinydashboard::renderValueBox({
-    ret <- get_query_tv()$"df"
-    shinydashboard::valueBox(
-      get_tv_contributor_count(ret), "Contributors",
-      icon = icon("hospital", verify_fa = FALSE), color = "light-blue"
-    )
-  })
-
-  get_tv_volumes_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"ID")))
-
-  output$card_tv_volumes <- shinydashboard::renderValueBox({
-    ret <- get_query_tv()$"df"
-    shinydashboard::valueBox(
-      get_tv_volumes_count(ret), "Unique Mouse IDs",
-      icon = icon("file-medical", verify_fa = FALSE), color = "green"
-    )
-  })
-
-  get_tv_studies_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"Study")))
-
-  output$card_tv_studies <- shinydashboard::renderValueBox({
-    ret <- get_query_tv()$"df"
-    shinydashboard::valueBox(
-      get_tv_studies_count(ret), "Studies",
-      icon = icon("chart-area", verify_fa = FALSE), color = "yellow"
-    )
-  })
-
-  get_tv_models_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"Tumor")))
-
-  output$card_tv_models <- shinydashboard::renderValueBox({
-    ret <- get_query_tv()$"df"
-    shinydashboard::valueBox(
-      get_tv_models_count(ret), "Models",
-      icon = icon("paw", verify_fa = FALSE), color = "blue"
-    )
-  })
-
-  get_tv_disease_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"Disease_Type")))
-
-  output$card_tv_disease <- shinydashboard::renderValueBox({
-    ret <- get_query_tv()$"df"
-    shinydashboard::valueBox(
-      get_tv_disease_count(ret), "Disease Types",
-      icon = icon("disease", verify_fa = FALSE), color = "red"
-    )
-  })
-
-  get_tv_treatment_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"Arms")))
-
-  output$card_tv_treatment <- shinydashboard::renderValueBox({
-    ret <- get_query_tv()$"df"
-    shinydashboard::valueBox(
-      get_tv_treatment_count(ret), "Treatment Arms",
-      icon = icon("pills", verify_fa = FALSE), color = "maroon"
-    )
-  })
-
-## ## ## ## ## ##
-
-# UPLOAD
-  output$tv_text_upload <- renderText({
-      paste0("Example Tumor Volume Data is Preloaded. \nClick Upload Button to Load Your Tumor Volume Data!")
-  })
-
-  observeEvent(input$user_tv_upload, {
-    output$tv_text_upload <- renderText({
-      paste0("Data Upload is Unsuccessful. Please check the Validation Tab for Input Data Conversion to the Expected Format!")
-    })
-  })
-
-  observeEvent(input$user_tv_load_default, {
-    output$tv_text_upload <- renderText({
-      paste0("Example Tumor Volume Data is Preloaded. \nClick Upload Button to Load Your Tumor Volume Data!")
-    })
-  })
-
-## ## ## 
-
 # QUERY
   ## Track is data are uploaded or not. 
   values <- reactiveValues(
@@ -355,13 +206,6 @@ rownames(data) <- NULL
                               input$tv_study,
                               input$tv_disease_type)
 
-          updateProgressBar(
-            session = session,
-            id = "pbar_tv",
-            value = length(unique((df_query$df)$Study)),
-            total = length(unique(curr_data$Study))
-          )
-
           for (i in 1:10) {
             incProgress(0.025, detail = "[Status] Finishing up...")
             Sys.sleep(0.02)
@@ -385,6 +229,160 @@ rownames(data) <- NULL
     })
 
   })
+
+
+
+
+# GET methods
+  get_tv_contributor <- function() {
+    if (length(unique(data$Contributor)) < 1) {
+      unique(data$Contributor)
+    } else {
+      sort(unique(data$Contributor), na.last = T,)
+    }
+  }
+
+  get_tv_treatment <- function() {
+    
+    filtered.df <- base::subset(
+      data, Contributor %in% unique(sort(data$Contributor))[1]
+    ) # filter list by what contributor is first picked.
+    
+    if (length(unique(filtered.df$Arms)) < 2) {
+      unique(filtered.df$Arms)
+    } else {
+      agents <- factor(unique(filtered.df$Arms))
+      agents <- relevel(agents, 'Control')
+      levels(agents)
+    }
+  }
+
+  get_tv_disease <- function() {
+
+    filtered.df <- base::subset(
+      data, Contributor %in% unique(sort(data$Contributor))[1]
+    ) # filter list by what contributor is first picked.
+    
+
+    if (length(unique(filtered.df$Disease_Type)) < 2) {
+      list(unique(filtered.df$Disease_Type))
+    } else {
+      sort(unique(filtered.df$Disease_Type), na.last = T)
+    }
+  }
+
+  get_tv_study <- function() {
+
+    filtered.df <- base::subset(
+      data, Contributor %in% unique(sort(data$Contributor))[1]
+    ) # filter list by what contributor is first picked.
+    
+
+    if (length(unique(filtered.df$Study)) < 2) {
+      unique(sort(filtered.df$Study))
+    } else {
+      unique(sort(filtered.df$Study, na.last = T))
+    }
+  }
+
+  get_tv_tumor <- function() {
+
+    filtered.df <- base::subset(
+      data, Contributor %in% unique(sort(data$Contributor))[1]
+    ) # filter list by what contributor is first picked.
+    
+    if (length(unique(filtered.df$Tumor)) < 2) {
+      unique(sort(filtered.df$Tumor))
+    } else {
+      unique(sort(filtered.df$Tumor, na.last = T))
+    }
+  }
+
+## ## ## ## ##
+
+# CARDS
+  get_tv_contributor_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"Contributor")))
+
+  output$card_tv_contributor <- shinydashboard::renderValueBox({
+    ret <- get_query_tv()$"df"
+    shinydashboard::valueBox(
+      get_tv_contributor_count(ret), "Contributors",
+      icon = icon("hospital", verify_fa = FALSE), color = "light-blue"
+    )
+  })
+
+  get_tv_volumes_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"ID")))
+
+  output$card_tv_volumes <- shinydashboard::renderValueBox({
+    ret <- get_query_tv()$"df"
+    shinydashboard::valueBox(
+      get_tv_volumes_count(ret), "Unique Mouse IDs",
+      icon = icon("file-medical", verify_fa = FALSE), color = "green"
+    )
+  })
+
+  get_tv_studies_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"Study")))
+
+  output$card_tv_studies <- shinydashboard::renderValueBox({
+    ret <- get_query_tv()$"df"
+    shinydashboard::valueBox(
+      get_tv_studies_count(ret), "Studies",
+      icon = icon("chart-area", verify_fa = FALSE), color = "yellow"
+    )
+  })
+
+  get_tv_models_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"Tumor")))
+
+  output$card_tv_models <- shinydashboard::renderValueBox({
+    ret <- get_query_tv()$"df"
+    shinydashboard::valueBox(
+      get_tv_models_count(ret), "Models",
+      icon = icon("paw", verify_fa = FALSE), color = "blue"
+    )
+  })
+
+  get_tv_disease_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"Disease_Type")))
+
+  output$card_tv_disease <- shinydashboard::renderValueBox({
+    ret <- get_query_tv()$"df"
+    shinydashboard::valueBox(
+      get_tv_disease_count(ret), "Disease Types",
+      icon = icon("disease", verify_fa = FALSE), color = "red"
+    )
+  })
+
+  get_tv_treatment_count <- function(df) ifelse(is.null(df), 0, length(unique(df$"Arms")))
+
+  output$card_tv_treatment <- shinydashboard::renderValueBox({
+    ret <- get_query_tv()$"df"
+    shinydashboard::valueBox(
+      get_tv_treatment_count(ret), "Treatment Arms",
+      icon = icon("pills", verify_fa = FALSE), color = "maroon"
+    )
+  })
+
+## ## ## ## ## ##
+
+# UPLOAD
+  output$tv_text_upload <- renderText({
+      paste0("Example Tumor Volume Data is Preloaded. \nClick Upload Button to Load Your Tumor Volume Data!")
+  })
+
+  observeEvent(input$user_tv_upload, {
+    output$tv_text_upload <- renderText({
+      paste0("Data Upload is Unsuccessful. Please check the Validation Tab for Input Data Conversion to the Expected Format!")
+    })
+  })
+
+  observeEvent(input$user_tv_load_default, {
+    output$tv_text_upload <- renderText({
+      paste0("Example Tumor Volume Data is Preloaded. \nClick Upload Button to Load Your Tumor Volume Data!")
+    })
+  })
+
+## ## ## 
+
+
 
 # OBSERVE EVENTS
 
@@ -911,7 +909,7 @@ observeEvent(input$override_day, {
       p1 <- study_volume_plot(filtered.df, position.dodge = 0.2, title = paste('Study:', study))
 
       p1 <- p1 + geom_vline(xintercept = last.study.day(), linetype="dashed",
-                            color = "black", size=1.2)
+                            color = "black", linewidth=1.2)
 
       p1 <- p1 + xlab("Time (d)") + ylab("Tumor Volume (mm3)")
 
@@ -1057,7 +1055,7 @@ observeEvent(input$override_day, {
 
       p1 <- EFSplot(filtered.df, PercChange_EventSize())
 
-      s <- subplot(p1[[1]], p1[[2]], heights = c(0.75, 0.25), margin = 0.05, nrows=2, shareX = T, titleY = T)
+      s <- suppressWarnings(subplot(p1[[1]], p1[[2]], heights = c(0.75, 0.25), margin = 0.05, nrows=2, shareX = T, titleY = T))
 
       for(i in 1:length(s$x$data)) {
         if (i <= length(levels(as.factor(p1$data.survtable$strata)))) {
@@ -1072,7 +1070,7 @@ observeEvent(input$override_day, {
         }
       }
       # remove '(*,1)' from the legends
-
+      
       s
 
     })

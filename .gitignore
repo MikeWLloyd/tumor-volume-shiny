@@ -7,3 +7,4 @@ include/.Rapp.history
 rsconnect/shinyapps.io/mike-lloyd/tumor-volume-shiny.dcf
 include/convert_object.R
 Rplots.pdf
+packrat/lib*/

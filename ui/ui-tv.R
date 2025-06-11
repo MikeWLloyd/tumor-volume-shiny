@@ -5,7 +5,7 @@ parameter_tabs <- tabsetPanel(
     pickerInput("tv_all_scaleby", "Scale Plot By",
                 choices = c("Growth Factor", "Volume"),
                 selected = c("Growth Factor"),
-                options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                options = pickerOptions(actionsBox = FALSE,
                                         showContent = TRUE),multiple = FALSE),
     numericInput("tv_all_endpoint_scale", "Endpoint Scaling", value = 4, min = 1, max = 15000)
   ),
@@ -140,6 +140,17 @@ tabPanel(
             )
         ) # move the notifications to top right of screen. current issue: with this code multiple notifications overlap and don't stack right.
   ),
+  tags$script(HTML("
+    $(document).on('shown.bs.tab', 'a[data-toggle=\"tab\"]', function (e) {
+      // Scroll to the tab button itself
+      var tabButton = e.target;
+      if (tabButton) {
+        $('html, body').animate({
+          scrollTop: $(tabButton).offset().top
+        }, 300);
+      }
+    });
+  ")), # This will smoothly scroll the page so the clicked tab button is at the top of the viewport.
   shinydashboard::box(
     width=12,
     title="Query and Data Summary", status="primary",solidHeader = T,
@@ -159,7 +170,7 @@ tabPanel(
                   pickerInput("tv_contributor", "Contributor",
                               choices = get_tv_contributor(),
                               selected = get_tv_contributor()[1],
-                              options = pickerOptions(actionsBox = TRUE, style = 'btn-light',
+                              options = pickerOptions(actionsBox = TRUE, 
                                                       showContent = TRUE),multiple = T)
               ),
               column(
@@ -167,7 +178,7 @@ tabPanel(
                   pickerInput("tv_treatment", "Treatment Arm",
                               choices = get_tv_treatment(),
                               selected = c('Control', get_tv_treatment()[1:3]),
-                              options = pickerOptions(actionsBox = TRUE, style = 'btn-light',
+                              options = pickerOptions(actionsBox = TRUE, 
                                                       showContent = TRUE),multiple = T)
               ),
               column(
@@ -175,7 +186,7 @@ tabPanel(
                 pickerInput("tv_study", "Study",
                             choices = get_tv_study(),
                             selected = get_tv_study()[1:length(get_tv_study())],
-                            options = pickerOptions(actionsBox = TRUE, style = 'btn-light',
+                            options = pickerOptions(actionsBox = TRUE, 
                                                     showContent = TRUE),multiple = T)
               ),
                column(
@@ -183,7 +194,7 @@ tabPanel(
                 pickerInput("tv_disease_type", "Disease Type",
                             choices = get_tv_disease(),
                             selected = get_tv_disease()[1],
-                            options = pickerOptions(actionsBox = TRUE, style = 'btn-light',
+                            options = pickerOptions(actionsBox = TRUE, 
                                                     showContent = TRUE),multiple = T)
               )
             ),
@@ -241,7 +252,7 @@ tabPanel(
                             pickerInput("tv_all_plot_type", "Plot Facet Type",
                                         choices = c("Study Plot", "Treatment Plot"),
                                         selected = c("Study Plot"),
-                                        options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                                        options = pickerOptions(actionsBox = FALSE,
                                                                 showContent = TRUE),multiple = FALSE),
                             checkboxInput("tv_all_interpolate", "Interpolate Data", FALSE)
                           )
@@ -251,7 +262,7 @@ tabPanel(
                           pickerInput("tv_all_plot_style", "Plot Style",
                                       choices = c("Study Average", "Individual Animal"),
                                       selected = c("Study Average"),
-                                      options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                                      options = pickerOptions(actionsBox = FALSE,
                                                               showContent = TRUE),multiple = FALSE)
                         ),
                         column(
@@ -259,7 +270,7 @@ tabPanel(
                           pickerInput("tv_all_plotType", "Plot Type",
                                             choices = c("Volume", "Scaled", "Percent Change", "Log2(Volume)", "Log2(Proportion Volume Change)"),
                                             selected = c("Volume"),
-                                            options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                                            options = pickerOptions(actionsBox = FALSE,
                                                                     showContent = TRUE),multiple = FALSE)
                         ),
                         column(
@@ -486,7 +497,7 @@ tabPanel(
         width = 2,
         pickerInput("tv_study_filtered", "Study",
                     choices = get_tv_study(),
-                    options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                    options = pickerOptions(actionsBox = FALSE,
                                             showContent = TRUE),multiple = FALSE)
       )
     ),
@@ -563,7 +574,7 @@ tabPanel(
                         pickerInput("waterfall_metric", "Waterfall Metric",
                                     choices = c('dVt', 'AUC.All.Measures', 'AUC.Filtered.Measures'),
                                     selected = 'dVt',
-                                    options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                                    options = pickerOptions(actionsBox = FALSE,
                                                             showContent = TRUE),multiple = FALSE),
                         checkboxInput("tv_waterfall_interpolate", "Interpolate Data For Calculation", FALSE)
                       )
@@ -637,7 +648,7 @@ tabPanel(
                   width = 2,
                   pickerInput("tv_tumor_filtered", "Tumor",
                     choices = get_tv_tumor(),
-                    options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                    options = pickerOptions(actionsBox = FALSE,
                                             showContent = TRUE),multiple = FALSE)
                 ),
                 column(
@@ -691,7 +702,7 @@ tabPanel(
                     pickerInput("tv_weight_plot_type", "Plot Facet Type",
                                 choices = c("Study Plot", "Treatment Plot"),
                                 selected = c("Study Plot"),
-                                options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                                options = pickerOptions(actionsBox = FALSE,
                                                         showContent = TRUE),multiple = FALSE)
                 ),
                 column(
@@ -699,7 +710,7 @@ tabPanel(
                   pickerInput("tv_weight_plot_style", "Plot Style",
                               choices = c("Study Average", "Individual Animal"),
                               selected = c("Study Average"),
-                              options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                              options = pickerOptions(actionsBox = FALSE,
                                                       showContent = TRUE),multiple = FALSE)
                 ),
                 column(
@@ -707,7 +718,7 @@ tabPanel(
                   pickerInput("tv_weight_plotType", "Plot Type",
                                     choices = c("Weight", "Percent Change"),
                                     selected = c("Weight"),
-                                    options = pickerOptions(actionsBox = FALSE, style = 'btn-light',
+                                    options = pickerOptions(actionsBox = FALSE,
                                                             showContent = TRUE),multiple = FALSE)
                 )
               )
@@ -740,13 +751,7 @@ tabPanel(
         )
       )
     )
-  ),
-  fluidRow(
-    column(width = 12)
-  ),
-  tags$script(src = "page_tracker.js")
-  #https://shiny.rstudio.com/articles/packaging-javascript.html
-  #https://stackoverflow.com/posts/61758293/revisions
+  )
 )
 
 

@@ -77,7 +77,14 @@ params:
 
 ```{r load options and functions, results='hide', echo=FALSE}
     
-    knitr::opts_chunk$set(fig.pos = "h", out.extra = "", warning = FALSE, message = FALSE)
+    knitr::opts_chunk$set(
+        fig.pos = "h",
+        fig.width = 9,
+        fig.height = 7,
+        out.width = "\\textwidth",
+        out.extra = "",
+        warning = FALSE,
+        message = FALSE)
     
     source(params$script_location, local = knitr::knit_global())
 
@@ -621,7 +628,7 @@ A Summary of cross study plots and analyses.
         filtered.df <- df %>%
         dplyr::filter(Study == study) %>% droplevels()
 
-        print(EFSplot(filtered.df, params$tv_PercChange_EventSize))
+        suppressWarnings(print(EFSplot(filtered.df, params$tv_PercChange_EventSize)))
 
         cat("\n\n\\newpage\n")
     }    
@@ -689,7 +696,7 @@ A Summary of cross study plots and analyses.
                     # caption = 'ANOVA and Tukey multiple means comparsion test tables'
                     # ) %>% kableExtra::kable_styling(latex_options = "HOLD_position"))
                     
-                                        # print(knitr::kables(
+                    # print(knitr::kables(
                     # list(
                     # # the first kable() to change column names
                     t1 <- knitr::kable(aov_res$anova[[1]], digits=2, format="latex", booktabs=T, linesep = "", valign = 't')
@@ -720,8 +727,7 @@ A Summary of cross study plots and analyses.
                     cat(kable(mct, digits=2, caption = "Tukey multiple means comparsion test") %>%
                     kable_styling(full_width = FALSE, position = "left"))
 
-                    cat(kable(mct[0,], digits=2, col.names = NULL, row.names = FALSE) %>%
-                    kable_styling(full_width = TRUE))
+                    cat('<div style="clear:both;"></div>')
                     # An empty table is required to break the 'float_left'. Without this table, the next header wraps to the right side of the screen. 
 
                 }

@@ -1,0 +1,12 @@
+name: PDX-Volumetric-Analyzer
+title: PDX-Volumetric-Analyzer
+username: pdxnet
+account: pdxnet
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 14847922
+bundleId: 10363337
+url: https://pdxnet.shinyapps.io/PDX-Volumetric-Analyzer/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

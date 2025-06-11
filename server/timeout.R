@@ -1,12 +1,12 @@
-timeoutSeconds <- 300
-warnSeconds <- 240
+timeoutSeconds <- 600
+warnSeconds <- 540
 
 inactivity <- sprintf("function idleTimer() {
-        
+
         var t = setTimeout(logout, %s);
-        
+
         var t2 = setTimeout(warn, %s );
-        
+
         var a = 1;
 
         window.onmousemove = resetTimer; // catches mouse movements
@@ -31,13 +31,13 @@ inactivity <- sprintf("function idleTimer() {
             t2 = setTimeout(warn, %s);  // time is in milliseconds (1000 is 1 second)
         }
     }
-    idleTimer();", 
-    timeoutSeconds*1000, 
-    warnSeconds*1000, 
-    timeoutSeconds, 
-    timeoutSeconds*1000, 
+    idleTimer();",
+    timeoutSeconds*1000,
+    warnSeconds*1000,
+    timeoutSeconds,
+    timeoutSeconds*1000,
     warnSeconds*1000
-    # Each of the '%s' corresponds to the a statement in the comma delim string. 
+    # Each of the '%s' corresponds to the a statement in the comma delim string.
 )
 
 #https://stackoverflow.com/a/53207050/18557826

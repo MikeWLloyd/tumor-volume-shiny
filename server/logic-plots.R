@@ -10,7 +10,7 @@ colorblind_palette <- c(
   '#6db6ff',
   '#924900',
   "#e69f00",
-  "#3372b2", 
+  "#3372b2",
   '#ffff6d',
   '#24ff24',
   '#b66dff',
@@ -22,14 +22,14 @@ colorblind_palette <- c(
   '#44aa99',
   '#B7B2D1',
   '#BD6666',
-  "#007E5C", 
-  "#f0e442", 
-  '#e00f00', 
+  "#007E5C",
+  "#f0e442",
+  '#e00f00',
   '#cc8d4d')
 
 colorblind_palette_noControl <- colorblind_palette[-1]
 
-shape_palette <- c( 
+shape_palette <- c(
   16,15,17,18,3,4,5,6,15,16,17,18,3,4,5,6,16,15,17,18,3,4,5,6,15
 )
 
@@ -54,7 +54,7 @@ get_data_summary <- function(data, plot.type,  measure.var, group.vars){
   }
 }
 
-# HELPER FUNCTION - GET SUMMARIZED DATA FOR PLOT WITHIN A STUDY. 
+# HELPER FUNCTION - GET SUMMARIZED DATA FOR PLOT WITHIN A STUDY.
 get_data_summary_study <- function(data, measure.var, group.vars){
 
   # make sure the colnames of indata including 'Arms', 'ID', 'Times', 'Volume' or 'BodyWeight', which guarantee normal running for the following code.
@@ -133,16 +133,16 @@ get_interpolated_pdx_data <- function(data){
 # HELPER FUNCTION - GET AUC
 auc <- function(x, y, from = min(x, na.rm=TRUE), to = max(x, na.rm=TRUE), type=c("linear", "spline"), absolutearea=FALSE, subdivisions = 100, ...) {
     type <- match.arg(type)
-    
+
     # Sanity checks
     stopifnot(length(x) == length(y))
     stopifnot(!is.na(from))
-    
+
     if (length(unique(x)) < 2)
       return(NA)
-    
+
     if (type=="linear") {
-      
+
       ## Default option
       if (absolutearea==FALSE) {
         values <- approx(x, y, xout = sort(unique(c(from, to, x[x > from & x < to]))), ...)
@@ -152,24 +152,24 @@ auc <- function(x, y, from = min(x, na.rm=TRUE), to = max(x, na.rm=TRUE), type=c
         o <- order(x)
         ox <- x[o]
         oy <- y[o]
-        
+
         idx <- which(diff(oy >= 0)!=0)
         newx <- c(x, x[idx] - oy[idx]*(x[idx+1]-x[idx]) / (y[idx+1]-y[idx]))
         newy <- c(y, rep(0, length(idx)))
         values <- approx(newx, newy, xout = sort(unique(c(from, to, newx[newx > from & newx < to]))), ...)
         res <- 0.5 * sum(diff(values$x) * (abs(values$y[-1]) + abs(values$y[-length(values$y)])))
       }
-      
+
     } else { ## If it is not a linear approximation
       if (absolutearea)
         myfunction <- function(z) { abs(splinefun(x, y, method="natural")(z)) }
       else
         myfunction <- splinefun(x, y, method="natural")
-      
-      
+
+
       res <- integrate(myfunction, lower=from, upper=to, subdivisions=subdivisions)$value
     }
-    
+
     res
 }
 
@@ -200,36 +200,36 @@ T.C_ratio <- function(data, last.measure.day = NULL) {
         data.d$Arms <- relevel(as.factor(data.d$Arms), 'Control')
 
         Response.Level.tmp <- data.frame()
-      
+
         if (length(data.d$Arms) < 2) stop('Can not compute T/C ratio with only 1 group')
-        
+
         aov.df <- data.frame()
-        
+
         data.id.c <- data.d[data.d$Arms == 'Control',]
-        
+
         if (!is.null(last.measure.day)) {
-          
+
           end_day_index = match(last.measure.day, data.id.c$Times)
-          
+
           if (is.na(end_day_index)) {
             end_day_index = which.min(abs(data.id.c$Times - last.measure.day))
           }
-          
+
           last.avail.day <- data.id.c[end_day_index,]$Times
-          
+
         } else {
           end_day_index <-length(data.id.c$Volume)
           last.avail.day <- data.id.c[end_day_index,]$Times
         }
-        
+
         data.id.sub.c <- data.id.c %>%
           dplyr::arrange(Contributor, Study, Tumor, Arms, ID, Times) %>%
           dplyr::group_by(Contributor, Study, Tumor, Arms, ID) %>%
           dplyr::mutate(dVt = (((Volume - Volume[1]) / Volume[1] ) * 100),
                         TV.ratio = (Volume / Volume[1]),
-                        log2.Fold.Change = log2(Volume / Volume[1])) %>% 
+                        log2.Fold.Change = log2(Volume / Volume[1])) %>%
           dplyr::filter(Times == last.avail.day)
-        
+
         aov.df <- rbind(aov.df, data.id.sub.c)
 
         mean.C <- mean(data.id.sub.c$TV.ratio)
@@ -237,38 +237,38 @@ T.C_ratio <- function(data, last.measure.day = NULL) {
         n.C <- length(data.id.sub.c$TV.ratio)
 
         for (i in levels(data.d$Arms)) {
-          
+
           if(i == 'Control') {
             next
           }
-          
+
           data.id.i <- data.d[data.d$Arms == i,]
-          
+
           if (!is.null(last.measure.day)) {
-            
+
             end_day_index = match(last.measure.day, data.id.i$Times)
-            
+
             if (is.na(end_day_index)) {
               end_day_index = which.min(abs(data.id.i$Times - last.measure.day))
             }
-            
+
             last.avail.day <- data.id.i[end_day_index,]$Times
-            
+
           } else {
             end_day_index <-length(data.id.i$Volume)
             last.avail.day <- data.id.i[end_day_index,]$Times
           }
-          
+
           data.id.i <- data.id.i %>%
             dplyr::arrange(Contributor, Study, Tumor, Arms, ID, Times) %>%
             dplyr::group_by(Contributor, Study, Tumor, Arms, ID) %>%
             dplyr::mutate(dVt = (((Volume - Volume[1]) / Volume[1] ) * 100),
                           TV.ratio = (Volume / Volume[1]),
-                          log2.Fold.Change = log2(Volume / Volume[1])) %>% 
+                          log2.Fold.Change = log2(Volume / Volume[1])) %>%
             dplyr::filter(Times == last.avail.day)
-      
+
           aov.df <- rbind(aov.df, data.id.i)
-          
+
           mean.T <- mean(data.id.i$TV.ratio)
           var.T <- var(data.id.i$TV.ratio)
           n.T <- length(data.id.i$TV.ratio)
@@ -277,7 +277,7 @@ T.C_ratio <- function(data, last.measure.day = NULL) {
 
           TC.ratio <- (mean.T / mean.C)
           se_TC.ratio <- 1 / mean.C * ((var.T / n.T + (mean.T / mean.C) * (var.C / n.C))^0.5)
-        
+
           tmp.df <- data.frame(Arms = i,
                               Contributor = c,
                               Study = s,
@@ -285,44 +285,44 @@ T.C_ratio <- function(data, last.measure.day = NULL) {
                               TC.CalcDay = last.avail.day,
                               mean.dVt = mean.dVt,
                               SE.dVt = SE.dVt,
-                              mean.TVratio = mean.T, 
-                              var.TVratio = var.T, 
+                              mean.TVratio = mean.T,
+                              var.TVratio = var.T,
                               n.TVratio = n.T,
                               TC.ratio = TC.ratio,
                               se_TC.ratio = se_TC.ratio)
-          
+
           Response.Level.tmp <- rbind(Response.Level.tmp,tmp.df)
         }
 
         aov.df$TV.ratio <- ifelse(aov.df$TV.ratio==0, 0.001, aov.df$TV.ratio)
-        
+
         lm.fit <- aov(log2(TV.ratio) ~ Arms, data = aov.df)
-        
+
         beta <- lm.fit$coefficients[-1]
-        
+
         aov.TC.ratio <- round((2^beta), 2)
-        
+
         names(aov.TC.ratio) <- sub("Arms","", names(aov.TC.ratio))
-        
+
         ANOVA.pvalue<-anova(lm.fit)[1,"Pr(>F)"]
-        
+
         myContr <- contrMat(table(data.d$Arms), "Tukey")[1:(length(levels(data.d$Arms))-1),]
-        
+
         mcp <- glht(lm.fit, linfct = mcp(Arms =  myContr))
-        
+
         mcp.sum <- summary(mcp,test = univariate())
-        
+
         contr.p <- mcp.sum$test$"pvalues"
-        
+
         contr.p.1sided <- pt( mcp.sum$test$tstat, mcp.sum$df, lower = TRUE)
-        
+
         temp.df <- data.frame(aov.TC.ratio = aov.TC.ratio,
                               Contrast.pValue = contr.p.1sided)
-        
+
         temp.df <- temp.df %>% tibble::rownames_to_column('Arms')
-        
+
         Response.merge <- merge(Response.Level.tmp, temp.df, by='Arms')
-        
+
         Response.Level <- rbind(Response.Level,Response.merge)
         }
     }
@@ -330,10 +330,10 @@ T.C_ratio <- function(data, last.measure.day = NULL) {
   return(Response.Level)
 }
 
-# HELPER FUNCTION - GET COHORT LEVEL ORC LEVELS 
+# HELPER FUNCTION - GET COHORT LEVEL ORC LEVELS
 get_response_level <- function(data, last.measure.day){
-  # this is passed a df already filtered to study. 
-  # loop over arms and get ORC for each arm within the study. 
+  # this is passed a df already filtered to study.
+  # loop over arms and get ORC for each arm within the study.
 
   if(inherits(data, "data.frame")){
     data<-as.data.frame(data)
@@ -344,12 +344,12 @@ get_response_level <- function(data, last.measure.day){
 
   Response.Level <- vector()
   mouse.info <- vector()
-  
+
   for (d in levels(as.factor(data$Tumor))) {
 
     data.d <- data[data$Tumor == d,]
     data.d <- droplevels(data.d)
-    
+
     Arms <- unique(data.d$Arms)
 
     for ( i in 1:length(Arms)){
@@ -357,7 +357,7 @@ get_response_level <- function(data, last.measure.day){
       data.id.i <- data.d[data.d$Arms == Arms[i],]
 
       ID <- unique(data.id.i$ID)
-      
+
       rc.change <- vector()
 
       for ( a in 1:length(ID)) {
@@ -377,12 +377,12 @@ get_response_level <- function(data, last.measure.day){
 
         volume.change.rate <- (((data.id.a$Volume[end_day_index] - data.id.a$Volume[1])/data.id.a$Volume[1]) * 100)
         rc.change <- append(rc.change, volume.change.rate)
-        
+
         mouse.info.a <- data.frame(Tumor = d,
                                   Arms = Arms[i],
                                   ID = data.id.a$ID[a],
                                   Nearest.Measure.Day.Avail = data.id.a$Times[end_day_index])
-        
+
         mouse.info <- rbind(mouse.info, mouse.info.a)
 
       }
@@ -402,15 +402,15 @@ get_response_level <- function(data, last.measure.day){
 
       # NOTE: The RECIST classification needs to be adjusted to fit the classification used in the MS. Currently this is the Jax PDX classification.
       #
-      # Funda suggested the following for individual mice:  
-      # 
-      # case_when(dVt <= -95 ~ 'CR', 
-      #   dVt > -95 & dVt <= -30 ~ 'PR', 
+      # Funda suggested the following for individual mice:
+      #
+      # case_when(dVt <= -95 ~ 'CR',
+      #   dVt > -95 & dVt <= -30 ~ 'PR',
       #   dVt > -30 & dVt <= 20 ~ 'SD',
       #   dVt > 20 ~ 'PD'))
       #
-      # # MWL Question: should the RECIST individual animal waterfall plots be shown? 
-      # # MWL Question: how is RECIST for individual animals translated into a model specific value? 
+      # # MWL Question: should the RECIST individual animal waterfall plots be shown?
+      # # MWL Question: how is RECIST for individual animals translated into a model specific value?
 
       response.level.id.i <- data.frame(Tumor = d,
                                         Arms = Arms[i],
@@ -441,12 +441,12 @@ IndividualMouseResponse <- function(data, last.measure.day = NULL) {
 
     data.c <- data[data$Contributor == c,]
     data.c <- droplevels(data.c)
-    
+
     for (s in levels(as.factor(data.c$Study))) {
 
       data.s <- data.c[data.c$Study == s,]
       data.s <- droplevels(data.s)
-        
+
       for (d in levels(as.factor(data.s$Tumor))) {
 
         data.d <- data.s[data.s$Tumor == d,]
@@ -500,14 +500,14 @@ IndividualMouseResponse <- function(data, last.measure.day = NULL) {
             dplyr::select(ID, Times, AUC.Filtered.Measures) %>%
             dplyr::full_join(data.id.i, by = c('ID', 'Times')) %>%
             dplyr::filter(Times == last.avail.day) %>%
-            dplyr::mutate(ORC = case_when(dVt <= -95 ~ 'CR', 
-                                          dVt > -95 & dVt <= -30 ~ 'PR', 
+            dplyr::mutate(ORC = case_when(dVt <= -95 ~ 'CR',
+                                          dVt > -95 & dVt <= -30 ~ 'PR',
                                           dVt > -30 & dVt <= 20 ~ 'SD',
-                                          dVt > 20 ~ 'PD')) %>% 
+                                          dVt > 20 ~ 'PD')) %>%
             dplyr::select(c('ID', 'Times', 'Contributor', 'Study', 'Arms', 'Tumor', 'Volume', 'dVt', 'log2.Fold.Change', 'AUC.Filtered.Measures', 'AUC.All.Measures', 'ORC'))
 
           data.id.sub <- as.data.frame(data.id.sub)
-         
+
           Response.Level <- rbind(Response.Level, data.id.sub)
         }
       }
@@ -521,17 +521,17 @@ IndividualMouseResponse <- function(data, last.measure.day = NULL) {
 clean_pltly_legend <- function(.pltly_obj, .new_legend = c()) {
   # https://www.anycodings.com/1questions/209076/avoid-legend-duplication-in-plotly-conversion-from-ggplot-with-facetwrap
   # Cleans up a plotly object legend, particularly when ggplot is facetted
-  
+
   assign_leg_grp <- function(.legend_group, .leg_nms) {
     # Assigns a legend group from the list of possible entries
     # Used to modify the legend settings for a plotly object
-    
+
     leg_nms_rem <- .leg_nms
-    
+
     parse_leg_nms <- function(.leg_options) {
       # Assigns a .leg_name, if possible
       # .leg_options is a 2-element list: 1 = original value; 2 = remaining options
-      
+
       if (is.na(.leg_options)) {
         .leg_options
       } else if(length(leg_nms_rem) == 0) {
@@ -541,52 +541,52 @@ clean_pltly_legend <- function(.pltly_obj, .new_legend = c()) {
         # Transfer the first element of the remaining options
         leg_nm_new <- leg_nms_rem[[1]]
         leg_nms_rem <<- leg_nms_rem[-1]
-        
+
         leg_nm_new
       }
-      
+
     }
-    
-    .legend_group %>% 
+
+    .legend_group %>%
       map(~ parse_leg_nms(.))
-    
+
   }
-  
+
   simplify_leg_grps <- function(.legendgroup_vec) {
     # Simplifies legend groups by removing brackets, position numbers and then de-duplicating
-    
+
     leg_grp_cln <-
       map_chr(.legendgroup_vec, ~ str_replace_all(., c("^\\(" = "", ",\\d+\\)$" = "")))
-    
+
     modify_if(leg_grp_cln, duplicated(leg_grp_cln), ~ NA_character_)
-    
+
   }
-  
+
   pltly_obj_data <-
     .pltly_obj$x$data
-  
+
   pltly_leg_grp <-
     # pltly_leg_grp is a character vector where each element represents a legend group. Element is NA if legend group not required or doesn't exist
-    pltly_obj_data%>% 
-    map(~ pluck(., "legendgroup")) %>% 
+    pltly_obj_data%>%
+    map(~ pluck(., "legendgroup")) %>%
     map_chr(~ if (is.null(.)) {NA_character_} else {.}) %>%
-    # Elements where showlegend = FALSE have legendgroup = NULL. 
-    
-    simplify_leg_grps() %>% 
-    
-    assign_leg_grp(.new_legend) 
-  
+    # Elements where showlegend = FALSE have legendgroup = NULL.
+
+    simplify_leg_grps() %>%
+
+    assign_leg_grp(.new_legend)
+
   pltly_obj_data_new <-
-    pltly_obj_data %>% 
+    pltly_obj_data %>%
     map2(pltly_leg_grp, ~ list_modify(.x, legendgroup = .y)) %>%
     map2(pltly_leg_grp, ~ list_modify(.x, name = .y)) %>%
     map2(pltly_leg_grp, ~ list_modify(.x, showlegend = !is.na(.y)))
   # i.e. showlegend set to FALSE when is.na(pltly_leg_grp), TRUE when not is.na(pltly_leg_grp)
-  
+
   .pltly_obj$x$data <- pltly_obj_data_new
-  
+
   .pltly_obj
-  
+
 }
 
 ##  ## ##  ##  ##  ## ##
@@ -609,27 +609,27 @@ get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment'
 
       if(pattern == 'Study'){
         s.data$label <- with(s.data,paste0("Contrib: ",Contributor,", ","Study: ",Study,", ","Tumor: ",Tumor))
-      
+
         p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Arms, shape = Arms)) +
-              geom_hline(yintercept = 0, size = 0.3) +
-              geom_line(position = position_dodge(position.dodge), cex = 0.8) +
+              geom_hline(yintercept = 0, linewidth = 0.3) +
+              geom_line(position = position_dodge(position.dodge), linewidth = 0.8) +
               geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
                             width = 1,
                             position = position_dodge(position.dodge)) +
-              geom_point(cex = 1.5,
+              geom_point(size = 1.5,
                         position = position_dodge(position.dodge)
               )
       }
       if(pattern == 'Treatment'){
         s.data$label <- with(s.data,paste0("Contrib: ",Contributor,", ","Tumor: ",Tumor,", ","Arm: ",Arms))
-      
+
         p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Study, shape = Study)) +
-              geom_hline(yintercept = 0, size = 0.3) +
-              geom_line(position = position_dodge(position.dodge), cex = 0.8) +
+              geom_hline(yintercept = 0, linewidth = 0.3) +
+              geom_line(position = position_dodge(position.dodge), linewidth = 0.8) +
               geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
                             width = 1,
                             position = position_dodge(position.dodge)) +
-              geom_point(cex = 1.5,
+              geom_point(size = 1.5,
                         position = position_dodge(position.dodge)
               )
       }
@@ -640,19 +640,19 @@ get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment'
 
       if(pattern == 'Study'){
         data$label <- with(data,paste0("Contrib: ",Contributor,", ","Study: ",Study,", ","Tumor: ",Tumor))
-      
+
         p <- ggplot(data, aes(x = Times, y = Volume, group = ID, color = Arms, shape = Arms)) +
-          geom_hline(yintercept = 0, size = 0.3) +
-          geom_line(size=0.8) +
-          geom_point(cex=1.5,aes(colour = Arms))
+          geom_hline(yintercept = 0, linewidth = 0.3) +
+          geom_line(linewidth = 0.8) +
+          geom_point(size = 1.5,aes(colour = Arms))
       }
       if(pattern == 'Treatment'){
         data$label <- with(data,paste0("Contrib: ",Contributor,", ","Tumor: ",Tumor,", ","Arm: ",Arms))
-      
+
         p <- ggplot(data, aes(x = Times, y = Volume, group = ID, color = Study, shape = Study)) +
-              geom_hline(yintercept = 0, size = 0.3) +
-              geom_line(size=0.8) +
-              geom_point(cex=1.5,aes(colour = Study))
+              geom_hline(yintercept = 0, linewidth = 0.3) +
+              geom_line(linewidth = 0.8) +
+              geom_point(size = 1.5,aes(colour = Study))
       }
     }
 
@@ -684,18 +684,18 @@ get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment'
 
 
     if(pattern == 'Study'){
-      p <- p + facet_wrap(~ label, dir = 'h') + 
+      p <- p + facet_wrap(~ label, dir = 'h') +
         labs(color = "Treatments") +
         theme(strip.text = element_text(colour = "black", face = "bold", size = 9),
-              strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)
+              strip.background = element_rect(fill = "#56b4e9", linewidth = rel(1.05), linetype = 1)
         )
     }
 
     if(pattern == 'Treatment'){
-      p <- p + facet_wrap(~ label, dir = 'h') + 
+      p <- p + facet_wrap(~ label, dir = 'h') +
         labs(color = "Study") +
         theme(strip.text = element_text(colour = "black", face = "bold", size = 9),
-              strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)
+              strip.background = element_rect(fill = "#56b4e9", linewidth = rel(1.05), linetype = 1)
         )
     }
 
@@ -707,7 +707,7 @@ get_tv_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatment'
 
 # SCALED TV PLOT
 get_plot_scaled <- function(data, orders = NULL, position.dodge, title = NULL, scale.factor, scale.by.volume = FALSE, level = 'Arm', pattern = "TAN", ...){
-  
+
   if (is.null(data) | nrow(data) == 0) {
     plot_ly()
   }else{
@@ -769,20 +769,20 @@ get_plot_scaled <- function(data, orders = NULL, position.dodge, title = NULL, s
 
       if(pattern == 'Study'){
         adjusted.data$label <- with(adjusted.data,paste0("Contrib: ",Contributor,", ","Study: ",Study,", ","Tumor: ",Tumor))
-      
+
         p <- ggplot(data = adjusted.data, aes(x = Times, y = Moscow, group = ID, color = Arms, shape = Arms)) +
-          geom_hline(yintercept = 0, size = 0.3) +
-          geom_line(position = position_dodge(position.dodge), cex = 0.8) +
-          geom_point(cex = 1.5, position = position_dodge(position.dodge)) +
+          geom_hline(yintercept = 0, linewidth = 0.3) +
+          geom_line(position = position_dodge(position.dodge), linewidth = 0.8) +
+          geom_point(size = 1.5, position = position_dodge(position.dodge)) +
           ylim(-100, 100) + labs(caption = caption_text)
       }
       if(pattern == 'Treatment'){
         adjusted.data$label <- with(adjusted.data,paste0("Contrib: ",Contributor,", ","Tumor: ",Tumor,", ","Arm: ",Arms))
-      
+
         p <- ggplot(data = adjusted.data, aes(x = Times, y = Moscow, group = ID, color = Study, shape = Study)) +
-          geom_hline(yintercept = 0, size = 0.3) +
-          geom_line(position = position_dodge(position.dodge), cex = 0.8) +
-          geom_point(cex = 1.5, position = position_dodge(position.dodge)) +
+          geom_hline(yintercept = 0, linewidth = 0.3) +
+          geom_line(position = position_dodge(position.dodge), linewidth = 0.8) +
+          geom_point(size = 1.5, position = position_dodge(position.dodge)) +
           ylim(-100, 100) + labs(caption = caption_text)
       }
     }
@@ -797,25 +797,25 @@ get_plot_scaled <- function(data, orders = NULL, position.dodge, title = NULL, s
 
       if(pattern == 'Study'){
         s.data$label <- with(s.data,paste0("Contrib: ",Contributor,", ","Study: ",Study,", ","Tumor: ",Tumor))
-      
+
         p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Arms, shape = Arms)) +
-              geom_hline(yintercept = 0, size = 0.3) +
-              geom_line(position = position_dodge(position.dodge), cex = 0.8) +
+              geom_hline(yintercept = 0, linewidth = 0.3) +
+              geom_line(position = position_dodge(position.dodge), linewidth = 0.8) +
               geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
                             position = position_dodge(position.dodge)) +
-              geom_point(cex = 1.5, position = position_dodge(position.dodge)) +
+              geom_point(size = 1.5, position = position_dodge(position.dodge)) +
               ylim(-100, 100) + labs(caption = caption_text)
       }
 
       if(pattern == 'Treatment'){
         s.data$label <- with(s.data,paste0("Contrib: ",Contributor,", ","Tumor: ",Tumor,", ","Arm: ",Arms))
-      
+
         p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = Study, shape = Study)) +
-              geom_hline(yintercept = 0, size = 0.3) +
-              geom_line(position = position_dodge(position.dodge), cex = 0.8) +
+              geom_hline(yintercept = 0, linewidth = 0.3) +
+              geom_line(position = position_dodge(position.dodge), linewidth = 0.8) +
               geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
                             position = position_dodge(position.dodge)) +
-              geom_point(cex = 1.5, position = position_dodge(position.dodge)) +
+              geom_point(size = 1.5, position = position_dodge(position.dodge)) +
               ylim(-100, 100) + labs(caption = caption_text)
       }
 
@@ -842,7 +842,7 @@ get_plot_scaled <- function(data, orders = NULL, position.dodge, title = NULL, s
 
       p <- p + facet_wrap(~ label, dir = 'h')+ labs(color = "Treatments") +
         theme(strip.text = element_text(colour = "black", face = "bold", size = 9),
-              strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)
+              strip.background = element_rect(fill = "#56b4e9", linewidth = rel(1.05), linetype = 1)
         )
     }
 
@@ -850,7 +850,7 @@ get_plot_scaled <- function(data, orders = NULL, position.dodge, title = NULL, s
 
       p <- p + facet_wrap(~ label, dir = 'h')+ labs(color = "Study") +
         theme(strip.text = element_text(colour = "black", face = "bold", size = 9),
-              strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)
+              strip.background = element_rect(fill = "#56b4e9", linewidth = rel(1.05), linetype = 1)
         )
     }
 
@@ -870,19 +870,19 @@ plotAvgGrowthBar <- function(data) {
   adjusted.data <- data %>%
     dplyr::filter(Arms != 'Control')
 
-  adjusted.data$label <- with(adjusted.data,paste0("Contrib: ",Contributor,", ", "Study: ",Study)) 
+  adjusted.data$label <- with(adjusted.data,paste0("Contrib: ",Contributor,", ", "Study: ",Study))
 
   Volume <- adjusted.data[ , 'mean.dVt']
-  
+
   adjusted.data$mean.dVt <- round(adjusted.data$mean.dVt, 2)
 
-  p <- ggplot(adjusted.data, aes(x = Tumor, y = mean.dVt, fill = Arms)) + 
-    geom_hline(yintercept = 0) + 
+  p <- ggplot(adjusted.data, aes(x = Tumor, y = mean.dVt, fill = Arms)) +
+    geom_hline(yintercept = 0) +
     geom_bar(stat = 'identity', position = position_dodge2(width = 0.9, preserve = "single")) +
     geom_errorbar(aes(x = Tumor, ymin = mean.dVt - SE.dVt , ymax = mean.dVt + SE.dVt ), width=0.2, position = position_dodge(0.9)) +
     scale_fill_manual(values=colorblind_palette_noControl) +
-    scale_y_continuous(limits = c(-150, max(adjusted.data$mean.dVt) + max(adjusted.data$SE.dVt )), breaks = c(-100, seq(0, max(adjusted.data$mean.dVt) + max(adjusted.data$SE.dVt ), by = 100))) 
-  
+    scale_y_continuous(limits = c(-150, max(adjusted.data$mean.dVt) + max(adjusted.data$SE.dVt )), breaks = c(-100, seq(0, max(adjusted.data$mean.dVt) + max(adjusted.data$SE.dVt ), by = 100)))
+
   p <- p + xlab('') + ylab("Average Tumor Volume Change (%)")
   p <- p + theme_bw()+
     theme(
@@ -893,7 +893,7 @@ plotAvgGrowthBar <- function(data) {
       axis.text.x=element_blank(),
       axis.ticks.x=element_blank()
     )   #backgroud
- 
+
   p <- p + theme(axis.title.y = element_text(size = 11),
                  axis.text.y  = element_text(hjust = 1,size = 11)
   )
@@ -911,7 +911,7 @@ plotAvgGrowthBar <- function(data) {
   }
   p <- p + facet_grid(. ~ label, scales = "free_x") +
           theme(strip.text = element_text(colour = "black", face = "bold", size = 9),
-                strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1))
+                strip.background = element_rect(fill = "#56b4e9", linewidth = rel(1.05), linetype = 1))
 
   return(p)
 
@@ -919,16 +919,16 @@ plotAvgGrowthBar <- function(data) {
 
 #### LOG2FOLD CHANGE PLOT
 log2FoldPlot <- function(data, caption_text_on = TRUE, point_size = 3, ...) {
-  
+
   data$Arms <- relevel(as.factor(data$Arms), 'Control')
-  
+
   data$orders <- as.factor(1:nrow(data))
-  
+
   levels <- levels(relevel(as.factor(data$Arms), 'Control'))
-  
+
   caption_text = paste(unique(paste0(data$Arms, ': date of measure ', data$VC.LastDay)), collapse = ', ')
-  
-  data <- data %>% group_by(Contributor, Study, Tumor, Arms) %>% 
+
+  data <- data %>% group_by(Contributor, Study, Tumor, Arms) %>%
     dplyr::summarize(min = min(log2.Fold.Change),
                      q1 = round(quantile(log2.Fold.Change, 0.05),2),
                      median = round(median(log2.Fold.Change),2),
@@ -936,14 +936,14 @@ log2FoldPlot <- function(data, caption_text_on = TRUE, point_size = 3, ...) {
                      q3 = round(quantile(log2.Fold.Change, 0.95), 2),
                      max = max(log2.Fold.Change), .groups = "keep")
 
-  data$label <- with(data,paste0("Contrib: ",Contributor,", ", "Study: ",Study)) 
+  data$label <- with(data,paste0("Contrib: ",Contributor,", ", "Study: ",Study))
 
   p <- ggplot(data, aes(x = Tumor, y = mean)) +
-    geom_hline(yintercept = 0, size = 0.5, colour = 'black') +
+    geom_hline(yintercept = 0, linewidth = 0.5, colour = 'black') +
     geom_pointrange(aes(ymin=q1, ymax=q3, color = Arms), position=position_dodge(width=0.5), size = point_size) +
     scale_color_manual(name = "Treatment Arms", limits = levels, values = colorblind_palette) +
-    #scale_color_discrete(guide = "none") + 
-    ylab('Log2 Fold Change (95% CI)') + 
+    #scale_color_discrete(guide = "none") +
+    ylab('Log2 Fold Change (95% CI)') +
     xlab('') +
     theme_classic() %+replace%
     theme(axis.line.x = element_blank(),
@@ -953,16 +953,16 @@ log2FoldPlot <- function(data, caption_text_on = TRUE, point_size = 3, ...) {
           axis.title.y = element_text(angle = 90, size = 11))
   ###  NOTE: plotly does not respect geom_pointrange line width: https://github.com/plotly/plotly.R/issues/2133
 
-  #geom_abline(intercept = 50, slope = 0, size = 0.5, colour = 'black', linetype="dotdash") + 
-  #geom_abline(intercept = 90, slope = 0, size = 0.5, colour = 'black', linetype="dashed")
-  
+  #geom_abline(intercept = 50, slope = 0, linewidth = 0.5, colour = 'black', linetype="dotdash") +
+  #geom_abline(intercept = 90, slope = 0, linewidth = 0.5, colour = 'black', linetype="dashed")
+
   p <- p + theme(legend.background = element_rect(fill = 'white', colour = 'black'),
                   legend.title = element_text( size = 12, face = "bold"),
                   legend.text = element_text( size = 12)) #+
 
   p <- p + facet_grid(. ~ label, scales = "free_x") +
           theme(strip.text = element_text(colour = "black", face = "bold", size = 9),
-                strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)) + geom_vline(xintercept = seq(0.5, (length(levels(as.factor(data$Tumor))) + 1), by = 1), color = 'gray', linetype = 'dashed')
+                strip.background = element_rect(fill = "#56b4e9", linewidth = rel(1.05), linetype = 1)) + geom_vline(xintercept = seq(0.5, (length(levels(as.factor(data$Tumor))) + 1), by = 1), color = 'gray', linetype = 'dashed')
 
   if(caption_text_on){
     #caption_text = paste(unique(paste0(data$Arms, ': date of measure ', data$VC.LastDay)), collapse = ', ')
@@ -973,7 +973,7 @@ log2FoldPlot <- function(data, caption_text_on = TRUE, point_size = 3, ...) {
 
 ## HYBRID WATERFALL PLOT
 WaterfallPlot_Hybrid <- function(data) {
-  
+
   data <- data %>%
     dplyr::mutate(Value = ifelse(mean.dVt <= 0, mean.dVt, ifelse((aov.TC.ratio*100) > 100, 100, aov.TC.ratio*100))) %>%
     dplyr::mutate(SE = ifelse(mean.dVt <= 0, SE.dVt, ifelse((se_TC.ratio*100) > 100, 100, se_TC.ratio*100)))
@@ -982,12 +982,12 @@ WaterfallPlot_Hybrid <- function(data) {
   levels <- unique(levels(as.factor(data$Arms)))
   data <- droplevels(data)
 
-  data$label <- with(data,paste0("Contrib: ",Contributor,", ", "Study: ",Study)) 
+  data$label <- with(data,paste0("Contrib: ",Contributor,", ", "Study: ",Study))
 
-  p <- ggplot(data, aes(x = Tumor, y = Value, fill = Arms)) + 
+  p <- ggplot(data, aes(x = Tumor, y = Value, fill = Arms)) +
     scale_fill_manual(name = "Treatment Arms", values = colorblind_palette_noControl) +
-    scale_color_discrete(guide = "none") + 
-    xlab('') + 
+    scale_color_discrete(guide = "none") +
+    xlab('') +
     ylab('% change in TV                             T/C Ratio * 100') +
     #labs(list(x = NULL,y = "Tumor Volume Change (%)")) +
     theme_classic() %+replace%
@@ -997,8 +997,8 @@ WaterfallPlot_Hybrid <- function(data) {
           axis.text.y  = element_text(hjust = 1,vjust = 0.5,size = 11),
           axis.title.y = element_text(angle = 90, size = 11 )) +
     coord_cartesian(ylim = c(-100, 100))
-  
-  p <- p + geom_hline(yintercept = 0, size = 0.5,colour = 'black') +
+
+  p <- p + geom_hline(yintercept = 0, linewidth = 0.5,colour = 'black') +
     geom_bar(stat = "identity", position = position_dodge2(width = 0.9, padding = 0.05, preserve = "single")) +
     geom_errorbar(aes(x = Tumor, ymin = ifelse(Value - SE < -100, -100, Value - SE) , ymax = ifelse(Value + SE > 100, 100, Value + SE) ), width=0.2, position = position_dodge(0.9))
 
@@ -1009,14 +1009,14 @@ WaterfallPlot_Hybrid <- function(data) {
 
   p <- p + facet_grid(. ~ label, scales = "free_x") +
           theme(strip.text = element_text(colour = "black", face = "bold", size = 9),
-                strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1))
+                strip.background = element_rect(fill = "#56b4e9", linewidth = rel(1.05), linetype = 1))
 
   return(p)
 }
 
 ## T/C (TGI) RATIO PLOT
 plotTC.ratio <- function(data, plot_measure = c('TC.ratio', 'aov.TC.ratio')) {
-  data <- data %>% 
+  data <- data %>%
     dplyr::filter(Arms != 'Control')
 
   # data <- data %>%
@@ -1032,14 +1032,14 @@ plotTC.ratio <- function(data, plot_measure = c('TC.ratio', 'aov.TC.ratio')) {
     xlim <- c(0, 1)
   }
 
-  p <- ggplot(data, aes(x = Tumor, y = !!as.name(plot_measure), fill = Arms)) + 
-    geom_hline(yintercept = 0) + 
-    geom_bar(stat = 'identity', position = position_dodge2(width = 0.9, padding = 0.05, preserve = "single")) + 
-    geom_errorbar(aes(x = Tumor, 
-                      ymax = !!as.name(plot_measure) + se_TC.ratio, 
-                      ymin = ifelse(!!as.name(plot_measure) - se_TC.ratio < 0, 0, !!as.name(plot_measure) - se_TC.ratio)), 
+  p <- ggplot(data, aes(x = Tumor, y = !!as.name(plot_measure), fill = Arms)) +
+    geom_hline(yintercept = 0) +
+    geom_bar(stat = 'identity', position = position_dodge2(width = 0.9, padding = 0.05, preserve = "single")) +
+    geom_errorbar(aes(x = Tumor,
+                      ymax = !!as.name(plot_measure) + se_TC.ratio,
+                      ymin = ifelse(!!as.name(plot_measure) - se_TC.ratio < 0, 0, !!as.name(plot_measure) - se_TC.ratio)),
                   width=0.2, position = position_dodge(0.9)) +
-    scale_y_continuous(name="aov.T/C Ratio (SE)", limits = xlim, breaks=c(0, 0.25, 0.5, 0.75, 1), labels=c(0, 0.25, 0.5, 0.75, 1)) + 
+    scale_y_continuous(name="aov.T/C Ratio (SE)", limits = xlim, breaks=c(0, 0.25, 0.5, 0.75, 1), labels=c(0, 0.25, 0.5, 0.75, 1)) +
     scale_fill_manual(values=colorblind_palette_noControl) +
     xlab('')
 
@@ -1067,15 +1067,15 @@ plotTC.ratio <- function(data, plot_measure = c('TC.ratio', 'aov.TC.ratio')) {
                    legend.background = element_rect(fill = 'white', colour = 'black'),
                    legend.title = element_text( size = 12, face = "bold"),
                    legend.text = element_text( size = 12)) #+
-      #geom_vline(xintercept = seq(1.5, (length(levels(as.factor(data$Tumor))) + 1), by = 1), color = 'gray', linetype = 'dashed') 
+      #geom_vline(xintercept = seq(1.5, (length(levels(as.factor(data$Tumor))) + 1), by = 1), color = 'gray', linetype = 'dashed')
   }
-  
+
   p <- p + facet_grid(. ~ Contributor, scales = "free_x") +
           theme(strip.text = element_text(colour = "black", face = "bold", size = 9),
-                strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1))
+                strip.background = element_rect(fill = "#56b4e9", linewidth = rel(1.05), linetype = 1))
 
   return(p)
-  
+
 }
 
 ## ORC STACKED PLOT
@@ -1084,19 +1084,19 @@ plotStackedORC <- function(data) {
   color_pallet <- c("#5C8FC1", "#728D96", "#9DB4BC", "#D6DBE1")
   adjusted.data <- data %>%
     dplyr::group_by(Contributor, Study, Tumor, Arms) %>%
-    count(ORC) %>% 
-    dplyr::mutate(pct = n / sum(n)) %>% 
+    count(ORC) %>%
+    dplyr::mutate(pct = n / sum(n)) %>%
     dplyr::filter(Arms != 'Control')
 
   adjusted.data$ORC<-factor(adjusted.data$ORC, levels=c('PD', 'SD', 'PR', 'CR'), ordered = TRUE)
 
   adjusted.data$label <- with(adjusted.data,paste0("Contrib: ",Contributor,", ","Study: ",Study,", ","Tumor: ",Tumor))
-      
-  p <- ggplot(adjusted.data, aes(x = Arms, y = pct, fill = ORC)) + 
+
+  p <- ggplot(adjusted.data, aes(x = Arms, y = pct, fill = ORC)) +
     geom_col(width=0.7) +
     geom_text(aes(label = n), position = position_stack(vjust = 0.5)) +
     scale_fill_manual(name = "Objective Response", values = color_pallet, labels = c('PD', 'SD', 'PR', 'CR'), drop = F)
-  
+
   p <- p + xlab('') + ylab("Proportion Animals in ORC Class")
 
   p <- p + theme_bw() +
@@ -1108,10 +1108,10 @@ plotStackedORC <- function(data) {
       axis.text.x=element_blank(),
       axis.ticks.x=element_blank()
     )   #backgroud
-  
+
   p <- p + theme(axis.title.y = element_text(size = 11),
                  axis.text.y  = element_text(hjust = 1,size = 11))
-  
+
 
   p <- p + theme(axis.text.x  = element_text(hjust = 1,vjust = 1,size = 10, angle = 0),
                 legend.background = element_rect(fill = 'white', colour = 'black'),
@@ -1163,12 +1163,12 @@ study_volume_plot <- function(data, orders = NULL, position.dodge, title = NULL,
     s.data$label <- with(s.data,paste0(Tumor, " - ", Arms))
 
     p <- ggplot(data = s.data, aes(x = Times, y = Volume, color = label, shape = label)) +
-      geom_line(position = position_dodge(position.dodge),cex = 1.2) +
+      geom_line(position = position_dodge(position.dodge), linewidth = 1.2) +
       geom_errorbar(aes(ymin = Volume - SE, ymax = Volume + SE),
                     width = 1.2,
                     position = position_dodge(position.dodge)) +
-      geom_point(cex = 2,position = position_dodge(position.dodge))
-  
+      geom_point(size = 2, position = position_dodge(position.dodge))
+
     p <- p + xlab("Time (d)") + ylab(expression(bold(paste("Tumor Volume (",mm^3,")",sep = " "))))
 
     p <- p + theme_bw() +
@@ -1185,11 +1185,11 @@ study_volume_plot <- function(data, orders = NULL, position.dodge, title = NULL,
       axis.text.y  = element_text(hjust = 1,size = 12)
     )
 
-    p <- p + scale_color_manual(values=colorblind_palette) + geom_hline(yintercept = 0, size = 0.3)
+    p <- p + scale_color_manual(values=colorblind_palette) + geom_hline(yintercept = 0, linewidth = 0.3)
     p <- p + scale_shape_manual(values=shape_palette)
 
     if (! is.null(title)) {
-      
+
       p <- p + ggtitle(title)
 
       p
@@ -1239,10 +1239,10 @@ WaterfallPlot_PDX <- function(data,
           axis.title.y = element_text(face = "bold",angle = 90,size = 12)) +
     coord_cartesian(ylim = c(NA,max(data$vc.rate)))
 
-  p <- p + geom_abline(intercept = 0, slope = 0,size = 0.5,colour = 'black') +
+  p <- p + geom_abline(intercept = 0, slope = 0,linewidth = 0.5,colour = 'black') +
     geom_bar(stat = "identity", width = 0.8, position = position_dodge(width = 0.8)) #+
-  #geom_abline(intercept = 50, slope = 0, size = 0.5, colour = 'black', linetype="dotdash") +
-  #geom_abline(intercept = 90, slope = 0, size = 0.5, colour = 'black', linetype="dashed")
+  #geom_abline(intercept = 50, slope = 0, geom_abline = 0.5, colour = 'black', linetype="dotdash") +
+  #geom_abline(intercept = 90, slope = 0, geom_abline = 0.5, colour = 'black', linetype="dashed")
 
   p <- p + theme(legend.background = element_rect(fill = 'white', colour = 'black'),
                  legend.title = element_text( size = 12, face = "bold"),
@@ -1263,8 +1263,8 @@ WaterfallPlot_PDX <- function(data,
 
 # STUDY EFS PLOT
 EFSplot <- function(data, PercChange_EventSize = 100, plot_on = TRUE) {
-  # This is passed a df from one study. 
-  # the analysis is done comparing treatment arms within study. 
+  # This is passed a df from one study.
+  # the analysis is done comparing treatment arms within study.
 
   if(inherits(data, "data.frame")){
     data<-as.data.frame(data)
@@ -1287,14 +1287,15 @@ EFSplot <- function(data, PercChange_EventSize = 100, plot_on = TRUE) {
   data$Arms <- relevel(as.factor(data$Arms), 'Control')
 
   fit <- survfit(Surv(Times, Outcome) ~ Tumor + Arms, data = data, error = "greenwood")
-  
+
   #names(fit$strata)
   label_text <- names(fit$strata)
 
   label_text <- gsub('Tumor=', '', label_text)
   label_text <- gsub(', Arms=', ' - ', label_text)
-
-  p <- ggsurvplot(fit,
+  
+  p <- suppressWarnings(
+    survminer::ggsurvplot(fit,
                   data = data,
                   size = 1,                 # change line size
                   palette = colorblind_palette,
@@ -1310,7 +1311,9 @@ EFSplot <- function(data, PercChange_EventSize = 100, plot_on = TRUE) {
                   legend.title="Arms",
                   risk.table.title='',
                   break.time.by = 5
+    )
   )
+
   return(p)
 }
 
@@ -1404,7 +1407,7 @@ response_analysis <- function(input_data, method=c('endpoint.ANOVA','endpoint.KW
                 buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download")))) %>%
               formatSignif(c('Sum Sq', 'Mean Sq', 'F value', 'Pr(>F)'), 4)
     return(tab.df)
-  
+
   } else {
 
     mct <- as.data.frame(multiple_comp_test[['Arms']])
@@ -1445,28 +1448,26 @@ get_weight_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatm
 
       if(pattern == 'Study'){
         s.data$label <- with(s.data,paste0("Contrib: ",Contributor,", ","Study: ",Study,", ","Tumor: ",Tumor))
-      
+
         p <- ggplot(data = s.data, aes(x = Times, y = Body_Weight, color = Arms)) +
-              geom_hline(yintercept = 0, size = 0.3) +
-              geom_line(position = position_dodge(position.dodge),cex = 1.2) +
+              geom_hline(yintercept = 0, linewidth = 0.3) +
+              geom_line(position = position_dodge(position.dodge), linewidth = 1.2) +
               geom_errorbar(aes(ymin = Body_Weight - SE, ymax = Body_Weight + SE),
                             width = 1,
                             position = position_dodge(position.dodge)) +
-              geom_point(cex = 2,
-                        position = position_dodge(position.dodge)
+              geom_point(size = 2, position = position_dodge(position.dodge)
               )
       }
       if(pattern == 'Treatment'){
         s.data$label <- with(s.data,paste0("Contrib: ",Contributor,", ","Tumor: ",Tumor,", ","Arm: ",Arms))
-      
+
         p <- ggplot(data = s.data, aes(x = Times, y = Body_Weight, color = Study)) +
-              geom_hline(yintercept = 0, size = 0.3) +
-              geom_line(position = position_dodge(position.dodge),cex = 1.2) +
+              geom_hline(yintercept = 0, linewidth = 0.3) +
+              geom_line(position = position_dodge(position.dodge), linewidth = 1.2) +
               geom_errorbar(aes(ymin = Body_Weight - SE, ymax = Body_Weight + SE),
                             width = 1,
                             position = position_dodge(position.dodge)) +
-              geom_point(cex = 2,
-                        position = position_dodge(position.dodge)
+              geom_point(size = 2, position = position_dodge(position.dodge)
               )
       }
     }
@@ -1478,17 +1479,17 @@ get_weight_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatm
         data$label <- with(data,paste0("Contrib: ",Contributor,", ","Study: ",Study,", ","Tumor: ",Tumor))
 
         p <- ggplot(data, aes(x = Times, y = Body_Weight, group = ID, color = Arms)) +
-          geom_hline(yintercept = 0, size = 0.3) +
-          geom_line(size=0.8) +
-          geom_point(cex=1.5,aes(colour = Arms))
+          geom_hline(yintercept = 0, linewidth = 0.3) +
+          geom_line(linewidth=0.8) +
+          geom_point(size = 1.5, aes(colour = Arms))
       }
       if(pattern == 'Treatment'){
         data$label <- with(data,paste0("Contrib: ",Contributor,", ","Tumor: ",Tumor,", ","Arm: ",Arms))
-      
+
         p <- ggplot(data, aes(x = Times, y = Body_Weight, group = ID, color = Study)) +
-              geom_hline(yintercept = 0, size = 0.3) +
-              geom_line(size=0.8) +
-              geom_point(cex=1.5,aes(colour = Study))
+              geom_hline(yintercept = 0, linewidth = 0.3) +
+              geom_line(linewidth=0.8) +
+              geom_point(size = 1.5, aes(colour = Study))
       }
     }
 
@@ -1517,14 +1518,14 @@ get_weight_plot <- function(data, level = c('Animal','Arm'), pattern = c('Treatm
     if(pattern == 'Study'){
       p <- p + facet_wrap(~ label, dir = 'h')+ labs(color = "Treatments") +
         theme(strip.text = element_text(colour = "black", face = "bold", size = 9),
-              strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)
+              strip.background = element_rect(fill = "#56b4e9", linewidth = rel(1.05), linetype = 1)
         )
     }
 
     if(pattern == 'Treatment'){
       p <- p + facet_wrap(~ label, dir = 'h')+ labs(color = "Study") +
         theme(strip.text = element_text(colour = "black", face = "bold", size = 9),
-              strip.background = element_rect(fill = "#56b4e9", size = rel(1.05), linetype = 1)
+              strip.background = element_rect(fill = "#56b4e9", linewidth = rel(1.05), linetype = 1)
         )
     }
 

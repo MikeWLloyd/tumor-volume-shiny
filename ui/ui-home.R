@@ -5,9 +5,9 @@ source(file.path("ui", "interface_variables.R"), local = TRUE)
 tabPanel(
   title = title_home, icon = icon("home", verify_fa = FALSE),
   tags$head(HTML(
-  '<link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png">
+  '<link rel="apple-touch-icon" sizes="180x180" href="www/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="www/favicon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="www/favicon.png">
   <meta name="theme-color" content="#ffffff">')),
 
   tags$head(
