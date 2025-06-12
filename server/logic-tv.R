@@ -538,7 +538,7 @@ rownames(data) <- NULL
         HTML("<br>"),
         checkboxInput("override_day", "Use single date for report calculations?", FALSE),
         numericInput("report_day", "Calculation Day for Report", value = '', min = 0, max = 500),
-        HTML("<br>NOTE: Report compile time can be ~1-5min.<br>Please be patient while the report is generated."),
+        HTML("<br>Report compile time can be ~1-5min.<br>Please be patient while the report is generated."),
       footer = tagList(
         downloadButton(outputId = "report", "Generate Report"),
         modalButton("Cancel")
@@ -566,25 +566,27 @@ showReportGeneratingModal <- function() {
       tags$div(
         style = "display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px;",
         tags$div(
-          style = "margin-bottom: 20px; font-size: 1.5em; font-weight: normal; text-align: center;",
-          tags$b("Report is being generated"),
+          style = "margin-bottom: 20px; font-size: 2.0em; font-weight: normal; text-align: center;",
+          tags$b("Report is Being Generated"),
         ),
         tags$div(
-          style = "margin-bottom: 10px;",
-          tags$div(
-            style = "border: 8px solid #f3f3f3; border-top: 8px solid #0273B7; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite;",
-            ""
-          ),
+          style = "display: flex; gap: 8px; margin-bottom: 10px;",
+          lapply(1:3, function(i) tags$div(
+            style = sprintf(
+                "width: 20px; height: 20px; background: #0273B7; border-radius: 50%%; margin-top: 10px; margin-bottom: 15px; animation: bounce 1s %ss infinite;",
+              (i-1)*0.2
+            )
+          )),
           tags$style(HTML("
-            @keyframes spin {
-              0% { transform: rotate(0deg);}
-              100% { transform: rotate(360deg);}
+            @keyframes bounce {
+              0%, 80%, 100% { transform: scale(0.7);}
+              40% { transform: scale(1.2);}
             }
           "))
         ),
         tags$div(
-          style = "text-align: center;",
-          HTML("<br>NOTE: Report compile time can be ~1-5min.<br>Please be patient while the report is generated.")
+          style = "text-align: center; font-size: 1.2em;",
+          HTML("Report compile time can be ~1-5min.<br>Please be patient while the report is generated.")
         )
       )
     )

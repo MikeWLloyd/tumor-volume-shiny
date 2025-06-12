@@ -1,5 +1,5 @@
-timeoutSeconds <- 600
-warnSeconds <- 540
+timeoutSeconds <- 900 # 15 minutes
+warnSeconds <- 840 # 14 minutes
 
 inactivity <- sprintf("function idleTimer() {
 
