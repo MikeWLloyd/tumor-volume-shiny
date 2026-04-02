@@ -21,7 +21,10 @@ tabPanel(
 
       h2('Session Info'),
 
-      htmlOutput("sessionInfo"),
+      tags$div(
+        style = "background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 10px;",
+        htmlOutput("sessionInfo")
+      ),
 
       br()
     )

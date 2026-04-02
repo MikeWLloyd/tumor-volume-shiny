@@ -1,6 +1,6 @@
 # About This Tool
 
-The source code for this tool is available on [GitHub](https://github.com/skoc/tumor-volume-shiny)
+The source code for this tool is available on <a href="https://github.com/MikeWLloyd/tumor-volume-shiny" target="_blank">GitHub</a>
 
 ## LICENSE
 
@@ -8,18 +8,30 @@ This project is licensed under GNU GPLv3.
 
 ## AUTHORS
 
-- [Soner Koc](https://github.com/skoc/), SevenBridges
-- [Mike Lloyd](https://github.com/MikeWLloyd), The Jackson Laboratory
+- <a href="https://github.com/skoc/" target="_blank">Soner Koc</a>
+- <a href="https://github.com/MikeWLloyd" target="_blank">Mike Lloyd</a>
+
+## PUBLICATION
+
+If you use PVA in your work, please cite: 
+
+<a href="https://doi.org/10.1158/1535-7163.MCT-23-0471" target="_blank">
+    Funda Meric-Bernstam, Michael W. Lloyd, Soner Koc, Yvonne A. Evrard, Lisa M. McShane, Michael T. Lewis, Kurt W. Evans, Dali Li, Lawrence Rubinstein, Alana Welm, Dennis A. Dean, Anuj Srivastava, Jeffrey W. Grover, Min J. Ha, Huiqin Chen, Xuelin Huang, Kaushik Varadarajan, Jing Wang, Jack A. Roth, Bryan Welm, Ramaswamy Govinden, Li Ding, Salma Kaochar, Nicholas Mitsiades, Luis Carvajal-Carmona, Meenhard Herylyn, Michael A. Davies, Geoffrey I. Shapiro, Ryan Fields, Jose G. Trevino, Joshua C. Harrell, NCI PDXNet Consortium, James H. Doroshow, Jeffrey H. Chuang, Jeffrey A. Moscow; Assessment of Patient-Derived Xenograft Growth and Antitumor Activity: The NCI PDXNet Consensus Recommendations. <i>Mol Cancer Ther</i> 1 July 2024; 23 (7): 924–938. https://doi.org/10.1158/1535-7163.MCT-23-0471
+</a>
+
 
 ## CITATIONS
 
-This application relies on heavily modified code originally from [DRAP](https://github.com/SCBIT-YYLab/DRAP)
+This application relies on heavily modified code originally from 
+<a href="https://github.com/SCBIT-YYLab/DRAP" target="_blank">
+    DRAP
+</a>
 
 ```
 Quanxue Li, Wentao Dai, Jixiang Liu, Yi‑Xue Li, and Yuan‑Yuan Li. DRAP: a toolbox for drug response analysis and visualization tailored for preclinical drug testing on patient-derived xenograft models. Journal of Translational Medicine, 2019, 17(1): 39.
 ```
 
-The following libraries are used:  
+The following libraries are also used:  
 
 ```
 shiny
