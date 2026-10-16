@@ -9,6 +9,39 @@ This repo offers the source code for the app's Docker image, including the Docke
 
 This `README` gives a brief introduction to pull the Docker image and run the app locally. For detailed usage of the app and more deployment options, please check our [User manual under Help page](https://pdxnet.shinyapps.io/PDX-Volumetric-Analyzer/).
 
+## Local Setup
+
+Dependencies are managed with renv. The lockfile was generated and tested with
+R 4.6.1. From the repository root, restore the recorded package versions:
+
+```sh
+Rscript -e 'renv::restore(prompt = FALSE)'
+```
+
+The project startup profile activates the isolated library automatically in R,
+Rscript, and RStudio. Restart existing R sessions after migration. Keep
+`renv.lock`, `.Rprofile`, and the renv activation and settings files in version
+control; the project library and cache are ignored.
+
+After intentionally adding or updating dependencies, update the lockfile:
+
+```sh
+Rscript -e 'renv::snapshot(prompt = FALSE)'
+```
+
+Posit Connect Cloud can restore dependencies from `renv.lock`.
+Report generation additionally requires Pandoc, and PDF reports require LaTeX;
+these system tools are not installed by renv.
+
+## Tests
+
+After restoring dependencies, run the timeout, tumor-volume query,
+interpolation, response-classification, and AUC tests from the repository root with:
+
+```sh
+Rscript tests/run-tests.R
+```
+
 ## LICENSE
 
 This project is licensed under GNU GPLv3.

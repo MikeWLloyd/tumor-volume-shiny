@@ -84,7 +84,7 @@ get_data_summary_study <- function(data, measure.var, group.vars){
 # HELPER FUNCTION - INTERPOLATE DATA PROVIDED
 get_interpolated_pdx_data <- function(data){
 
-  if (is.null(data) | nrow(data) == 0) {
+  if (is.null(data) || nrow(data) == 0) {
     plot_ly()
   }else{
 
@@ -96,6 +96,10 @@ get_interpolated_pdx_data <- function(data){
       dplyr::mutate(adjustment = case_when(Day_min == 0 ~ 1,
                                           Day_min == 1 ~ 0)) %>%
       dplyr::filter(N != 1)
+
+    if (nrow(data.tmp) == 0L) {
+      return(dplyr::mutate(data, Interpolated_Volume = Volume))
+    }
 
     # Back fill the data with all day numbers
     data.tmp <- data.tmp %>%
@@ -197,11 +201,11 @@ T.C_ratio <- function(data, last.measure.day = NULL) {
         data.d <- data.s[data.s$Tumor == d,]
         data.d <- droplevels(data.d)
 
+        if (length(unique(data.d$Arms)) < 2L) stop('Can not compute T/C ratio with only 1 group')
+        if (!'Control' %in% data.d$Arms) stop('Can not compute T/C ratio without a Control group')
         data.d$Arms <- relevel(as.factor(data.d$Arms), 'Control')
 
         Response.Level.tmp <- data.frame()
-
-        if (length(data.d$Arms) < 2) stop('Can not compute T/C ratio with only 1 group')
 
         aov.df <- data.frame()
 

@@ -1,0 +1,10 @@
+name: PDX-Volumetric-Analyzer
+title: PDX-Volumetric-Analyzer
+username: pdxnet
+account: pdxnet
+server: connect.posit.cloud
+hostUrl: https://api.connect.posit.cloud/v1
+appId: 01a11176-b5db-cf93-8ce9-ecd091cf311e
+bundleId:
+url: https://connect.posit.cloud/pdxnet/content/01a11176-b5db-cf93-8ce9-ecd091cf311e
+version: 1

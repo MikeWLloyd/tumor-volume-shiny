@@ -1,43 +1,72 @@
-timeoutSeconds <- 900 # 15 minutes
-warnSeconds <- 840 # 14 minutes
+timeoutSeconds <- 900
+warnSeconds <- 840
+last_activity <- Sys.time()
+idle_warning_shown <- FALSE
 
-inactivity <- sprintf("function idleTimer() {
-
-        var t = setTimeout(logout, %s);
-
-        var t2 = setTimeout(warn, %s );
-
-        var a = 1;
-
-        window.onmousemove = resetTimer; // catches mouse movements
-        window.onmousedown = resetTimer; // catches mouse movements
-        window.onclick = resetTimer;     // catches mouse clicks
-        window.onscroll = resetTimer;    // catches scrolling
-        window.onkeypress = resetTimer;  //catches keyboard actions
-
-        function logout() {
-            Shiny.setInputValue('timeOut', '%s')
-        }
-
-        function warn() {
-            Shiny.setInputValue('warnTimeOut', a)
-            a++;
-        }
-
-        function resetTimer() {
-            clearTimeout(t);
-            clearTimeout(t2);
-            t = setTimeout(logout, %s);  // time is in milliseconds (1000 is 1 second)
-            t2 = setTimeout(warn, %s);  // time is in milliseconds (1000 is 1 second)
-        }
+observeEvent(input$analyzer_activity, {
+    last_activity <<- Sys.time()
+    if (idle_warning_shown) {
+        removeModal()
+        idle_warning_shown <<- FALSE
     }
-    idleTimer();",
-    timeoutSeconds*1000,
-    warnSeconds*1000,
-    timeoutSeconds,
-    timeoutSeconds*1000,
-    warnSeconds*1000
-    # Each of the '%s' corresponds to the a statement in the comma delim string.
-)
+}, ignoreInit = FALSE)
 
-#https://stackoverflow.com/a/53207050/18557826
+observeEvent(input$analyzer_continue_session, {
+    last_activity <<- Sys.time()
+    idle_warning_shown <<- FALSE
+    removeModal()
+})
+
+observe({
+    invalidateLater(5000, session)
+    idle_seconds <- as.numeric(difftime(Sys.time(), last_activity, units = "secs"))
+
+    if (idle_seconds >= timeoutSeconds) {
+        showModal(modalDialog(
+            title = "Session expired",
+            "Your session ended after 15 minutes of inactivity. Reload to start a new session. Uploaded data and unsaved analysis state will be lost.",
+            easyClose = FALSE,
+            footer = tags$button(
+                type = "button", class = "btn btn-primary",
+                onclick = "window.location.reload();", "Reload"
+            )
+        ))
+        session$onFlushed(function() session$close(), once = TRUE)
+    } else if (idle_seconds >= warnSeconds && !idle_warning_shown) {
+        idle_warning_shown <<- TRUE
+        showModal(modalDialog(
+            title = "Session expiring",
+            "Your session will close in about one minute due to inactivity. Continue to keep your current work.",
+            easyClose = FALSE,
+            footer = actionButton("analyzer_continue_session", "Continue Session")
+        ))
+    }
+})
+
+inactivity <- "(function() {
+    if (window.pvaIdleActivityInstalled) return;
+    window.pvaIdleActivityInstalled = true;
+    let lastActivitySent = 0;
+    let connected = true;
+
+    function reportActivity() {
+        if (!connected || document.hidden) return;
+        const now = Date.now();
+        if (now - lastActivitySent < 10000) return;
+        lastActivitySent = now;
+        Shiny.setInputValue('analyzer_activity', now, {priority: 'event'});
+    }
+
+    $(document).on('shiny:connected.pvaIdle', function() {
+        connected = true;
+        lastActivitySent = 0;
+        reportActivity();
+    });
+    $(document).on('shiny:disconnected.pvaIdle', function() {
+        connected = false;
+    });
+    ['pointerdown', 'keydown', 'input', 'scroll', 'touchstart'].forEach(function(eventName) {
+        document.addEventListener(eventName, reportActivity, {passive: true, capture: true});
+    });
+    reportActivity();
+})();"
