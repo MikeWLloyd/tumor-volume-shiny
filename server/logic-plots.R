@@ -399,6 +399,300 @@ get_TC_pairwise_contrasts <- function(data, last.measure.day = NULL) {
   contrasts
 }
 
+get_interaction_agents <- function(data) {
+  if (is.null(data) || nrow(data) == 0 || !"Treatment_Components" %in% names(data)) {
+    return(character())
+  }
+
+  components <- as.character(data$Treatment_Components)
+  components[is.na(components)] <- ""
+  components <- unlist(strsplit(components, ";", fixed = TRUE), use.names = FALSE)
+  sort(unique(trimws(components[nzchar(trimws(components))])))
+}
+
+interaction_analysis_available <- function(data) {
+  if (length(get_interaction_agents(data)) < 2) {
+    return(FALSE)
+  }
+
+  cohort_columns <- intersect(c("Contributor", "Study", "Tumor"), names(data))
+  if (length(cohort_columns) != 3) {
+    return(FALSE)
+  }
+  cohort_key <- interaction(data[cohort_columns], drop = TRUE, lex.order = TRUE)
+  cohorts <- split(seq_len(nrow(data)), cohort_key)
+
+  any(vapply(cohorts, function(rows) {
+    cohort_data <- data[rows, , drop = FALSE]
+    arm_names <- unique(as.character(cohort_data$Arms))
+    if (!"Control" %in% arm_names) {
+      return(FALSE)
+    }
+
+    components <- as.character(cohort_data$Treatment_Components)
+    components[is.na(components)] <- ""
+    arm_components <- lapply(arm_names, function(arm) {
+      values <- unique(components[as.character(cohort_data$Arms) == arm])
+      if (length(values) != 1) return(NULL)
+      value <- trimws(values[1])
+      if (!nzchar(value)) character() else sort(unique(trimws(strsplit(value, ";", fixed = TRUE)[[1]])))
+    })
+    names(arm_components) <- arm_names
+    if (any(vapply(arm_components, is.null, logical(1))) || length(arm_components$Control) != 0) {
+      return(FALSE)
+    }
+    length(unique(unlist(arm_components, use.names = FALSE))) >= 2
+  }, logical(1)))
+}
+
+get_interaction_order_choices <- function(agents, current_order = NULL) {
+  orders <- if (length(agents) >= 2) seq.int(2, length(agents)) else integer()
+  labels <- if (length(orders) > 0) paste("Up to", orders, "way") else character()
+  choices <- stats::setNames(orders, labels)
+  selected <- suppressWarnings(as.integer(current_order))
+  if (length(selected) != 1 || is.na(selected) || !selected %in% orders) {
+    selected <- if (length(orders) > 0) orders[1] else NULL
+  }
+  list(choices = choices, selected = selected)
+}
+
+factorial_interaction_analysis <- function(data, last.measure.day, agents = NULL, interaction_order = 2) {
+  required_columns <- c(
+    "Contributor", "Study", "Tumor", "Arms", "ID", "Times", "Volume",
+    "Treatment_Components"
+  )
+  missing_columns <- setdiff(required_columns, names(data))
+  if (length(missing_columns) > 0) {
+    stop(
+      "Interaction analysis requires these columns: ",
+      paste(missing_columns, collapse = ", "),
+      call. = FALSE
+    )
+  }
+  if (length(last.measure.day) != 1 || is.na(last.measure.day) || !is.finite(last.measure.day)) {
+    stop("Select one finite interaction calculation day.", call. = FALSE)
+  }
+
+  available_agents <- get_interaction_agents(data)
+  if (is.null(agents)) {
+    agents <- available_agents
+  }
+  agents <- unique(as.character(agents))
+  unknown_agents <- setdiff(agents, available_agents)
+  if (length(unknown_agents) > 0) {
+    stop("Unknown treatment component(s): ", paste(unknown_agents, collapse = ", "), call. = FALSE)
+  }
+  if (length(agents) < 2) {
+    stop("Select at least two treatment components for interaction analysis.", call. = FALSE)
+  }
+  if (length(interaction_order) != 1 || is.na(interaction_order) ||
+      interaction_order < 2 || interaction_order > length(agents)) {
+    stop("Interaction order must be between 2 and the number of selected components.", call. = FALSE)
+  }
+  interaction_order <- as.integer(interaction_order)
+
+  data$.Treatment_Components <- as.character(data$Treatment_Components)
+  data$.Treatment_Components[is.na(data$.Treatment_Components)] <- ""
+  data$.Treatment_Components <- vapply(data$.Treatment_Components, function(value) {
+    components <- trimws(strsplit(value, ";", fixed = TRUE)[[1]])
+    components <- sort(unique(components[nzchar(components)]))
+    paste(components, collapse = ";")
+  }, character(1))
+
+  cohort_columns <- c("Contributor", "Study", "Tumor")
+  cohort_key <- interaction(data[cohort_columns], drop = TRUE, lex.order = TRUE)
+  cohorts <- split(seq_len(nrow(data)), cohort_key)
+  effect_results <- list()
+  test_results <- list()
+  diagnostics <- list()
+  result_index <- 0L
+  test_index <- 0L
+  diagnostic_index <- 0L
+  variable_names <- paste0("agent_", seq_along(agents))
+
+  for (cohort_rows in cohorts) {
+    cohort_data <- data[cohort_rows, , drop = FALSE]
+    cohort_identity <- cohort_data[1, cohort_columns, drop = FALSE]
+    cohort_label <- paste(unlist(cohort_identity), collapse = " / ")
+    arm_names <- unique(as.character(cohort_data$Arms))
+
+    composition_by_arm <- lapply(arm_names, function(arm) {
+      unique(cohort_data$.Treatment_Components[as.character(cohort_data$Arms) == arm])
+    })
+    names(composition_by_arm) <- arm_names
+    if (any(lengths(composition_by_arm) != 1)) {
+      diagnostic_index <- diagnostic_index + 1L
+      diagnostics[[diagnostic_index]] <- data.frame(
+        cohort_identity,
+        Status = "Each treatment arm must have one consistent Treatment_Components value.",
+        stringsAsFactors = FALSE
+      )
+      next
+    }
+    components_by_arm <- lapply(composition_by_arm, function(value) {
+      if (!nzchar(value)) character() else strsplit(value, ";", fixed = TRUE)[[1]]
+    })
+    if (!"Control" %in% arm_names || length(components_by_arm$Control) != 0) {
+      diagnostic_index <- diagnostic_index + 1L
+      diagnostics[[diagnostic_index]] <- data.frame(
+        cohort_identity,
+        Status = "Control must be present and have an empty Treatment_Components value.",
+        stringsAsFactors = FALSE
+      )
+      next
+    }
+
+    cohort_agents <- sort(unique(unlist(components_by_arm, use.names = FALSE)))
+    if (!all(agents %in% cohort_agents)) {
+      diagnostic_index <- diagnostic_index + 1L
+      diagnostics[[diagnostic_index]] <- data.frame(
+        cohort_identity,
+        Status = "Not all selected components are present in this cohort.",
+        stringsAsFactors = FALSE
+      )
+      next
+    }
+
+    selected_arm_names <- names(components_by_arm)[vapply(
+      components_by_arm,
+      function(components) all(components %in% agents),
+      logical(1)
+    )]
+    excluded_arm_names <- setdiff(arm_names, selected_arm_names)
+    if (length(excluded_arm_names) > 0) {
+      diagnostic_index <- diagnostic_index + 1L
+      diagnostics[[diagnostic_index]] <- data.frame(
+        cohort_identity,
+        Status = paste(
+          "Excluded arms containing unselected components:",
+          paste(excluded_arm_names, collapse = ", ")
+        ),
+        stringsAsFactors = FALSE
+      )
+    }
+    cohort_data <- cohort_data[as.character(cohort_data$Arms) %in% selected_arm_names, , drop = FALSE]
+
+    endpoints <- get_endpoint_measurements(
+      cohort_data,
+      c("Arms", "ID"),
+      "Times",
+      "Volume",
+      last.measure.day
+    )
+    if (nrow(endpoints) == 0) {
+      diagnostic_index <- diagnostic_index + 1L
+      diagnostics[[diagnostic_index]] <- data.frame(
+        cohort_identity,
+        Status = "No eligible animals span the selected calculation day with a positive baseline.",
+        stringsAsFactors = FALSE
+      )
+      next
+    }
+
+    endpoints$.Treatment_Components <- vapply(as.character(endpoints$Arms), function(arm) {
+      paste(components_by_arm[[arm]], collapse = ";")
+    }, character(1))
+    for (i in seq_along(agents)) {
+      endpoints[[variable_names[i]]] <- vapply(endpoints$.Treatment_Components, function(value) {
+        components <- if (!nzchar(value)) character() else strsplit(value, ";", fixed = TRUE)[[1]]
+        as.integer(agents[i] %in% components)
+      }, integer(1))
+    }
+    endpoints$Log2.Fold.Change <- log2(pmax(endpoints$TV.ratio, 0.001))
+
+    agent_formula <- paste(variable_names, collapse = " + ")
+    main_formula <- stats::as.formula(paste("Log2.Fold.Change ~", agent_formula))
+    interaction_formula <- stats::as.formula(paste(
+      "Log2.Fold.Change ~ (", agent_formula, ")^", interaction_order
+    ))
+    main_fit <- stats::lm(main_formula, data = endpoints)
+    interaction_fit <- stats::lm(interaction_formula, data = endpoints)
+    if (interaction_fit$rank <= main_fit$rank) {
+      diagnostic_index <- diagnostic_index + 1L
+      diagnostics[[diagnostic_index]] <- data.frame(
+        cohort_identity,
+        Status = "No selected interaction terms are estimable; check that the cohort contains the required treatment combinations and replicates.",
+        stringsAsFactors = FALSE
+      )
+      next
+    }
+
+    nested_test <- stats::anova(main_fit, interaction_fit)
+    interaction_test <- nested_test[2, , drop = FALSE]
+    test_index <- test_index + 1L
+    test_results[[test_index]] <- data.frame(
+      cohort_identity,
+      Calc.Day = unique(endpoints$Endpoint.Day),
+      Response = "Log2 fold change from baseline",
+      Highest.Interaction.Order = interaction_order,
+      N = nrow(endpoints),
+      NumDF = interaction_test$Df,
+      DenDF = interaction_fit$df.residual,
+      F.Value = interaction_test$F[1],
+      P.Value = interaction_test$`Pr(>F)`[1],
+      stringsAsFactors = FALSE
+    )
+
+    coefficient_table <- summary(interaction_fit)$coefficients
+    interaction_terms <- grep(":", rownames(coefficient_table), value = TRUE)
+    if (length(interaction_terms) == 0) next
+    interaction_p <- coefficient_table[interaction_terms, "Pr(>|t|)"]
+    adjusted_p <- stats::p.adjust(interaction_p, method = "holm")
+
+    for (term in interaction_terms) {
+      term_variables <- strsplit(term, ":", fixed = TRUE)[[1]]
+      term_agents <- agents[match(term_variables, variable_names)]
+      critical_value <- stats::qt(0.975, df = interaction_fit$df.residual)
+      estimate <- coefficient_table[term, "Estimate"]
+      standard_error <- coefficient_table[term, "Std. Error"]
+      result_index <- result_index + 1L
+      effect_results[[result_index]] <- data.frame(
+        cohort_identity,
+        Calc.Day = unique(endpoints$Endpoint.Day),
+        Response = "Log2 fold change from baseline",
+        Interaction = paste(term_agents, collapse = " x "),
+        Estimate = estimate,
+        SE = standard_error,
+        CI.Lower = estimate - critical_value * standard_error,
+        CI.Upper = estimate + critical_value * standard_error,
+        P.Value = coefficient_table[term, "Pr(>|t|)"],
+        Adjusted.P.Value = adjusted_p[match(term, interaction_terms)],
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+
+  list(
+    agents = available_agents,
+    effects = if (length(effect_results) == 0) data.frame() else do.call(rbind, effect_results),
+    tests = if (length(test_results) == 0) data.frame() else do.call(rbind, test_results),
+    diagnostics = if (length(diagnostics) == 0) data.frame() else do.call(rbind, diagnostics)
+  )
+}
+
+interaction_effects_table_data <- function(result) {
+  if (!is.null(result$error)) {
+    return(data.frame(Status = result$error, stringsAsFactors = FALSE))
+  }
+  if (is.null(result$effects) || nrow(result$effects) == 0) {
+    return(data.frame(Status = "No interaction terms are estimable for the selected cohort.", stringsAsFactors = FALSE))
+  }
+
+  result$effects %>%
+    dplyr::select(
+      Contributor, Study, Tumor, Calc.Day, Interaction, Estimate, SE,
+      CI.Lower, CI.Upper, P.Value, Adjusted.P.Value
+    ) %>%
+    dplyr::rename(
+      `Calc Day` = Calc.Day,
+      `Log2 Interaction` = Estimate,
+      `95% CI Lower` = CI.Lower,
+      `95% CI Upper` = CI.Upper,
+      `P Value` = P.Value,
+      `Holm-Adjusted P` = Adjusted.P.Value
+    )
+}
+
 # HELPER FUNCTION - GET COHORT LEVEL ORC LEVELS
 get_response_level <- function(data, last.measure.day){
   # this is passed a df already filtered to study.
@@ -1387,6 +1681,26 @@ EFSplot <- function(data, PercChange_EventSize = 100, plot_on = TRUE) {
 }
 
 # STUDY ANOVA / RESPONSE TABLE
+get_response_analysis_message <- function(endpoint_measurements, target_day) {
+  if (is.null(endpoint_measurements) || nrow(endpoint_measurements) == 0) {
+    return(paste0(
+      "No animals have eligible endpoint measurements at day ", target_day,
+      ". Animals need a positive baseline and measurements spanning that day; endpoint calculations do not extrapolate."
+    ))
+  }
+
+  available_arms <- unique(as.character(endpoint_measurements$Arms))
+  if (length(available_arms) < 2) {
+    return(paste0(
+      "ANOVA requires at least two treatment arms at day ", target_day,
+      ". Only ", paste(available_arms, collapse = ", "),
+      " has eligible endpoint measurements. Try a day within the arms' shared measurement range; interpolation does not extrapolate."
+    ))
+  }
+
+  NULL
+}
+
 response_analysis <- function(input_data, method=c('endpoint.ANOVA','endpoint.KW','mixed.ANOVA','LMM'), last.measure.day = NULL, multi_test_anova = FALSE, tv_study_filtered, tv_tumor_filtered, main_anova_interpolate, report = FALSE) {
 
   ## NOTE: 'Volume' is used here, but dVt could potentially be used.
@@ -1415,8 +1729,16 @@ response_analysis <- function(input_data, method=c('endpoint.ANOVA','endpoint.KW
     'Volume',
     last.measure.day
   )
-  if (nrow(endpoint.measurements) == 0) {
-    return()
+  analysis_message <- get_response_analysis_message(endpoint.measurements, last.measure.day)
+  if (!is.null(analysis_message)) {
+    if (report || multi_test_anova) {
+      return(NULL)
+    }
+    return(DT::datatable(
+      data.frame(Message = analysis_message, stringsAsFactors = FALSE),
+      rownames = FALSE,
+      options = list(dom = "t")
+    ))
   }
 
   endpoint.data <- endpoint.measurements[, c('Tumor', 'Arms', 'endpoint_volume')]
@@ -1426,14 +1748,6 @@ response_analysis <- function(input_data, method=c('endpoint.ANOVA','endpoint.KW
     endpoint.data$Arms,
     levels = order_treatment_arms(endpoint.data$Arms)
   )
-
-  if(length(unique(endpoint.data$Arms)) == 1 & !multi_test_anova) {
-    # showNotification('There is only one treatment arm at the select time point. Select a different time point, or add more arms','',type = "error")
-    return()
-  } else if(length(unique(endpoint.data$Arms)) == 1 & multi_test_anova) {
-    #showNotification('There is only one treatment arm at the select time point. Select a different time point, or add more arms','',type = "error")
-    return()
-  }
 
   #get mean growth rate
   ID <- unique(as.character(df$ID))

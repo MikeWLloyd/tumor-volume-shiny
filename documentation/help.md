@@ -31,52 +31,18 @@ Files uploaded to this tool must also contain expected columns and data structur
 
 ## Data Format and Structure
 
-The following columns with the **exact names** and **data types** are expected in the dataset uploaded to the tool. 
+The following columns are required unless marked optional. Column names and data types must match exactly.
 
-    1. 'Contributor':  
-
-        Attributes studies to the contributing investigator or institution (e.g., PDTC_1, PDTC_2).  
-
-    2. 'Arms':
-
-        Treatment arms description (e.g., Carboplatin, Control).  
-        NOTE: The dataset MUST contain a control arm, and the control arm MUST be named 'Control'. 
-              An error will be thrown on upload if the text 'Control' is missing from the treatment arm column.   
-
-    3. 'Times':  
-
-        Numeric study day (e.g., 0, 4, 8, 14, 21).
-        NOTE: Numeric or integer values are expected. Calendar dates (e.g., 06.02.2022) are not valid.   
-
-    4. 'Volume':  
-    
-        Tumor volume in mm<sup>3</sup> (e.g. 200, 140, 23.4). 
-        NOTE: Negative values are accepted, but may result in improper plotting or calculations. 
-        A warning message from the validator will report the number of values with negative volumes. 
-
-    5. 'Study':  
-    
-        Study ID corresponding to that particular sample (e.g., Study_1, Study_2).  
-        NOTE: Study IDs MUST be unique across centers / samples. 
-
-    6. 'ID':  
-    
-        Unique identifier for each individual animal on study (e.g., Mouse_1, Mouse_2).
-        NOTE: Animal IDs MUST be unique across studies. 
-
-    7. 'Tumor':  
-    
-        PDX model ID (e.g., PDX_1, PDX_2).   
-
-    8. 'Disease_Type':  
-    
-        A descriptor of the tumor type (e.g., Invasive breast carcinoma, Unknown, NA). 
-        NOTE: This is a free text field, and is only used in the data filter query.
-    
-    9. 'Body_Weight': 
-
-        The measured body weights of the animals (e.g., 14.2, 14, 15.1). 
-        NOTE: This field is optional, if not provided the 'Body Weight Analysis' tab will be disabled.  
+1. **Contributor** (character): Contributing investigator or institution, such as `PDTC_1`.
+2. **Arms** (character): Treatment-arm label, such as `Carboplatin`. The dataset must contain a control arm named exactly `Control`.
+3. **Times** (numeric or integer): Study day, such as `0`, `4`, `8`, `14`, or `21`. Calendar dates are not accepted.
+4. **Volume** (numeric or integer): Tumor volume in mm<sup>3</sup>. Use nonnegative measurements. Some analyses exclude negative values, and the upload validator does not reliably warn about them.
+5. **Study** (character): Study identifier. Study IDs should be unique across centers and samples.
+6. **ID** (character or integer): Unique identifier for each animal; IDs should be unique across studies.
+7. **Tumor** (character, numeric, or integer): PDX model identifier, such as `PDX_1`.
+8. **Disease_Type** (character): Free-text tumor type, used by the data filter.
+9. **Body_Weight** (optional, numeric or integer): Animal body weight. If omitted or empty, Body Weight Analysis is unavailable.
+10. **Treatment_Components** (optional, character): Semicolon-separated list of active agents in the treatment arm, repeated on every measurement row (e.g., `Drug A;Drug B`). Leave empty for `Control`; keep each arm's component list consistent within a Contributor/Study/Tumor cohort. Do not use semicolons within an agent name. Dose-response analysis requires separate dose metadata and is not provided by the fixed-dose factorial analysis.
 
 ## Data Upload Template
 
@@ -105,28 +71,25 @@ The Tumor Volume Analysis page contains all plot and analysis functions.
 
 By default an example dataset is loaded. To add your own data, see the **Data Upload and Validation** section of this document. 
 
-The default data includes a second contributor, `Example_Set_2`, with a synthetic 2 x 2 combination example. Select it in the Contributor filter. It contains control, Drug A, Drug B, and Drug A + Drug B arms, with explicit drug-presence columns. At day 21, the single agents each have about 2x fold growth while the combination has about 0.5x. Under an additive no-interaction model on log2 fold change, the expected combination is about 1x; this dataset is constructed to show a negative interaction. It is illustrative synthetic data, not experimental evidence.
+The default data includes a second contributor, `Example_Set_2`, with a synthetic 2 x 2 combination example. Select it in the Contributor filter. It contains control, Drug A, Drug B, and Drug A + Drug B arms, with `Treatment_Components` metadata. At day 21, the single agents each have about 2x fold growth while the combination has about 0.5x. Under an additive no-interaction model on log2 fold change, the expected combination has about 1x fold growth; this dataset is constructed to show a negative interaction. It is illustrative synthetic data, not experimental evidence.
 
 ---
 
-## Calculation Day Information 
-For many plots and metrics, a user defined time point is required for the calculation (e.g., RECIST objective response classification). In these cases, measures are calculated based on data sampled from the last available time point for each individual (rounded down).  
+## Calculation Day Information
 
-**Example:**   
-Tumors for a study are measured at time points `0, 7, 10, 21, 29`.   
-1. If a user selects to calculate RECIST classification at time 21; data from time point 21 will be used.   
-2. If a user selects to calculate RECIST at time 26; data at time 21 will also be used.  
-3. If data are collected in an asynchronous fashion, (e.g., `mouse_1: 0, 7, 10`; `mouse_2: 0, 6, 9`, etc.), the last available time point (rounded down) for each individual animal is used.  
+Calculation-day handling depends on the analysis; the app does not use one universal rounding rule.
 
-In all cases where a user must input a day for calculation, data underlying the metric or plot can be interpolated as described below. Using interpolation overcomes asynchronous and missing data issues. Note that the use of interpolation should be reported in final results.  
+* Cohort RECIST and individual-animal response metrics use the closest available measurement for each animal when there is no exact measurement on the selected day. If the interpolation checkbox is enabled, those analyses use the interpolated series instead.
+* T/C, endpoint ANOVA, and factorial interaction calculations linearly interpolate an animal's volume to the requested day when it is bracketed by measurements. They do not extrapolate. Animals without a measurement range spanning the selected day, or with a baseline volume at or below zero, are excluded from these endpoint calculations.
+* Endpoint volume zero is retained. For log2 fold-change models, a zero fold change is floored to 0.001 before taking the logarithm.
 
-Ultimately, it is up to the user to know their data and select time points for metric calculation that are relevant to the data.  
+Choose a calculation day that is scientifically relevant to the study. Report the selected day and whether full-series interpolation was enabled.
 
 ## Data Interpolation 
 
-In all cases where a user must input a day for calculation (plots and metrics), data underlying the metrics can be interpolated using the 'Interpolate Data' or 'Interpolate Data for Calculation' checkboxes. 
+For analyses with an interpolation checkbox, data can be interpolated using the 'Interpolate Data' or 'Interpolate Data for Calculation' checkbox. T/C, endpoint ANOVA, and factorial interaction also interpolate to a requested day within the measurement range as described above, regardless of the checkbox. 
 
-When these boxes are checked, a linear interpolation method is used to adjusts for animals where there is no tumor volume measurement at time *t*, but which have flanking volume measurements at time *t*<sub>0</sub> and *t*<sub>1</sub> such that *t*<sub>0</sub> < *t* < *t*<sub>1</sub>.
+When a checkbox is enabled, linear interpolation fills missing days between flanking volume measurements at times *t*<sub>0</sub> and *t*<sub>1</sub>, where *t*<sub>0</sub> < *t* < *t*<sub>1</sub>. No extrapolation is performed.
 
 ---
 
@@ -345,11 +308,11 @@ Where model by treatment arm shows regression, percent change in tumor volume (a
 
 This plot and table shows cross study tumor growth inhibition defined as the T/C ratio at the user defined time point (default "TGI Calc. Day" is 21). 
 
-For T/C and endpoint ANOVA calculations, tumor volume is linearly interpolated to the selected day when it falls between measurements. Animals without measurements spanning that day, or with a baseline volume at or below zero, are excluded; endpoint volume zero is retained. Zero fold changes are set to 0.001 only for the log2 model. The arithmetic T/C ratio is the ratio of arm means and uses a delta-method standard error. The ANOVA-derived T/C ratio is estimated on log2 fold changes and its displayed standard error is calculated from the fitted model. T/C p-values are two-sided Tukey-adjusted comparisons against control.
+For T/C calculations, tumor volume is linearly interpolated to the selected day when it falls between measurements. Animals without measurements spanning that day, or with a baseline volume at or below zero, are excluded; endpoint volume zero is retained. Fold changes below 0.001 are floored to 0.001 for the log2 model. The arithmetic T/C ratio is the ratio of arm means and uses a delta-method standard error. The ANOVA-derived T/C ratio is estimated on log2 fold changes and its displayed standard error is calculated from the fitted model. T/C p-values are two-sided Tukey-adjusted comparisons against control.
 
 The pairwise table compares every pair of treatment arms on the same log2 fold-change scale. It reports the difference and geometric fold-change ratio with a Tukey-adjusted 95% confidence interval and p-value; the ratio is Arm 1 divided by Arm 2. This includes combination-versus-single-agent contrasts when those arms are present.
 
-To measure antitumor activity of the treatment group compared to the control group, we considered the tumor growth treatment-to-control ratio (gamma<sub>t</sub>) estimated by one way ANOVA focused on time *t* as described in Supplemental Materials 1 in (Evrard et al. 2020). Data underlying this plot can be interpolated with the checkbox.  
+The ANOVA-derived T/C ratio follows the log2 fold-change model described in Supplemental Materials 1 of Evrard et al. (2020). The day-specific endpoint is interpolated within each animal's measurement range as described above. The checkbox can additionally interpolate the full time series used by related plots.
 
  
 Briefly, after log transforming the change in tumor volume (as defined above), a linear model is fit:
@@ -461,6 +424,12 @@ Event free survival analysis is conducted based on censoring events which occur 
 </p> 
 
 The difference in tumor volumes among treatment arms at a user defined day can be compared using one-way ANOVA. By default ANOVA Calc. Day is 21 days. Endpoint volumes are linearly interpolated to this day when measurements span it; zero endpoint volumes are retained and animals with baseline volume at or below zero are excluded. If fewer than 2 groups remain, select a different time point. Tukey's test reports adjusted pairwise comparisons among all treatment arms.
+
+### Factorial Interaction
+
+The Factorial Interaction tab uses the optional `Treatment_Components` column to discover any number of agents. Select the agents to include, the calculation day, and the highest interaction order. Arms containing unselected agents are excluded from that selected-agent model. The response is each eligible animal's log2 fold change from baseline, with fold changes below 0.001 (including zero) floored to 0.001 before log transformation. A nested F-test compares the selected model, including main effects and interactions through the chosen order, with a main-effects-only model. Individual interaction terms have coefficient estimates, model-based 95% confidence intervals, and Holm-adjusted p-values within each cohort.
+
+The analysis is fit separately within each Contributor, Study, and Tumor cohort and is not pooled across cohorts. It requires a `Control` arm with an empty component list, consistent component metadata for each arm, positive baseline measurements, and enough observed treatment combinations and replication to estimate the selected terms. A complete factorial design is needed to estimate all terms without aliasing; rank-deficient interaction terms are reported as non-estimable. Cohort exclusions are listed in the diagnostics. The joint test is a test of interaction on the log2 fold-change scale, not a universal synergy score; interpretation depends on the selected response scale and design.
 
 ---
 

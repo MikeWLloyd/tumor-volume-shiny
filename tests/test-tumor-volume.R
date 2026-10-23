@@ -79,8 +79,14 @@ source_function_definitions(
     "auc",
     "get_plot_scaled",
     "get_endpoint_measurements",
+    "get_response_analysis_message",
     "T.C_ratio",
     "get_TC_pairwise_contrasts",
+    "get_interaction_agents",
+    "interaction_analysis_available",
+    "get_interaction_order_choices",
+    "factorial_interaction_analysis",
+      "interaction_effects_table_data",
     "response_analysis",
     "get_response_level",
     "IndividualMouseResponse"
@@ -115,12 +121,16 @@ stopifnot(nrow(interaction_example) == 96L)
 stopifnot(all(table(interaction_example$Arms) == 24L))
 stopifnot(length(unique(interaction_example$ID)) == 24L)
 stopifnot(all(interaction_example$Volume >= 0))
-stopifnot(all(interaction_example$Drug_A_Present == ifelse(
-  interaction_example$Arms %in% c("Drug A", "Drug A + Drug B"), "Yes", "No"
-)))
-stopifnot(all(interaction_example$Drug_B_Present == ifelse(
-  interaction_example$Arms %in% c("Drug B", "Drug A + Drug B"), "Yes", "No"
-)))
+stopifnot("Treatment_Components" %in% names(interaction_example))
+stopifnot(identical(
+  query_env$get_interaction_agents(interaction_example),
+  c("Drug A", "Drug B")
+))
+stopifnot(all(
+  interaction_example$Treatment_Components[
+    interaction_example$Arms == "Drug A + Drug B"
+  ] == "Drug A;Drug B"
+))
 
 default_data <- query_env$load_default_tv_data()
 stopifnot(setequal(unique(default_data$Contributor), c("Example_Set_1", "Example_Set_2")))
@@ -146,6 +156,28 @@ second_contributor_query <- query_env$query_tv(
   "Synthetic model"
 )
 stopifnot(second_contributor_query$hits_total == nrow(interaction_example))
+stopifnot("Treatment_Components" %in% names(second_contributor_query$df))
+stopifnot(query_env$interaction_analysis_available(second_contributor_query$df))
+first_contributor_data <- default_data[default_data$Contributor == "Example_Set_1", ]
+stopifnot(!query_env$interaction_analysis_available(first_contributor_data))
+stopifnot(!query_env$interaction_analysis_available(NULL))
+empty_interaction_orders <- query_env$get_interaction_order_choices(character())
+stopifnot(length(empty_interaction_orders$choices) == 0L)
+stopifnot(is.null(empty_interaction_orders$selected))
+two_agent_orders <- query_env$get_interaction_order_choices(c("A", "B"))
+stopifnot(identical(unname(two_agent_orders$choices), 2L))
+stopifnot(identical(two_agent_orders$selected, 2L))
+three_agent_orders <- query_env$get_interaction_order_choices(c("A", "B", "C"))
+stopifnot(identical(unname(three_agent_orders$choices), c(2L, 3L)))
+stopifnot(identical(three_agent_orders$selected, 2L))
+stopifnot(identical(
+  names(query_env$interaction_effects_table_data(list(effects = data.frame()))),
+  "Status"
+))
+stopifnot(identical(
+  names(query_env$interaction_effects_table_data(list(error = "No interaction data"))),
+  "Status"
+))
 selected_study <- query_env$select_available_choice(
   "INV_1",
   unique(sort(default_data$Study[default_data$Contributor == "Example_Set_2"]))
@@ -174,6 +206,38 @@ interaction_anova <- query_env$response_analysis(
 )
 stopifnot(nrow(interaction_anova$mct$Arms) == 6L)
 
+inv3_pdx3_data <- subset(
+  default_data,
+  Contributor == "Example_Set_1" & Study == "INV_3" & Tumor == "PDX3"
+)
+inv3_pdx3_endpoints <- query_env$get_endpoint_measurements(
+  inv3_pdx3_data,
+  c("Contributor", "Study", "Tumor", "Arms", "ID"),
+  "Times",
+  "Volume",
+  21
+)
+inv3_pdx3_message <- query_env$get_response_analysis_message(inv3_pdx3_endpoints, 21)
+stopifnot(grepl("Only PARPi", inv3_pdx3_message, fixed = TRUE))
+stopifnot(grepl("does not extrapolate", inv3_pdx3_message, fixed = TRUE))
+inv3_pdx3_anova <- query_env$response_analysis(
+  inv3_pdx3_data,
+  last.measure.day = 21,
+  tv_study_filtered = "INV_3",
+  tv_tumor_filtered = "PDX3",
+  main_anova_interpolate = FALSE
+)
+stopifnot(inherits(inv3_pdx3_anova, "datatables"))
+inv3_pdx3_tukey <- query_env$response_analysis(
+  inv3_pdx3_data,
+  last.measure.day = 21,
+  multi_test_anova = TRUE,
+  tv_study_filtered = "INV_3",
+  tv_tumor_filtered = "PDX3",
+  main_anova_interpolate = FALSE
+)
+stopifnot(is.null(inv3_pdx3_tukey))
+
 interaction_endpoints <- interaction_example[interaction_example$Times == 21, ]
 baseline_volumes <- interaction_example[
   interaction_example$Times == 0, c("ID", "Volume"), drop = FALSE
@@ -183,22 +247,66 @@ interaction_endpoints <- merge(interaction_endpoints, baseline_volumes, by = "ID
 interaction_endpoints$Log2.Fold.Change <- log2(
   interaction_endpoints$Volume / interaction_endpoints$Baseline.Volume
 )
-interaction_endpoints$Drug_A_Present <- factor(
-  interaction_endpoints$Drug_A_Present, levels = c("No", "Yes")
-)
-interaction_endpoints$Drug_B_Present <- factor(
-  interaction_endpoints$Drug_B_Present, levels = c("No", "Yes")
-)
-interaction_model <- stats::lm(
-  Log2.Fold.Change ~ Drug_A_Present * Drug_B_Present,
-  data = interaction_endpoints
-)
-interaction_term <- stats::coef(interaction_model)["Drug_A_PresentYes:Drug_B_PresentYes"]
-interaction_p_value <- summary(interaction_model)$coefficients[
-  "Drug_A_PresentYes:Drug_B_PresentYes", "Pr(>|t|)"
-]
-stopifnot(interaction_term < -0.9, interaction_p_value < 1e-6)
+factorial_result <- query_env$factorial_interaction_analysis(interaction_example, 21)
+stopifnot(nrow(factorial_result$effects) == 1L)
+interaction_term <- factorial_result$effects$Estimate[1]
+stopifnot(interaction_term < -0.9, factorial_result$effects$Adjusted.P.Value[1] < 1e-6)
 stopifnot(isTRUE(all.equal(unname(2^interaction_term), 0.5, tolerance = 0.02)))
+
+three_agent_design <- expand.grid(
+  Drug_A = 0:1,
+  Drug_B = 0:1,
+  Drug_C = 0:1,
+  animal = seq_len(5),
+  stringsAsFactors = FALSE
+)
+agent_names <- c("Agent A", "Agent B", "Agent C")
+three_agent_design$Arms <- vapply(seq_len(nrow(three_agent_design)), function(i) {
+  present <- agent_names[as.logical(three_agent_design[i, c("Drug_A", "Drug_B", "Drug_C")])]
+  if (length(present) == 0) "Control" else paste(present, collapse = " + ")
+}, character(1))
+three_agent_design$Treatment_Components <- vapply(seq_len(nrow(three_agent_design)), function(i) {
+  present <- agent_names[as.logical(three_agent_design[i, c("Drug_A", "Drug_B", "Drug_C")])]
+  paste(present, collapse = ";")
+}, character(1))
+three_agent_design$Log2.Fold.Change <- with(
+  three_agent_design,
+  2 + 0.2 * Drug_A + 0.1 * Drug_B + 0.15 * Drug_C -
+    0.25 * Drug_A * Drug_B + 0.12 * Drug_A * Drug_C +
+    0.07 * Drug_B * Drug_C - 0.3 * Drug_A * Drug_B * Drug_C +
+    c(-0.08, -0.04, 0, 0.04, 0.08)[animal]
+)
+three_agent_design$Contributor <- "Synthetic_Three_Agent"
+three_agent_design$Study <- "Three_Agent_Factorial"
+three_agent_design$Tumor <- "DEMO_003"
+three_agent_design$ID <- paste(three_agent_design$Arms, three_agent_design$animal, sep = "_")
+three_agent_data <- three_agent_design[rep(seq_len(nrow(three_agent_design)), each = 2), ]
+three_agent_data$Times <- rep(c(0, 21), times = nrow(three_agent_design))
+three_agent_data$Volume <- ifelse(
+  three_agent_data$Times == 0,
+  100,
+  100 * 2^three_agent_data$Log2.Fold.Change
+)
+
+pairwise_factorial <- query_env$factorial_interaction_analysis(
+  three_agent_data, 21, interaction_order = 2
+)
+full_factorial <- query_env$factorial_interaction_analysis(
+  three_agent_data, 21, interaction_order = 3
+)
+stopifnot(nrow(pairwise_factorial$effects) == 3L)
+stopifnot(nrow(full_factorial$effects) == 4L)
+stopifnot("Agent A x Agent B x Agent C" %in% full_factorial$effects$Interaction)
+stopifnot(all(is.finite(full_factorial$effects$Adjusted.P.Value)))
+selected_two_agent_model <- query_env$factorial_interaction_analysis(
+  three_agent_data,
+  21,
+  agents = c("Agent A", "Agent B"),
+  interaction_order = 2
+)
+stopifnot(nrow(selected_two_agent_model$effects) == 1L)
+stopifnot(isTRUE(all.equal(selected_two_agent_model$effects$Estimate, -0.25, tolerance = 1e-8)))
+stopifnot(any(grepl("unselected components", selected_two_agent_model$diagnostics$Status)))
 
 query_result <- query_env$query_tv(
   volume_data,

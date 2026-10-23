@@ -1212,6 +1212,115 @@ showReportGeneratingModal <- function() {
       response_analysis(get_query_tv()$"df", method = 'endpoint.ANOVA', last.measure.day = anova_measure_day(), multi_test_anova = TRUE, tv_study_filtered = input$tv_study_filtered, tv_tumor_filtered = input$tv_tumor_filtered, main_anova_interpolate = input$main_anova_interpolate)
     )
 
+    interaction_analysis_data <- reactive({
+      queried_data <- get_query_tv()$"df"
+      if (is.null(queried_data) || nrow(queried_data) == 0) {
+        return(NULL)
+      }
+      queried_data %>%
+        dplyr::filter(
+          Study %in% input$tv_study_filtered,
+          Tumor %in% input$tv_tumor_filtered
+        ) %>%
+        droplevels()
+    })
+
+    update_interaction_order_choices <- function(agents) {
+      order_selection <- get_interaction_order_choices(
+        agents, current_order = input$tv_interaction_order
+      )
+      updatePickerInput(
+        session,
+        "tv_interaction_order",
+        choices = order_selection$choices,
+        selected = order_selection$selected
+      )
+    }
+
+    observeEvent(interaction_analysis_data(), {
+      data <- interaction_analysis_data()
+      agents <- get_interaction_agents(data)
+      tab_available <- interaction_analysis_available(data)
+      tab_selector <- "$('#individual_study_tabs a[data-value=\"factorial_interaction_tab\"]').closest('li')"
+      shinyjs::runjs(paste0(tab_selector, if (tab_available) ".show();" else ".hide();"))
+      if (!tab_available && identical(input$individual_study_tabs, "factorial_interaction_tab")) {
+        updateTabsetPanel(session, "individual_study_tabs", selected = "ANOVA")
+      }
+
+      selected_agents <- intersect(as.character(input$tv_interaction_agents), agents)
+      if (length(selected_agents) == 0 && length(agents) >= 2) {
+        selected_agents <- agents
+      }
+      updatePickerInput(
+        session,
+        "tv_interaction_agents",
+        choices = agents,
+        selected = selected_agents
+      )
+      update_interaction_order_choices(selected_agents)
+    }, ignoreInit = FALSE)
+
+    observeEvent(input$tv_interaction_agents, {
+      update_interaction_order_choices(input$tv_interaction_agents)
+    })
+
+    factorial_interaction_result <- reactive({
+      data <- interaction_analysis_data()
+      if (is.null(data) || nrow(data) == 0) {
+        return(list(error = "Select a study and tumor with queried data."))
+      }
+      tryCatch(
+        factorial_interaction_analysis(
+          data,
+          last.measure.day = input$tv_interaction_day,
+          agents = input$tv_interaction_agents,
+          interaction_order = as.integer(input$tv_interaction_order)
+        ),
+        error = function(error) list(error = conditionMessage(error))
+      )
+    })
+
+    output$interaction_test_summary <- renderText({
+      result <- factorial_interaction_result()
+      if (!is.null(result$error)) {
+        return(result$error)
+      }
+      if (nrow(result$tests) == 0) {
+        test_text <- "No joint interaction test is estimable for the selected cohort."
+      } else {
+        test_text <- paste(vapply(seq_len(nrow(result$tests)), function(i) {
+          test <- result$tests[i, ]
+          paste0(
+            test$Contributor, " / ", test$Study, " / ", test$Tumor,
+            ": F(", test$NumDF, ", ", test$DenDF, ") = ",
+            formatC(test$F.Value, digits = 3, format = "f"),
+            ", p = ", format.pval(test$P.Value, digits = 3)
+          )
+        }, character(1)), collapse = "\n")
+      }
+      if (!is.null(result$diagnostics) && nrow(result$diagnostics) > 0) {
+        diagnostic_text <- paste(
+          paste0(result$diagnostics$Contributor, " / ", result$diagnostics$Study,
+                 " / ", result$diagnostics$Tumor, ": ", result$diagnostics$Status),
+          collapse = "\n"
+        )
+        paste(test_text, diagnostic_text, sep = "\n")
+      } else {
+        test_text
+      }
+    })
+
+    output$dt_interaction_effects <- DT::renderDataTable({
+      result <- factorial_interaction_result()
+      effect_data <- interaction_effects_table_data(result)
+      if ("Status" %in% names(effect_data)) {
+        return(DT::datatable(effect_data, rownames = FALSE, options = list(dom = "t")))
+      }
+      DT::datatable(effect_data, rownames = FALSE, options = list(dom = "t", scrollX = TRUE)) %>%
+        DT::formatRound(c("Log2 Interaction", "SE", "95% CI Lower", "95% CI Upper"), 3) %>%
+        DT::formatSignif(c("P Value", "Holm-Adjusted P"), 3)
+    })
+
 ##
   ## Body weight plot
     output$plot_mouseweight <- renderPlotly({

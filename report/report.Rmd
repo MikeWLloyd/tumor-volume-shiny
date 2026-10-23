@@ -52,6 +52,9 @@ params:
     main_tc_interpolate: NA
     main_TGI.day: NA
     main_tgi_interpolate: NA
+    tv_interaction_day: NA
+    tv_interaction_agents: NA
+    tv_interaction_order: NA
     main_orc.day: NA
     main_stackedorc_interpolate: NA
     tv_recist.day: NA
@@ -785,6 +788,82 @@ A Summary of cross study plots and analyses.
         }
     }
     #params$progress$inc(1 / 10)
+```
+
+### Factorial Interaction Analysis
+
+```{r factorial interaction analysis, results='asis', echo=FALSE}
+    interaction_data <- params$data_subset %>%
+        dplyr::filter(
+            Study %in% params$tv_study_filtered,
+            Tumor %in% params$tv_tumor_filtered
+        )
+    interaction_agents <- params$tv_interaction_agents
+    if (is.null(interaction_agents) || length(interaction_agents) == 0) {
+        interaction_agents <- get_interaction_agents(interaction_data)
+    }
+    interaction_order <- suppressWarnings(as.integer(params$tv_interaction_order))
+    if (length(interaction_order) != 1 || is.na(interaction_order)) {
+        interaction_order <- 2L
+    }
+    interaction_day <- params$tv_interaction_day
+    if (length(interaction_day) != 1 || is.na(interaction_day)) {
+        interaction_day <- params$anova_Measure_Day
+    }
+
+    interaction_result <- tryCatch(
+        factorial_interaction_analysis(
+            interaction_data,
+            last.measure.day = interaction_day,
+            agents = interaction_agents,
+            interaction_order = interaction_order
+        ),
+        error = function(error) error
+    )
+
+    if (inherits(interaction_result, "error")) {
+        cat("Interaction analysis unavailable: ", conditionMessage(interaction_result), "\n\n")
+    } else {
+        cat("Response: log2 fold change from baseline at day ", interaction_day,
+            ". The joint F-test compares the selected interaction model with a main-effects-only model.\n\n", sep = "")
+
+        if (nrow(interaction_result$tests) > 0) {
+            if (knitr::is_latex_output()) {
+                print(kable(interaction_result$tests, digits = 3, format = "latex", booktabs = TRUE,
+                      caption = "Joint Factorial Interaction Test") %>%
+                    kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 9))
+            } else {
+                print(kable(interaction_result$tests, digits = 3,
+                      caption = "Joint Factorial Interaction Test") %>%
+                    kable_styling(full_width = FALSE, position = "left"))
+            }
+        } else {
+            cat("No joint interaction test was estimable for the selected cohorts.\n\n")
+        }
+
+        if (nrow(interaction_result$effects) > 0) {
+            if (knitr::is_latex_output()) {
+                print(kable(interaction_result$effects, digits = 3, format = "latex", booktabs = TRUE,
+                      caption = "Factorial Interaction Terms") %>%
+                    kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 9))
+            } else {
+                print(kable(interaction_result$effects, digits = 3,
+                      caption = "Factorial Interaction Terms") %>%
+                    kable_styling(full_width = FALSE, position = "left"))
+            }
+        }
+
+        if (nrow(interaction_result$diagnostics) > 0) {
+            if (knitr::is_latex_output()) {
+                print(kable(interaction_result$diagnostics, format = "latex", booktabs = TRUE,
+                      caption = "Interaction Cohort Diagnostics") %>%
+                    kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 9))
+            } else {
+                print(kable(interaction_result$diagnostics, caption = "Interaction Cohort Diagnostics") %>%
+                    kable_styling(full_width = FALSE, position = "left"))
+            }
+        }
+    }
 ```
 
 ### Body Weight Plots

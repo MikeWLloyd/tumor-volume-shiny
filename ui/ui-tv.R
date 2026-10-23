@@ -514,7 +514,7 @@ tabPanel(
       )
     ),
 
-    tabsetPanel(type = "tabs",
+    tabsetPanel(id = "individual_study_tabs", type = "tabs",
       tabPanel("Objective Response (RECIST)",
         br(),
         fluidRow(
@@ -699,6 +699,48 @@ tabPanel(
             )
           )
         )
+      ),
+      tabPanel("Factorial Interaction", value = "factorial_interaction_tab",
+        br(),
+        fluidRow(
+          column(
+            width = 3,
+            numericInput(
+              "tv_interaction_day", "Calculation Day",
+              value = 21, min = 0, max = 99999
+            )
+          ),
+          column(
+            width = 5,
+            shinyWidgets::pickerInput(
+              "tv_interaction_agents",
+              "Agents in the factorial model",
+              choices = character(),
+              selected = character(),
+              multiple = TRUE,
+              options = shinyWidgets::pickerOptions(actionsBox = TRUE, showContent = TRUE)
+            )
+          ),
+          column(
+            width = 4,
+            shinyWidgets::pickerInput(
+              "tv_interaction_order",
+              "Highest interaction order",
+              choices = character(),
+              selected = character(),
+              multiple = FALSE,
+              options = shinyWidgets::pickerOptions(showContent = TRUE)
+            )
+          )
+        ),
+        tags$p(
+          "Log2 fold change from baseline; the joint F-test compares the selected interaction model with a main-effects-only model. Term p-values are Holm-adjusted."
+        ),
+        verbatimTextOutput("interaction_test_summary"),
+        tags$div(
+          style = "margin-top: 16px;",
+          DTOutput("dt_interaction_effects")
+        )
       )
     )
   ),
@@ -764,7 +806,8 @@ tabPanel(
         )
       )
     )
-  )
+  ),
+  tags$div(style = "height: 80px;")
 )
 
 
