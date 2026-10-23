@@ -86,6 +86,7 @@ params:
         warning = FALSE,
         message = FALSE)
     
+    source(file.path(dirname(params$script_location), "query-tv.R"), local = knitr::knit_global())
     source(params$script_location, local = knitr::knit_global())
 
     suppressPackageStartupMessages({
@@ -432,7 +433,7 @@ A Summary of cross study plots and analyses.
     response_list <- T.C_ratio(plot_data, last.measure.day = params$main_TGI.day)
 
     response_list <- response_list %>% dplyr::select(-mean.TVratio,	-var.TVratio,	-mean.dVt, -TC.ratio) %>%
-                                dplyr::select(Contributor, Study, Tumor, Arms, TC.CalcDay, n.TVratio, aov.TC.ratio, se_TC.ratio, Contrast.pValue) %>%
+                                dplyr::select(Contributor, Study, Tumor, Arms, TC.CalcDay, n.TVratio, aov.TC.ratio, se_aov.TC.ratio, Contrast.pValue) %>%
                                 dplyr::rename(pValue = Contrast.pValue)
 
     if (knitr::is_latex_output()) {
@@ -441,6 +442,51 @@ A Summary of cross study plots and analyses.
     } else {
         kable(response_list[order(response_list$Arms),], digits=2, row.names = FALSE, booktabs=T, caption = "Tumor Growth Inhibition Summary Table") %>%
             kable_styling(full_width = TRUE, position = "left")
+    }
+
+    contrast_list <- get_TC_pairwise_contrasts(
+        plot_data, last.measure.day = params$main_TGI.day
+    )
+
+    if (nrow(contrast_list) > 0) {
+        contrast_list <- contrast_list %>%
+            dplyr::select(
+                Contributor, Study, Tumor, TC.CalcDay, Contrast, N.Arm.1, N.Arm.2,
+                Log2.Fold.Change.Difference, Fold.Change.Ratio, CI.Lower, CI.Upper,
+                Adjusted.pValue
+            ) %>%
+            dplyr::rename(
+                `Calc Day` = TC.CalcDay,
+                `N Arm 1` = N.Arm.1,
+                `N Arm 2` = N.Arm.2,
+                `Log2 Difference (Arm 1 - Arm 2)` = Log2.Fold.Change.Difference,
+                `Geometric Ratio (Arm 1 / Arm 2)` = Fold.Change.Ratio,
+                `95% CI Lower` = CI.Lower,
+                `95% CI Upper` = CI.Upper,
+                `Tukey-Adjusted p` = Adjusted.pValue
+            )
+
+        if (knitr::is_latex_output()) {
+            kable(
+                contrast_list,
+                digits = 3,
+                row.names = FALSE,
+                format = "latex",
+                booktabs = TRUE,
+                linesep = "",
+                caption = "Pairwise Tumor Growth Inhibition Contrasts"
+            ) %>%
+                kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 9)
+        } else {
+            kable(
+                contrast_list,
+                digits = 3,
+                row.names = FALSE,
+                booktabs = TRUE,
+                caption = "Pairwise Tumor Growth Inhibition Contrasts"
+            ) %>%
+                kable_styling(full_width = FALSE, position = "left")
+        }
     }
 
     #params$progress$inc(1 / 10)

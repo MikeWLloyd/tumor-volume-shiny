@@ -1,4 +1,32 @@
 # Query TV Data
+order_treatment_arms <- function(arms) {
+  arm_names <- unique(as.character(arms))
+  arm_names <- arm_names[!is.na(arm_names)]
+  control <- intersect("Control", arm_names)
+  treatment_arms <- setdiff(arm_names, "Control")
+  is_combination <- grepl("\\+", treatment_arms)
+
+  c(
+    control,
+    sort(treatment_arms[!is_combination]),
+    sort(treatment_arms[is_combination])
+  )
+}
+
+select_available_choice <- function(current, choices) {
+  choices <- unique(as.character(choices))
+  choices <- choices[!is.na(choices)]
+  selected <- intersect(as.character(current), choices)
+
+  if (length(selected) > 0) {
+    selected[1]
+  } else if (length(choices) > 0) {
+    choices[1]
+  } else {
+    NULL
+  }
+}
+
 query_tv <- function(tv_df, tv_contributor, tv_treatment, tv_study, tv_disease_type) {
 
   # 1.2 Contributor
@@ -78,6 +106,7 @@ query_tv <- function(tv_df, tv_contributor, tv_treatment, tv_study, tv_disease_t
 
   # make factors so DT can have dropdowns for filter boxes
   df[sapply(df, is.character)] <- lapply(df[sapply(df, is.character)], as.factor)
+  df$Arms <- factor(df$Arms, levels = order_treatment_arms(df$Arms))
 
   # message
   pretee <- function(x) formatC(as.numeric(x), format = "d", big.mark = ",")

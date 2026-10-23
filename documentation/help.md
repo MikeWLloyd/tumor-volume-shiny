@@ -105,6 +105,8 @@ The Tumor Volume Analysis page contains all plot and analysis functions.
 
 By default an example dataset is loaded. To add your own data, see the **Data Upload and Validation** section of this document. 
 
+The default data includes a second contributor, `Example_Set_2`, with a synthetic 2 x 2 combination example. Select it in the Contributor filter. It contains control, Drug A, Drug B, and Drug A + Drug B arms, with explicit drug-presence columns. At day 21, the single agents each have about 2x fold growth while the combination has about 0.5x. Under an additive no-interaction model on log2 fold change, the expected combination is about 1x; this dataset is constructed to show a negative interaction. It is illustrative synthetic data, not experimental evidence.
+
 ---
 
 ## Calculation Day Information 
@@ -343,6 +345,10 @@ Where model by treatment arm shows regression, percent change in tumor volume (a
 
 This plot and table shows cross study tumor growth inhibition defined as the T/C ratio at the user defined time point (default "TGI Calc. Day" is 21). 
 
+For T/C and endpoint ANOVA calculations, tumor volume is linearly interpolated to the selected day when it falls between measurements. Animals without measurements spanning that day, or with a baseline volume at or below zero, are excluded; endpoint volume zero is retained. Zero fold changes are set to 0.001 only for the log2 model. The arithmetic T/C ratio is the ratio of arm means and uses a delta-method standard error. The ANOVA-derived T/C ratio is estimated on log2 fold changes and its displayed standard error is calculated from the fitted model. T/C p-values are two-sided Tukey-adjusted comparisons against control.
+
+The pairwise table compares every pair of treatment arms on the same log2 fold-change scale. It reports the difference and geometric fold-change ratio with a Tukey-adjusted 95% confidence interval and p-value; the ratio is Arm 1 divided by Arm 2. This includes combination-versus-single-agent contrasts when those arms are present.
+
 To measure antitumor activity of the treatment group compared to the control group, we considered the tumor growth treatment-to-control ratio (gamma<sub>t</sub>) estimated by one way ANOVA focused on time *t* as described in Supplemental Materials 1 in (Evrard et al. 2020). Data underlying this plot can be interpolated with the checkbox.  
 
  
@@ -454,7 +460,7 @@ Event free survival analysis is conducted based on censoring events which occur 
 <img src="images/24.tv_ANOVA.png" alt="" width="500"/>
 </p> 
 
-The difference in tumor volumes among treatment arms at a user defined day can be compared using one-way ANOVA. By default ANOVA Calc. Day is 21 days. If at the user defined day, fewer than 2 groups exists, and error message will be displayed. If this occurs select a different time point. When the number of treatment arms is two or more, a multiple mean comparison test (Tukey) is provided to compare treatment arms against control.
+The difference in tumor volumes among treatment arms at a user defined day can be compared using one-way ANOVA. By default ANOVA Calc. Day is 21 days. Endpoint volumes are linearly interpolated to this day when measurements span it; zero endpoint volumes are retained and animals with baseline volume at or below zero are excluded. If fewer than 2 groups remain, select a different time point. Tukey's test reports adjusted pairwise comparisons among all treatment arms.
 
 ---
 

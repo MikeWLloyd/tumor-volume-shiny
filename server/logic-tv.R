@@ -3,8 +3,17 @@
 ### The factors: Contributor, Study, Tumor, and Arms must be accounted for by every plot / metric. 
 
 # DATA
-## load example data. 
-data <- try(as.data.frame(readRDS("include/tv-test.rds")), silent = T) #%>% withSpinner(color="#0dc5c1")
+load_default_tv_data <- function() {
+  default_data <- as.data.frame(readRDS("include/tv-test.rds"))
+  interaction_data <- read.csv(
+    "include/example_combination_interaction.csv",
+    stringsAsFactors = FALSE
+  )
+  dplyr::bind_rows(default_data, interaction_data)
+}
+
+## load example data.
+data <- try(as.data.frame(load_default_tv_data()), silent = T) #%>% withSpinner(color="#0dc5c1")
 rownames(data) <- NULL
 
 # data <- try(as.data.frame(read.csv("include/unit_test.csv", header = TRUE)), silent = T)
@@ -84,8 +93,7 @@ rownames(data) <- NULL
 
         n_unique_arms <- length(unique(filtered.df$Arms))
 
-        agents <- factor(unique(filtered.df$Arms))
-        agents <- levels(relevel(agents, 'Control'))
+        agents <- order_treatment_arms(filtered.df$Arms)
 
         n_studies <- length(unique(sort(filtered.df$Study)))
 
@@ -124,10 +132,17 @@ rownames(data) <- NULL
       # Note that Shiny is 'smart' enough to know when data was loaded and when/if it should run the same statement again. 
       # The csv file gets loaded once, and then the 'curr_data' are queried in the get_query_tv statement. Because get_data is reactive, this block is only run once per change/update to inputs$user_tv_data. 
 
-      tumor_list <- curr_data %>% dplyr::filter(Study == curr_data$Study[1]) %>% dplyr::select(Tumor) %>% unique()
+      initial_contributor <- unique(sort(curr_data$Contributor))[1]
+      initial_study <- unique(sort(curr_data$Study[curr_data$Contributor == initial_contributor]))[1]
+      tumor_list <- curr_data %>%
+        dplyr::filter(Contributor == initial_contributor, Study == initial_study) %>%
+        dplyr::pull(Tumor) %>%
+        unique() %>%
+        sort()
 
       updatePickerInput(session, inputId = "tv_tumor_filtered",
-                        choices = tumor_list$Tumor)
+                        choices = tumor_list,
+                        selected = select_available_choice(input$tv_tumor_filtered, tumor_list))
       ## Update the Tumor list used in ANOVA. Done here regardless of the data loaded.
 
       check_state$loaded_data = TRUE
@@ -183,14 +198,30 @@ rownames(data) <- NULL
         }
       )
 
-      choices <- input$tv_study
+      study_choices <- input$tv_study
+      selected_study <- select_available_choice(input$tv_study_filtered, study_choices)
 
       updatePickerInput(
         session,
         inputId = "tv_study_filtered",
-        choices = choices
+        choices = study_choices,
+        selected = selected_study
       )
-      # update the sub-list in 'Individual Study'
+
+      if (!is.null(df_query$df) && nrow(df_query$df) > 0) {
+        tumor_choices <- df_query$df %>%
+          dplyr::filter(Study %in% selected_study) %>%
+          dplyr::pull(Tumor) %>%
+          as.character() %>%
+          unique() %>%
+          sort()
+        updatePickerInput(
+          session,
+          inputId = "tv_tumor_filtered",
+          choices = tumor_choices,
+          selected = select_available_choice(input$tv_tumor_filtered, tumor_choices)
+        )
+      }
 
       df_query
 
@@ -219,9 +250,7 @@ rownames(data) <- NULL
     if (length(unique(filtered.df$Arms)) < 2) {
       unique(filtered.df$Arms)
     } else {
-      agents <- factor(unique(filtered.df$Arms))
-      agents <- relevel(agents, 'Control')
-      levels(agents)
+      order_treatment_arms(filtered.df$Arms)
     }
   }
 
@@ -421,14 +450,19 @@ rownames(data) <- NULL
     if (check_state$loaded_data) {
       
       #tv_study_filtered
-      df <- base::subset(
-        get_query_tv()$"df", Study %in% c(input$tv_study_filtered)
-      )
-      
-      df <- droplevels(df)
+      df <- get_data() %>%
+        dplyr::filter(
+          Contributor %in% input$tv_contributor,
+          Study %in% input$tv_study_filtered
+        )
+      tumor_choices <- sort(unique(as.character(df$Tumor)))
 
-      updatePickerInput(session, inputId = "tv_tumor_filtered",
-              choices = unique(sort(levels(as.factor(df$Tumor)))))
+      updatePickerInput(
+        session,
+        inputId = "tv_tumor_filtered",
+        choices = tumor_choices,
+        selected = select_available_choice(input$tv_tumor_filtered, tumor_choices)
+      )
 
     }
   },ignoreNULL = F)
@@ -446,8 +480,7 @@ rownames(data) <- NULL
 
       n_unique_arms <- length(unique(filtered.df$Arms))
 
-      agents <- factor(unique(filtered.df$Arms))
-      agents <- levels(relevel(agents, 'Control'))
+      agents <- order_treatment_arms(filtered.df$Arms)
 
       n_studies <- length(unique(sort(filtered.df$Study)))
 
@@ -463,8 +496,13 @@ rownames(data) <- NULL
                     choices = unique(sort(filtered.df$Disease_Type)),
                     selected = unique(sort(filtered.df$Disease_Type))[1])
 
-      updatePickerInput(session, inputId = "tv_study_filtered",
-                    choices = unique(sort(filtered.df$Study)))
+      study_filtered_choices <- unique(sort(filtered.df$Study))
+      updatePickerInput(
+        session,
+        inputId = "tv_study_filtered",
+        choices = study_filtered_choices,
+        selected = select_available_choice(input$tv_study_filtered, study_filtered_choices)
+      )
     } 
   },ignoreNULL = T) #
 
@@ -479,8 +517,7 @@ rownames(data) <- NULL
 
       n_unique_arms <- length(unique(filtered.df$Arms))
 
-      agents <- factor(unique(filtered.df$Arms))
-      agents <- levels(relevel(agents, 'Control'))
+      agents <- order_treatment_arms(filtered.df$Arms)
 
       n_studies <- length(unique(sort(filtered.df$Study)))
 
@@ -831,7 +868,7 @@ showReportGeneratingModal <- function() {
       response_list <- T.C_ratio(df, last.measure.day = mainTGI.study.day())
 
       response_list <- response_list %>% dplyr::select(-mean.TVratio,	-var.TVratio,	-mean.dVt, -TC.ratio) %>%
-                                        dplyr::select(Contributor, Study, Tumor, Arms, TC.CalcDay, n.TVratio, aov.TC.ratio, se_TC.ratio, Contrast.pValue) %>%
+                                        dplyr::select(Contributor, Study, Tumor, Arms, TC.CalcDay, n.TVratio, aov.TC.ratio, se_aov.TC.ratio, Contrast.pValue) %>%
                                         dplyr::rename(pValue = Contrast.pValue)
 
       tab.df <- DT::datatable(response_list[order(response_list$Arms),],
@@ -844,9 +881,62 @@ showReportGeneratingModal <- function() {
                 options = list(
                   dom = "Blrtip", scrollX = TRUE, ordering = F, autoWidth = TRUE, keys = TRUE, lengthMenu = list(c(5, 20, 50, -1), c('5', '20', '50', 'All')), pageLength = 20, paging = T,
                   buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download")))) %>%
-                formatRound(c('aov.TC.ratio', 'se_TC.ratio'), digits = 2) %>%
+                formatRound(c('aov.TC.ratio', 'se_aov.TC.ratio'), digits = 2) %>%
                 formatSignif(c('pValue'), 2)
       tab.df
+    })
+
+    output$main_tc_contrast_table <- DT::renderDataTable({
+      df <- get_query_tv()$"df"
+      if (is.null(df) || nrow(df) == 0) {
+        return(data.frame(Message = "No pairwise arm comparisons available."))
+      }
+
+      if (input$main_tgi_interpolate) {
+        df <- get_interpolated_pdx_data(data = df)
+        df$Volume <- df$Interpolated_Volume
+      }
+
+      contrast_data <- get_TC_pairwise_contrasts(
+        df, last.measure.day = mainTGI.study.day()
+      )
+      if (is.null(contrast_data) || nrow(contrast_data) == 0) {
+        return(data.frame(Message = "No pairwise arm comparisons available."))
+      }
+
+      contrast_data <- contrast_data %>%
+        dplyr::select(
+          Contributor, Study, Tumor, TC.CalcDay, Contrast, N.Arm.1, N.Arm.2,
+          Log2.Fold.Change.Difference, Fold.Change.Ratio, CI.Lower, CI.Upper,
+          Adjusted.pValue
+        ) %>%
+        dplyr::rename(
+          `Calc Day` = TC.CalcDay,
+          `N Arm 1` = N.Arm.1,
+          `N Arm 2` = N.Arm.2,
+          `Log2 Difference (Arm 1 - Arm 2)` = Log2.Fold.Change.Difference,
+          `Geometric Ratio (Arm 1 / Arm 2)` = Fold.Change.Ratio,
+          `95% CI Lower` = CI.Lower,
+          `95% CI Upper` = CI.Upper,
+          `Tukey-Adjusted p` = Adjusted.pValue
+        )
+
+      DT::datatable(
+        contrast_data,
+        style = "bootstrap",
+        escape = FALSE,
+        filter = "none",
+        rownames = FALSE,
+        class = "cell-border stripe",
+        extensions = "Buttons",
+        options = list(
+          dom = "Blrtip", scrollX = TRUE, ordering = FALSE, autoWidth = TRUE,
+          pageLength = 20, paging = TRUE,
+          buttons = list("copy", list(extend = "collection", buttons = c("csv", "excel"), text = "Download"))
+        )
+      ) %>%
+        DT::formatRound(c("Log2 Difference (Arm 1 - Arm 2)", "Geometric Ratio (Arm 1 / Arm 2)", "95% CI Lower", "95% CI Upper"), 3) %>%
+        DT::formatSignif("Tukey-Adjusted p", 3)
     })
 
   ## ORC stacked plot

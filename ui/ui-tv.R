@@ -443,13 +443,24 @@ tabPanel(
               fluidRow(
                 column(
                   width = 6, offset = 3,
+                  tags$h5("Treatment vs Control"),
                   HTML("<br>"),
                   withSpinner(
                     DTOutput("main_tc_table"),
                     proxy.height = "100px", color="#0273B7"
                   )
                 )
-              )                          
+              ),
+              fluidRow(
+                column(
+                  width = 12,
+                  tags$h5("Pairwise Arm Comparisons"),
+                  withSpinner(
+                    DTOutput("main_tc_contrast_table"),
+                    proxy.height = "100px", color="#0273B7"
+                  )
+                )
+              )
             )
           )
         )
@@ -497,6 +508,7 @@ tabPanel(
         width = 2,
         pickerInput("tv_study_filtered", "Study",
                     choices = get_tv_study(),
+                    selected = get_tv_study()[1],
                     options = pickerOptions(actionsBox = FALSE,
                                             showContent = TRUE),multiple = FALSE)
       )
@@ -648,6 +660,7 @@ tabPanel(
                   width = 2,
                   pickerInput("tv_tumor_filtered", "Tumor",
                     choices = get_tv_tumor(),
+                    selected = get_tv_tumor()[1],
                     options = pickerOptions(actionsBox = FALSE,
                                             showContent = TRUE),multiple = FALSE)
                 ),

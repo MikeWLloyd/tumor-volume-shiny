@@ -178,6 +178,74 @@ auc <- function(x, y, from = min(x, na.rm=TRUE), to = max(x, na.rm=TRUE), type=c
 }
 
 # HELPER FUNCTION - COMPUTE T/C RATIO
+get_endpoint_measurements <- function(data, id_columns, time_column, volume_column, target_day = NULL) {
+  empty_result <- data.frame()
+  if (is.null(data) || nrow(data) == 0) {
+    return(empty_result)
+  }
+
+  valid_data <- data[
+    is.finite(data[[time_column]]) & is.finite(data[[volume_column]]) & data[[volume_column]] >= 0,
+    , drop = FALSE
+  ]
+  if (nrow(valid_data) == 0) {
+    return(empty_result)
+  }
+
+  groups <- split(
+    seq_len(nrow(valid_data)),
+    do.call(interaction, c(valid_data[id_columns], list(drop = TRUE, lex.order = TRUE)))
+  )
+  curves <- lapply(groups, function(rows) {
+    animal_data <- valid_data[rows, , drop = FALSE]
+    animal_data <- animal_data[order(animal_data[[time_column]]), , drop = FALSE]
+    curve <- stats::aggregate(
+      animal_data[[volume_column]],
+      list(day = animal_data[[time_column]]),
+      mean
+    )
+    names(curve)[2] <- "volume"
+    if (nrow(curve) < 2 || !is.finite(curve$volume[1]) || curve$volume[1] <= 0) {
+      return(NULL)
+    }
+    list(identity = animal_data[1, id_columns, drop = FALSE], curve = curve)
+  })
+  curves <- Filter(Negate(is.null), curves)
+  if (length(curves) == 0) {
+    return(empty_result)
+  }
+
+  if (is.null(target_day)) {
+    target_day <- min(vapply(curves, function(x) max(x$curve$day), numeric(1)))
+  }
+  if (length(target_day) != 1 || is.na(target_day) || !is.finite(target_day)) {
+    return(empty_result)
+  }
+
+  measurements <- lapply(curves, function(x) {
+    curve <- x$curve
+    if (target_day < min(curve$day) || target_day > max(curve$day)) {
+      return(NULL)
+    }
+    endpoint_volume <- stats::approx(curve$day, curve$volume, xout = target_day, rule = 1)$y
+    if (length(endpoint_volume) != 1 || !is.finite(endpoint_volume)) {
+      return(NULL)
+    }
+    baseline_volume <- curve$volume[1]
+    data.frame(
+      x$identity,
+      baseline_volume = baseline_volume,
+      endpoint_volume = endpoint_volume,
+      Endpoint.Day = target_day,
+      TV.ratio = endpoint_volume / baseline_volume,
+      dVt = (endpoint_volume - baseline_volume) / baseline_volume * 100,
+      stringsAsFactors = FALSE
+    )
+  })
+  measurements <- Filter(Negate(is.null), measurements)
+  if (length(measurements) == 0) empty_result else do.call(rbind, measurements)
+}
+
 T.C_ratio <- function(data, last.measure.day = NULL) {
 
   if(inherits(data, "data.frame")){
@@ -205,133 +273,130 @@ T.C_ratio <- function(data, last.measure.day = NULL) {
         if (!'Control' %in% data.d$Arms) stop('Can not compute T/C ratio without a Control group')
         data.d$Arms <- relevel(as.factor(data.d$Arms), 'Control')
 
-        Response.Level.tmp <- data.frame()
+        endpoint_data <- get_endpoint_measurements(
+          data.d, c("Arms", "ID"), "Times", "Volume", last.measure.day
+        )
+        if (nrow(endpoint_data) == 0 || !"Control" %in% endpoint_data$Arms) next
 
-        aov.df <- data.frame()
+        endpoint_data$Arms <- factor(
+          endpoint_data$Arms,
+          levels = order_treatment_arms(endpoint_data$Arms)
+        )
+        endpoint_data$log2.TV.ratio <- log2(pmax(endpoint_data$TV.ratio, 0.001))
+        control_data <- endpoint_data[endpoint_data$Arms == "Control", , drop = FALSE]
+        mean.C <- mean(control_data$TV.ratio)
+        if (!is.finite(mean.C) || mean.C <= 0) next
+        var.C <- var(control_data$TV.ratio)
+        n.C <- nrow(control_data)
+        lm.fit <- stats::lm(log2.TV.ratio ~ Arms, data = endpoint_data)
+        tukey <- stats::TukeyHSD(stats::aov(lm.fit))$Arms
+        coefficient_summary <- summary(lm.fit)$coefficients
 
-        data.id.c <- data.d[data.d$Arms == 'Control',]
+        for (arm in levels(endpoint_data$Arms)) {
+          if (arm == "Control") next
+          arm_data <- endpoint_data[endpoint_data$Arms == arm, , drop = FALSE]
+          mean.T <- mean(arm_data$TV.ratio)
+          var.T <- var(arm_data$TV.ratio)
+          n.T <- nrow(arm_data)
+          TC.ratio <- mean.T / mean.C
+          se_TC.ratio <- sqrt(
+            var.T / (n.T * mean.C^2) + mean.T^2 * var.C / (n.C * mean.C^4)
+          )
+          coefficient_name <- paste0("Arms", arm)
+          tukey_row <- paste0(arm, "-Control")
+          beta <- stats::coef(lm.fit)[coefficient_name]
+          beta_se <- coefficient_summary[coefficient_name, "Std. Error"]
 
-        if (!is.null(last.measure.day)) {
-
-          end_day_index = match(last.measure.day, data.id.c$Times)
-
-          if (is.na(end_day_index)) {
-            end_day_index = which.min(abs(data.id.c$Times - last.measure.day))
-          }
-
-          last.avail.day <- data.id.c[end_day_index,]$Times
-
-        } else {
-          end_day_index <-length(data.id.c$Volume)
-          last.avail.day <- data.id.c[end_day_index,]$Times
+          tmp.df <- data.frame(
+            Arms = arm,
+            Contributor = c,
+            Study = s,
+            Tumor = d,
+            TC.CalcDay = unique(endpoint_data$Endpoint.Day),
+            mean.dVt = mean(arm_data$dVt),
+            SE.dVt = stats::sd(arm_data$dVt) / sqrt(n.T),
+            mean.TVratio = mean.T,
+            var.TVratio = var.T,
+            n.TVratio = n.T,
+            mean.log2FC = mean(log2(pmax(arm_data$TV.ratio, 0.001))),
+            TC.ratio = TC.ratio,
+            se_TC.ratio = se_TC.ratio,
+            aov.TC.ratio = 2^beta,
+            se_aov.TC.ratio = 2^beta * log(2) * beta_se,
+            Contrast.pValue = tukey[tukey_row, "p adj"],
+            stringsAsFactors = FALSE
+          )
+          Response.Level <- rbind(Response.Level, tmp.df)
         }
-
-        data.id.sub.c <- data.id.c %>%
-          dplyr::arrange(Contributor, Study, Tumor, Arms, ID, Times) %>%
-          dplyr::group_by(Contributor, Study, Tumor, Arms, ID) %>%
-          dplyr::mutate(dVt = (((Volume - Volume[1]) / Volume[1] ) * 100),
-                        TV.ratio = (Volume / Volume[1]),
-                        log2.Fold.Change = log2(Volume / Volume[1])) %>%
-          dplyr::filter(Times == last.avail.day)
-
-        aov.df <- rbind(aov.df, data.id.sub.c)
-
-        mean.C <- mean(data.id.sub.c$TV.ratio)
-        var.C <- var(data.id.sub.c$TV.ratio)
-        n.C <- length(data.id.sub.c$TV.ratio)
-
-        for (i in levels(data.d$Arms)) {
-
-          if(i == 'Control') {
-            next
-          }
-
-          data.id.i <- data.d[data.d$Arms == i,]
-
-          if (!is.null(last.measure.day)) {
-
-            end_day_index = match(last.measure.day, data.id.i$Times)
-
-            if (is.na(end_day_index)) {
-              end_day_index = which.min(abs(data.id.i$Times - last.measure.day))
-            }
-
-            last.avail.day <- data.id.i[end_day_index,]$Times
-
-          } else {
-            end_day_index <-length(data.id.i$Volume)
-            last.avail.day <- data.id.i[end_day_index,]$Times
-          }
-
-          data.id.i <- data.id.i %>%
-            dplyr::arrange(Contributor, Study, Tumor, Arms, ID, Times) %>%
-            dplyr::group_by(Contributor, Study, Tumor, Arms, ID) %>%
-            dplyr::mutate(dVt = (((Volume - Volume[1]) / Volume[1] ) * 100),
-                          TV.ratio = (Volume / Volume[1]),
-                          log2.Fold.Change = log2(Volume / Volume[1])) %>%
-            dplyr::filter(Times == last.avail.day)
-
-          aov.df <- rbind(aov.df, data.id.i)
-
-          mean.T <- mean(data.id.i$TV.ratio)
-          var.T <- var(data.id.i$TV.ratio)
-          n.T <- length(data.id.i$TV.ratio)
-          mean.dVt <- mean(data.id.i$dVt)
-          SE.dVt <- sd(data.id.i$dVt)/sqrt(length((data.id.i$dVt)))
-
-          TC.ratio <- (mean.T / mean.C)
-          se_TC.ratio <- 1 / mean.C * ((var.T / n.T + (mean.T / mean.C) * (var.C / n.C))^0.5)
-
-          tmp.df <- data.frame(Arms = i,
-                              Contributor = c,
-                              Study = s,
-                              Tumor = d,
-                              TC.CalcDay = last.avail.day,
-                              mean.dVt = mean.dVt,
-                              SE.dVt = SE.dVt,
-                              mean.TVratio = mean.T,
-                              var.TVratio = var.T,
-                              n.TVratio = n.T,
-                              TC.ratio = TC.ratio,
-                              se_TC.ratio = se_TC.ratio)
-
-          Response.Level.tmp <- rbind(Response.Level.tmp,tmp.df)
-        }
-
-        aov.df$TV.ratio <- ifelse(aov.df$TV.ratio==0, 0.001, aov.df$TV.ratio)
-
-        lm.fit <- aov(log2(TV.ratio) ~ Arms, data = aov.df)
-
-        beta <- lm.fit$coefficients[-1]
-
-        aov.TC.ratio <- round((2^beta), 2)
-
-        names(aov.TC.ratio) <- sub("Arms","", names(aov.TC.ratio))
-
-        ANOVA.pvalue<-anova(lm.fit)[1,"Pr(>F)"]
-
-        myContr <- contrMat(table(data.d$Arms), "Tukey")[1:(length(levels(data.d$Arms))-1),]
-
-        mcp <- glht(lm.fit, linfct = mcp(Arms =  myContr))
-
-        mcp.sum <- summary(mcp,test = univariate())
-
-        contr.p <- mcp.sum$test$"pvalues"
-
-        contr.p.1sided <- pt( mcp.sum$test$tstat, mcp.sum$df, lower = TRUE)
-
-        temp.df <- data.frame(aov.TC.ratio = aov.TC.ratio,
-                              Contrast.pValue = contr.p.1sided)
-
-        temp.df <- temp.df %>% tibble::rownames_to_column('Arms')
-
-        Response.merge <- merge(Response.Level.tmp, temp.df, by='Arms')
-
-        Response.Level <- rbind(Response.Level,Response.merge)
-        }
+      }
     }
   }
+  if (nrow(Response.Level) > 0) {
+    Response.Level$Arms <- factor(
+      Response.Level$Arms,
+      levels = order_treatment_arms(Response.Level$Arms)
+    )
+  }
   return(Response.Level)
+}
+
+get_TC_pairwise_contrasts <- function(data, last.measure.day = NULL) {
+  if (is.null(data) || nrow(data) == 0) {
+    return(data.frame())
+  }
+
+  contrasts <- data.frame()
+  for (contributor in levels(as.factor(data$Contributor))) {
+    contributor_data <- droplevels(data[data$Contributor == contributor, , drop = FALSE])
+    for (study in levels(as.factor(contributor_data$Study))) {
+      study_data <- droplevels(contributor_data[contributor_data$Study == study, , drop = FALSE])
+      for (tumor in levels(as.factor(study_data$Tumor))) {
+        cohort_data <- study_data[study_data$Tumor == tumor, , drop = FALSE]
+        if (!"Control" %in% cohort_data$Arms) next
+
+        endpoint_data <- get_endpoint_measurements(
+          cohort_data, c("Arms", "ID"), "Times", "Volume", last.measure.day
+        )
+        if (length(unique(endpoint_data$Arms)) < 2) next
+
+        endpoint_data$Arms <- factor(
+          endpoint_data$Arms,
+          levels = order_treatment_arms(endpoint_data$Arms)
+        )
+        endpoint_data$log2.TV.ratio <- log2(pmax(endpoint_data$TV.ratio, 0.001))
+        fit <- stats::aov(log2.TV.ratio ~ Arms, data = endpoint_data)
+        tukey <- stats::TukeyHSD(fit)$Arms
+        arms <- levels(endpoint_data$Arms)
+
+        for (first_index in seq_len(length(arms) - 1L)) {
+          for (second_index in seq.int(first_index + 1L, length(arms))) {
+            arm_1 <- arms[first_index]
+            arm_2 <- arms[second_index]
+            tukey_row <- paste(arm_2, arm_1, sep = "-")
+            contrast <- tukey[tukey_row, , drop = FALSE]
+            contrasts <- rbind(contrasts, data.frame(
+              Contributor = contributor,
+              Study = study,
+              Tumor = tumor,
+              TC.CalcDay = unique(endpoint_data$Endpoint.Day),
+              Contrast = paste(arm_1, "/", arm_2),
+              Arm.1 = arm_1,
+              Arm.2 = arm_2,
+              N.Arm.1 = sum(endpoint_data$Arms == arm_1),
+              N.Arm.2 = sum(endpoint_data$Arms == arm_2),
+              Log2.Fold.Change.Difference = -contrast[1, "diff"],
+              Fold.Change.Ratio = 2^(-contrast[1, "diff"]),
+              CI.Lower = 2^(-contrast[1, "upr"]),
+              CI.Upper = 2^(-contrast[1, "lwr"]),
+              Adjusted.pValue = contrast[1, "p adj"],
+              stringsAsFactors = FALSE
+            ))
+          }
+        }
+      }
+    }
+  }
+  contrasts
 }
 
 # HELPER FUNCTION - GET COHORT LEVEL ORC LEVELS
@@ -794,7 +859,7 @@ get_plot_scaled <- function(data, orders = NULL, position.dodge, title = NULL, s
     if( level == 'Arm') {
       s.data <- adjusted.data %>%
                 group_by(Contributor, Study, Tumor, Arms, Times) %>%
-                summarise(N = n(), Mean = mean(Moscow), SD = sd(Moscow), SE = (SD / sqrt(N)), Study=Study, ID=ID, .groups = 'drop') %>%
+                summarise(N = n(), Mean = mean(Moscow), SD = sd(Moscow), SE = (SD / sqrt(N)), .groups = 'drop') %>%
                 dplyr::rename(Volume = Mean)
 
       s.data$Volume <- round(s.data$Volume, 2)
@@ -980,7 +1045,7 @@ WaterfallPlot_Hybrid <- function(data) {
 
   data <- data %>%
     dplyr::mutate(Value = ifelse(mean.dVt <= 0, mean.dVt, ifelse((aov.TC.ratio*100) > 100, 100, aov.TC.ratio*100))) %>%
-    dplyr::mutate(SE = ifelse(mean.dVt <= 0, SE.dVt, ifelse((se_TC.ratio*100) > 100, 100, se_TC.ratio*100)))
+    dplyr::mutate(SE = ifelse(mean.dVt <= 0, SE.dVt, ifelse((se_aov.TC.ratio*100) > 100, 100, se_aov.TC.ratio*100)))
 
   data$Value <- round(data$Value, 2)
   levels <- unique(levels(as.factor(data$Arms)))
@@ -1030,8 +1095,8 @@ plotTC.ratio <- function(data, plot_measure = c('TC.ratio', 'aov.TC.ratio')) {
   Arms <- data[ , 'Arms']
   TC.ratio <- data[ , 'TC.ratio']
 
-  xlim <- if (max(data[[plot_measure]] + data$se_TC.ratio) > 1) {
-    xlim <- c(0, max(data[[plot_measure]] + data$se_TC.ratio))
+  xlim <- if (max(data[[plot_measure]] + data$se_aov.TC.ratio) > 1) {
+    xlim <- c(0, max(data[[plot_measure]] + data$se_aov.TC.ratio))
   } else {
     xlim <- c(0, 1)
   }
@@ -1040,8 +1105,8 @@ plotTC.ratio <- function(data, plot_measure = c('TC.ratio', 'aov.TC.ratio')) {
     geom_hline(yintercept = 0) +
     geom_bar(stat = 'identity', position = position_dodge2(width = 0.9, padding = 0.05, preserve = "single")) +
     geom_errorbar(aes(x = Tumor,
-                      ymax = !!as.name(plot_measure) + se_TC.ratio,
-                      ymin = ifelse(!!as.name(plot_measure) - se_TC.ratio < 0, 0, !!as.name(plot_measure) - se_TC.ratio)),
+                      ymax = !!as.name(plot_measure) + se_aov.TC.ratio,
+                      ymin = ifelse(!!as.name(plot_measure) - se_aov.TC.ratio < 0, 0, !!as.name(plot_measure) - se_aov.TC.ratio)),
                   width=0.2, position = position_dodge(0.9)) +
     scale_y_continuous(name="aov.T/C Ratio (SE)", limits = xlim, breaks=c(0, 0.25, 0.5, 0.75, 1), labels=c(0, 0.25, 0.5, 0.75, 1)) +
     scale_fill_manual(values=colorblind_palette_noControl) +
@@ -1343,25 +1408,24 @@ response_analysis <- function(input_data, method=c('endpoint.ANOVA','endpoint.KW
     df$Volume <- df$Interpolated_Volume
   }
 
-  if (!is.null(last.measure.day)) {
-    end_day_index = match(last.measure.day,df$Times)
-    if (is.na(end_day_index)) {
-      end_day_index = which.min(abs(df$Times - last.measure.day))
-    }
-    df <- subset(df, Times <= df$Times[end_day_index])
+  endpoint.measurements <- get_endpoint_measurements(
+    df,
+    c('Contributor', 'Study', 'Tumor', 'Arms', 'ID'),
+    'Times',
+    'Volume',
+    last.measure.day
+  )
+  if (nrow(endpoint.measurements) == 0) {
+    return()
   }
 
-  df$Arms <- relevel(as.factor(df$Arms), 'Control')
-
-  Volume <- df[,'Volume']
-
-  df <- subset(df,Volume != 0)
-
-  #get endpoint data
-  endpoint.data <- df[df$Times == max(df$Times),]
-  endpoint.data <- endpoint.data[,c('Tumor','Arms','Volume')]
+  endpoint.data <- endpoint.measurements[, c('Tumor', 'Arms', 'endpoint_volume')]
+  names(endpoint.data)[names(endpoint.data) == 'endpoint_volume'] <- 'Volume'
   endpoint.data$Tumor=factor(endpoint.data$Tumor)
-  endpoint.data$Arms=factor(endpoint.data$Arms)
+  endpoint.data$Arms <- factor(
+    endpoint.data$Arms,
+    levels = order_treatment_arms(endpoint.data$Arms)
+  )
 
   if(length(unique(endpoint.data$Arms)) == 1 & !multi_test_anova) {
     # showNotification('There is only one treatment arm at the select time point. Select a different time point, or add more arms','',type = "error")

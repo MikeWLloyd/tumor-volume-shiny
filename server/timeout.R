@@ -1,5 +1,5 @@
-timeoutSeconds <- 900
-warnSeconds <- 840
+timeoutSeconds <- 600
+warnSeconds <- 540
 last_activity <- Sys.time()
 idle_warning_shown <- FALSE
 
@@ -24,7 +24,7 @@ observe({
     if (idle_seconds >= timeoutSeconds) {
         showModal(modalDialog(
             title = "Session expired",
-            "Your session ended after 15 minutes of inactivity. Reload to start a new session. Uploaded data and unsaved analysis state will be lost.",
+            "Your session ended after 10 minutes of inactivity. Reload to start a new session. Uploaded data and unsaved analysis state will be lost.",
             easyClose = FALSE,
             footer = tags$button(
                 type = "button", class = "btn btn-primary",
