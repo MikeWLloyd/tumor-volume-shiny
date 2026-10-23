@@ -193,7 +193,7 @@ tabPanel(
                 width = 3,
                 pickerInput("tv_disease_type", "Disease Type",
                             choices = get_tv_disease(),
-                            selected = get_tv_disease()[1],
+                            selected = get_tv_disease(),
                             options = pickerOptions(actionsBox = TRUE, 
                                                     showContent = TRUE),multiple = T)
               )

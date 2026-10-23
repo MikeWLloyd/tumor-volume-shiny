@@ -101,9 +101,10 @@ rownames(data) <- NULL
                       choices = agents,
                       selected = c('Control', unique(filtered.df$Arms)[1:min(10,n_unique_arms)]))
 
+        disease_type_choices <- unique(sort(filtered.df$Disease_Type))
         updatePickerInput(session, "tv_disease_type",
-                      choices = unique(sort(filtered.df$Disease_Type)),
-                      selected = unique(sort(filtered.df$Disease_Type))[1])
+              choices = disease_type_choices,
+              selected = disease_type_choices)
 
         updatePickerInput(session, "tv_study",
                       choices = unique(sort(filtered.df$Study)),
@@ -492,9 +493,10 @@ rownames(data) <- NULL
                     choices = agents,
                     selected = c('Control', unique(filtered.df$Arms)[1:min(10,n_unique_arms)]))
 
+      disease_type_choices <- unique(sort(filtered.df$Disease_Type))
       updatePickerInput(session, "tv_disease_type",
-                    choices = unique(sort(filtered.df$Disease_Type)),
-                    selected = unique(sort(filtered.df$Disease_Type))[1])
+            choices = disease_type_choices,
+            selected = disease_type_choices)
 
       study_filtered_choices <- unique(sort(filtered.df$Study))
       updatePickerInput(
@@ -525,9 +527,10 @@ rownames(data) <- NULL
                     choices = agents,
                     selected = c('Control', unique(filtered.df$Arms)[1:min(10,n_unique_arms)]))
 
+      disease_type_choices <- unique(sort(filtered.df$Disease_Type))
       updatePickerInput(session, "tv_disease_type",
-                    choices = unique(sort(filtered.df$Disease_Type)),
-                    selected = unique(sort(filtered.df$Disease_Type))[1])
+            choices = disease_type_choices,
+            selected = disease_type_choices)
 
     } 
   },ignoreNULL = T)
